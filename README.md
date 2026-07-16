@@ -62,5 +62,7 @@ Mobile recording session booking app. "We bring the studio to you."
 
 ## Deployment
 - **Platform**: Cloudflare Pages (Workers) — user's own Cloudflare account (BYOK)
+- **Production URL**: https://studio2u.pages.dev
 - **Tech Stack**: Hono + TypeScript + TailwindCSS (CDN) + Cloudflare D1 + Cloudflare R2
-- **Status**: See deployment section below for live URL
+- **Status**: ✅ Active
+- **Admin password**: Set as the `ADMIN_PASSWORD` Cloudflare secret (not stored in code/repo). Rotate anytime with `wrangler pages secret put ADMIN_PASSWORD --project-name studio2u`.
