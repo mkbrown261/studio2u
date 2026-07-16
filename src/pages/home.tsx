@@ -1,8 +1,6 @@
 import type { Engineer, Service } from '../types'
 
 export function HomePage({ engineer, services }: { engineer: Engineer | null; services: Service[] }) {
-  const genres = engineer?.genres?.split(',').map((g) => g.trim()) || []
-
   return (
     <div>
       {/* HERO */}
@@ -110,15 +108,26 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
       <section id="about" class="max-w-6xl mx-auto px-5 py-20">
         <div class="grid md:grid-cols-2 gap-14 items-center">
           <div>
-            <p class="text-gold text-xs font-semibold uppercase tracking-[0.2em] mb-3">About your engineer</p>
-            <h2 class="font-display text-3xl md:text-4xl font-bold mb-5">{engineer?.name || 'Mason Brown'}</h2>
-            <p class="text-muted leading-relaxed mb-6">{engineer?.bio}</p>
-            <div class="flex flex-wrap gap-2 mb-6">
-              {genres.map((g) => (
-                <span class="text-xs font-medium bg-wine/20 text-wine-light border border-wine/40 rounded-full px-3 py-1.5">{g}</span>
-              ))}
-            </div>
+            <p class="text-gold text-xs font-semibold uppercase tracking-[0.2em] mb-3">About Studio2You</p>
+            <h2 class="font-display text-3xl md:text-4xl font-bold mb-5">About Studio2You</h2>
+            <p class="text-muted leading-relaxed mb-4">
+              Studio2You was built to make professional recording more accessible by bringing the studio directly to you.
+            </p>
+            <p class="text-muted leading-relaxed mb-4">
+              Backed by over 12 years of professional audio engineering experience, Studio2You was founded on the belief that artists shouldn't have to sacrifice quality for convenience. Whether you're recording in your home, apartment, hotel, rehearsal space, or another location, our mission is to deliver a professional recording experience wherever creativity happens.
+            </p>
+            <p class="text-muted leading-relaxed mb-4">
+              Our founder brings over 12 years of professional audio engineering experience, including work with major-label and nationally recognized artists — spanning recording, mixing, vocal production, and artist development. That experience shapes every session and every engineer who becomes part of the Studio2You network.
+            </p>
+            <p class="text-muted leading-relaxed mb-6">
+              Today, Studio2You is growing into a platform that connects artists with trusted mobile recording engineers, making it easier than ever to book high-quality recording sessions on your schedule, at your location.
+            </p>
+            <p class="font-display text-lg text-gold italic mb-6">Professional sound. Your space. Your schedule.</p>
             <div class="flex gap-8 text-sm">
+              <div>
+                <div class="text-2xl font-display font-bold text-gold">12+</div>
+                <div class="text-muted text-xs uppercase tracking-wide mt-1">Years Experience</div>
+              </div>
               <div>
                 <div class="text-2xl font-display font-bold text-gold">{engineer?.travel_radius_miles ?? 30}mi</div>
                 <div class="text-muted text-xs uppercase tracking-wide mt-1">Travel Radius</div>
