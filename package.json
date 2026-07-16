@@ -1,12 +1,16 @@
 {
-  "name": "webapp",
+  "name": "studio2u",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:sandbox": "wrangler pages dev dist --d1=DB --r2=R2 --ip 0.0.0.0 --port 3000",
     "build": "vite build",
     "preview": "wrangler pages dev",
-    "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "deploy": "npm run build && wrangler pages deploy dist --project-name studio2u",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
+    "db:migrate:local": "wrangler d1 migrations apply studio2u-production --local",
+    "db:migrate:prod": "wrangler d1 migrations apply studio2u-production --remote"
   },
   "dependencies": {
     "hono": "^4.12.30"
