@@ -8,7 +8,11 @@ export interface GeocodeResult {
 }
 
 export async function geocodeLocation(locationLabel: string): Promise<GeocodeResult | null> {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(locationLabel)}`
+  // Bias to the US: a bare zip code like "19802" has no country context on its own and
+  // Nominatim can match an identical postal code in another country (seen in production:
+  // "19802" resolved to a village in Turkey instead of Wilmington, DE). countrycodes=us
+  // scopes results to the US, which is correct for Studio2U's current market.
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=${encodeURIComponent(locationLabel)}`
   try {
     const res = await fetch(url, {
       headers: {
