@@ -11,6 +11,9 @@ export interface EngineerProfile {
   travel_radius_miles: number
   equipment_text: string | null
   equipment_photo_url: string | null
+  mic_spec: string | null
+  daw_spec: string | null
+  interface_spec: string | null
   cashapp_handle: string | null
   location_label: string | null
   lat: number | null
@@ -60,6 +63,9 @@ export interface UpsertEngineerParams {
   travelRadiusMiles: number
   equipmentText: string
   equipmentPhotoUrl?: string
+  micSpec: string
+  dawSpec: string
+  interfaceSpec: string
   cashappHandle: string
   locationLabel: string
   lat: number | null
@@ -77,6 +83,7 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
           hourly_rate = ?, first_time_discount_amount = ?, first_time_discount_hours = ?,
           genres = ?, travel_radius_miles = ?,
           equipment_text = ?, equipment_photo_url = COALESCE(?, equipment_photo_url),
+          mic_spec = ?, daw_spec = ?, interface_spec = ?,
           cashapp_handle = ?, location_label = ?, lat = ?, lng = ?,
           is_published = 1, updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ?`
@@ -92,6 +99,9 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
         p.travelRadiusMiles,
         p.equipmentText,
         p.equipmentPhotoUrl || null,
+        p.micSpec,
+        p.dawSpec,
+        p.interfaceSpec,
         p.cashappHandle,
         p.locationLabel,
         p.lat,
@@ -108,8 +118,9 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
         user_id, display_name, bio, photo_url, hourly_rate,
         first_time_discount_amount, first_time_discount_hours,
         genres, travel_radius_miles, equipment_text, equipment_photo_url,
+        mic_spec, daw_spec, interface_spec,
         cashapp_handle, location_label, lat, lng, is_published
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`
     )
     .bind(
       p.userId,
@@ -123,6 +134,9 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
       p.travelRadiusMiles,
       p.equipmentText,
       p.equipmentPhotoUrl || null,
+      p.micSpec,
+      p.dawSpec,
+      p.interfaceSpec,
       p.cashappHandle,
       p.locationLabel,
       p.lat,

@@ -81,7 +81,34 @@ export function EngineerProfilePage({
           <h2 class="font-display text-xl font-bold mb-3">About</h2>
           <p class="text-muted leading-relaxed mb-8 whitespace-pre-line">{profile.bio}</p>
 
-          {profile.equipment_text && (
+          {(profile.mic_spec || profile.daw_spec || profile.interface_spec) ? (
+            <>
+              <h2 class="font-display text-xl font-bold mb-3">Equipment</h2>
+              <div class="space-y-2.5 mb-4">
+                {profile.mic_spec && (
+                  <div class="flex items-center gap-3">
+                    <img src="/static/brand/icon-mic-64.png" alt="Microphone" class="w-6 h-6 object-contain shrink-0" />
+                    <span class="text-muted">{profile.mic_spec}</span>
+                  </div>
+                )}
+                {profile.daw_spec && (
+                  <div class="flex items-center gap-3">
+                    <img src="/static/brand/icon-daw-64.png" alt="DAW" class="w-6 h-6 object-contain shrink-0" />
+                    <span class="text-muted">{profile.daw_spec}</span>
+                  </div>
+                )}
+                {profile.interface_spec && (
+                  <div class="flex items-center gap-3">
+                    <img src="/static/brand/icon-interface-64.png" alt="Audio Interface" class="w-6 h-6 object-contain shrink-0" />
+                    <span class="text-muted">{profile.interface_spec}</span>
+                  </div>
+                )}
+              </div>
+              {profile.equipment_photo_url && (
+                <img src={`/media/${profile.equipment_photo_url}`} alt="Equipment" class="rounded-xl border border-gold/20 mb-8 max-h-72 object-cover" />
+              )}
+            </>
+          ) : profile.equipment_text ? (
             <>
               <h2 class="font-display text-xl font-bold mb-3">Equipment</h2>
               <p class="text-muted leading-relaxed mb-4 whitespace-pre-line">{profile.equipment_text}</p>
@@ -89,7 +116,7 @@ export function EngineerProfilePage({
                 <img src={`/media/${profile.equipment_photo_url}`} alt="Equipment" class="rounded-xl border border-gold/20 mb-8 max-h-72 object-cover" />
               )}
             </>
-          )}
+          ) : null}
         </div>
       </div>
 

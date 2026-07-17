@@ -82,6 +82,9 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
   const discountHours = offerDiscount ? parseFloat((formData.get('discount_hours') as string) || '0') : null
   const genres = ((formData.get('genres') as string) || '').trim()
   const equipmentText = ((formData.get('equipment_text') as string) || '').trim()
+  const micSpec = ((formData.get('mic_spec') as string) || '').trim()
+  const dawSpec = ((formData.get('daw_spec') as string) || '').trim()
+  const interfaceSpec = ((formData.get('interface_spec') as string) || '').trim()
   const cashappHandle = ((formData.get('cashapp_handle') as string) || '').trim()
   const locationLabel = ((formData.get('location_label') as string) || '').trim()
 
@@ -132,6 +135,9 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
     travelRadiusMiles,
     equipmentText,
     equipmentPhotoUrl,
+    micSpec,
+    dawSpec,
+    interfaceSpec,
     cashappHandle,
     locationLabel,
     lat,

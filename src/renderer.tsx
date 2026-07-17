@@ -13,7 +13,8 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
           name="description"
           content="Studio2U is mobile recording. Book a professional recording engineer to come record your session tonight — no studio required."
         />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/favicon-32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/static/brand/favicon-180.png" />
 
         <script src="https://cdn.tailwindcss.com"></script>
         <script
@@ -61,7 +62,7 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
         <header id="site-header" class="fixed top-0 left-0 right-0 z-50 border-b border-gold/10 bg-ink/80 backdrop-blur-md">
           <nav class="max-w-6xl mx-auto flex items-center justify-between px-5 py-4">
             <a href="/" class="flex items-center gap-2 group">
-              <span class="w-9 h-9 rounded-full bg-gradient-to-br from-gold to-wine flex items-center justify-center text-ink font-display font-bold text-sm">S2U</span>
+              <img src="/static/brand/header-badge.png" alt="Studio2U" class="w-9 h-9 object-contain" />
               <span class="font-display text-lg tracking-wide">Studio<span class="text-gold">2</span>U</span>
             </a>
             <div class="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
@@ -96,7 +97,7 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
           <div class="max-w-6xl mx-auto px-5 py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
             <div>
               <div class="flex items-center gap-2 mb-3">
-                <span class="w-8 h-8 rounded-full bg-gradient-to-br from-gold to-wine flex items-center justify-center text-ink font-display font-bold text-xs">S2U</span>
+                <img src="/static/brand/header-badge.png" alt="Studio2U" class="w-8 h-8 object-contain" />
                 <span class="font-display text-base">Studio2U</span>
               </div>
               <p class="text-sm text-muted leading-relaxed">We bring the studio to you. Professional mobile recording, on your schedule.</p>

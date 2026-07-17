@@ -70,14 +70,39 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
           <input type="text" name="genres" placeholder="Hip Hop, R&B, Pop" value={profile?.genres || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-muted mb-2">Equipment / Spec List</label>
-          <textarea name="equipment_text" rows="3" placeholder="e.g. Neumann TLM 103, Universal Audio Apollo Twin, Sennheiser HD 280 Pro..." class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold">{profile?.equipment_text || ''}</textarea>
+        <div class="bg-ink/50 rounded-xl p-5 space-y-4">
+          <p class="text-sm font-medium text-cream -mb-1">Equipment</p>
+          <p class="text-xs text-muted -mt-3">Shown on your public profile next to a matching icon for each field.</p>
+
+          <div>
+            <label class="flex items-center gap-2 text-sm font-medium text-muted mb-2">
+              <img src="/static/brand/icon-mic-64.png" alt="" class="w-5 h-5 object-contain" />
+              Microphone
+            </label>
+            <input type="text" name="mic_spec" placeholder="e.g. Neumann TLM 103" value={profile?.mic_spec || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
+          </div>
+
+          <div>
+            <label class="flex items-center gap-2 text-sm font-medium text-muted mb-2">
+              <img src="/static/brand/icon-daw-64.png" alt="" class="w-5 h-5 object-contain" />
+              DAW
+            </label>
+            <input type="text" name="daw_spec" placeholder="e.g. Pro Tools, Logic Pro, Ableton" value={profile?.daw_spec || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
+          </div>
+
+          <div>
+            <label class="flex items-center gap-2 text-sm font-medium text-muted mb-2">
+              <img src="/static/brand/icon-interface-64.png" alt="" class="w-5 h-5 object-contain" />
+              Audio Interface
+            </label>
+            <input type="text" name="interface_spec" placeholder="e.g. Universal Audio Apollo Twin" value={profile?.interface_spec || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
+          </div>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-muted mb-2">Equipment Photo (optional)</label>
           <input type="file" name="equipment_photo" accept="image/png,image/jpeg" class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream text-sm focus:outline-none focus:border-gold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-gold file:text-ink file:font-semibold" />
+          {profile?.equipment_photo_url && <p class="text-xs text-muted mt-1.5">Current photo on file — upload a new one to replace it.</p>}
         </div>
 
         <div>
