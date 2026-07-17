@@ -17,6 +17,7 @@ import {
 } from './lib/db'
 import { calculatePrice, isWithinStandardAvailability } from './lib/pricing'
 import { getEngineerProfileById, getEngineerDisplayForBooking, getAllEngineersForAdmin, setEngineerSuspended } from './lib/db-engineers'
+import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
@@ -307,11 +308,32 @@ app.use('/admin/engineers/*', async (c, next) => {
   await next()
 })
 
+app.use('/admin/settings/*', async (c, next) => {
+  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  if (!authed) return c.redirect('/admin/login')
+  await next()
+})
+
 app.get('/admin', async (c) => {
   const statusFilter = c.req.query('status') || 'all'
   const bookings = await getAllBookings(c.env.DB, statusFilter)
   const engineers = await getAllEngineersForAdmin(c.env.DB)
-  return c.render(<AdminDashboardPage bookings={bookings} statusFilter={statusFilter} engineers={engineers} />, { title: 'Admin Dashboard' })
+  const commissionPercent = await getCommissionPercent(c.env.DB)
+  return c.render(
+    <AdminDashboardPage bookings={bookings} statusFilter={statusFilter} engineers={engineers} commissionPercent={commissionPercent} />,
+    { title: 'Admin Dashboard' }
+  )
+})
+
+// Platform-wide commission percentage — admin-editable, read live by the booking/payout
+// flow instead of being hardcoded anywhere in app code (Phase 3 M1).
+app.post('/admin/settings/commission', async (c) => {
+  const body = await c.req.parseBody()
+  const percent = parseFloat((body['commission_percent'] as string) || '')
+  if (Number.isFinite(percent)) {
+    await setCommissionPercent(c.env.DB, percent)
+  }
+  return c.redirect('/admin')
 })
 
 app.post('/admin/bookings/:id/status', async (c) => {

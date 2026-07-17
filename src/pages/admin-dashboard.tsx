@@ -22,11 +22,13 @@ const STATUS_LABELS: Record<string, string> = {
 export function AdminDashboardPage({
   bookings,
   statusFilter,
-  engineers
+  engineers,
+  commissionPercent
 }: {
   bookings: Booking[]
   statusFilter: string
   engineers: EngineerProfile[]
+  commissionPercent: number
 }) {
   const filters = ['all', 'pending_payment', 'pending_approval', 'confirmed', 'completed', 'cancelled', 'rejected']
 
@@ -43,6 +45,45 @@ export function AdminDashboardPage({
           </button>
         </form>
       </div>
+
+      {/* ---------- Platform commission setting ---------- */}
+      <section class="mb-14">
+        <h2 class="font-display text-xl font-bold mb-4">Platform Commission</h2>
+        <div class="bg-surface border border-gold/10 rounded-xl p-5">
+          <p class="text-muted text-sm mb-4">
+            Percentage the platform keeps from each booking (the rest is the engineer's payout via Stripe Connect).
+            Change this any time — it applies to new bookings going forward.
+          </p>
+          <form method="POST" action="/admin/settings/commission" class="flex items-end gap-4 flex-wrap">
+            <div>
+              <label class="block text-xs text-muted uppercase tracking-wide mb-1.5" for="commission_percent">
+                Commission %
+              </label>
+              <div class="relative">
+                <input
+                  type="number"
+                  id="commission_percent"
+                  name="commission_percent"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={commissionPercent}
+                  class="bg-ink border border-gold/20 rounded-lg pl-4 pr-9 py-2.5 text-cream w-32 focus:outline-none focus:border-gold/50"
+                  required
+                />
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-sm">%</span>
+              </div>
+            </div>
+            <button type="submit" class="text-sm font-semibold bg-gold text-ink rounded-full px-6 py-2.5 hover:bg-gold-light transition">
+              <i class="fa-solid fa-floppy-disk mr-1.5"></i>Save
+            </button>
+            <span class="text-xs text-muted">
+              e.g. on a $100 booking, platform keeps ${((100 * commissionPercent) / 100).toFixed(2)}, engineer gets $
+              {(100 - (100 * commissionPercent) / 100).toFixed(2)}
+            </span>
+          </form>
+        </div>
+      </section>
 
       {/* ---------- Engineer kill switch ---------- */}
       <section class="mb-14">
