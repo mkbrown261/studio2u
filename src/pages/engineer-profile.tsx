@@ -42,7 +42,15 @@ export function EngineerProfilePage({
           <h1 class="font-display text-2xl font-bold mb-1">{profile.display_name}</h1>
           <div class="text-muted text-sm mb-5">{profile.location_label || 'Location on request'} · {profile.travel_radius_miles}mi radius</div>
 
-          <div id="engineer-map" class="w-full h-40 rounded-xl overflow-hidden border border-gold/20 mb-5" data-lat={profile.lat ?? ''} data-lng={profile.lng ?? ''} data-name={profile.display_name}></div>
+          <div
+            id="engineer-distance"
+            class="flex items-center gap-2 text-sm text-muted bg-surface border border-gold/10 rounded-xl px-4 py-3 mb-5"
+            data-lat={profile.lat ?? ''}
+            data-lng={profile.lng ?? ''}
+          >
+            <i class="fa-solid fa-location-crosshairs text-gold"></i>
+            <span class="distance-text">Enable location to see distance</span>
+          </div>
 
           <div class="bg-surface border border-gold/10 rounded-xl p-5 mb-5">
             <div class="text-2xl font-display font-bold text-gold mb-1">${profile.hourly_rate}<span class="text-sm text-muted font-sans">/hr</span></div>
@@ -142,9 +150,7 @@ export function EngineerProfilePage({
         )}
       </section>
 
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-      <script src="/static/engineer-map.js"></script>
+      <script src="/static/engineer-distance.js"></script>
     </div>
   )
 }
