@@ -1,13 +1,22 @@
-import type { Booking, Engineer } from '../types'
+import type { Booking } from '../types'
 
-export function PayPage({ booking, engineer, error }: { booking: Booking; engineer: Engineer | null; error?: string }) {
-  const cashapp = engineer?.cashapp_handle || '$KEYZGMG'
+export function PayPage({
+  booking,
+  engineerDisplay,
+  error
+}: {
+  booking: Booking
+  engineerDisplay: { name: string; cashappHandle: string | null; photoUrl: string | null }
+  error?: string
+}) {
+  const cashapp = engineerDisplay.cashappHandle || '$KEYZGMG'
 
   return (
     <div class="max-w-xl mx-auto px-5 py-16">
       <div class="text-center mb-8">
         <p class="text-gold text-xs font-semibold uppercase tracking-[0.2em] mb-3">Booking #{booking.id}</p>
         <h1 class="font-display text-3xl font-bold">Deposit Required</h1>
+        <p class="text-muted text-sm mt-2">with {engineerDisplay.name}</p>
       </div>
 
       <div class="bg-gold/10 border border-gold/30 rounded-2xl p-7 mb-8 text-center">
@@ -18,7 +27,7 @@ export function PayPage({ booking, engineer, error }: { booking: Booking; engine
       </div>
 
       <p class="text-center text-muted text-sm mb-8">
-        Once payment is received, upload your confirmation below. Your booking stays <strong class="text-cream">pending</strong> until we approve it.
+        Once payment is received, upload your confirmation below. Your booking stays <strong class="text-cream">pending</strong> until {engineerDisplay.name.split(' ')[0]} approves it.
       </p>
 
       {error && (

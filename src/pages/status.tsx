@@ -87,7 +87,21 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
               {b.status === 'confirmed' && (
                 <div class="text-sm text-emerald-400 bg-emerald-500/10 rounded-xl px-4 py-3 mt-3">
                   <i class="fa-solid fa-circle-check mr-2"></i>
-                  You're all set! Mason will see you on {b.session_date} at {b.session_time}.
+                  You're all set! Your engineer will see you on {b.session_date} at {b.session_time}.
+                </div>
+              )}
+
+              {b.status === 'completed' && b.reviewed !== 1 && b.engineer_profile_id != null && (
+                <div class="bg-gold/10 border border-gold/30 rounded-xl px-5 py-4 mt-3">
+                  <p class="text-sm text-cream/80 mb-3">
+                    <i class="fa-solid fa-microphone-lines text-gold mr-1"></i> How did your session go? Leave a review for your engineer.
+                  </p>
+                  <a
+                    href={`/review/${b.id}?email=${encodeURIComponent(b.customer_email)}`}
+                    class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold text-sm px-5 py-2.5 rounded-full transition"
+                  >
+                    Leave a Review <i class="fa-solid fa-arrow-right text-xs"></i>
+                  </a>
                 </div>
               )}
 

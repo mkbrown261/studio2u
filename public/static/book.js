@@ -1,8 +1,10 @@
 // Studio2U booking flow — vanilla JS, no framework needed for this scope.
 ;(function () {
   const root = document.getElementById('booking-app')
+  const engineerId = root.getAttribute('data-engineer-id')
   let step = 1
   const state = {
+    engineerId: engineerId,
     sessionDate: '',
     sessionTime: '',
     durationHours: 3,
@@ -209,7 +211,7 @@
       </div>
     `
 
-    fetch(`/api/price-check?email=${encodeURIComponent(state.customerEmail)}&duration=${state.durationHours}`)
+    fetch(`/api/price-check?engineerId=${encodeURIComponent(state.engineerId)}&email=${encodeURIComponent(state.customerEmail)}&duration=${state.durationHours}`)
       .then((r) => r.json())
       .then((data) => {
         document.getElementById('price-amount').textContent = `$${data.amount}`

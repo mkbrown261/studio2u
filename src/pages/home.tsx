@@ -1,6 +1,6 @@
-import type { Engineer, Service } from '../types'
+import type { Service } from '../types'
 
-export function HomePage({ engineer, services }: { engineer: Engineer | null; services: Service[] }) {
+export function HomePage({ services }: { services: Service[] }) {
   return (
     <div>
       {/* HERO */}
@@ -21,7 +21,7 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
             Skip the studio search. Book a professional mobile recording session, get a confirmed time, and we show up — set up, record, and break down, wherever you are.
           </p>
           <div class="mt-10 flex flex-wrap gap-4">
-            <a href="/book" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-7 py-4 rounded-full transition shadow-xl shadow-gold/20 text-base">
+            <a href="/engineers" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-7 py-4 rounded-full transition shadow-xl shadow-gold/20 text-base">
               Book Your Session <i class="fa-solid fa-arrow-right"></i>
             </a>
             <a href="#pricing" class="inline-flex items-center gap-2 border border-cream/20 hover:border-gold/50 text-cream font-medium px-7 py-4 rounded-full transition text-base">
@@ -29,8 +29,8 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
             </a>
           </div>
           <div class="mt-14 flex flex-wrap gap-8 text-sm text-cream/70">
-            <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-gold"></i> First session $100 / 3hrs</div>
-            <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-gold"></i> We travel to you</div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-gold"></i> First-session deals with many engineers</div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-gold"></i> They travel to you</div>
             <div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-gold"></i> Pro gear, no studio needed</div>
           </div>
         </div>
@@ -46,7 +46,7 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
           {[
             { icon: 'fa-calendar-check', title: 'Book', desc: 'Pick your date, time, and location in under 2 minutes.' },
             { icon: 'fa-mobile-screen-button', title: 'Pay Deposit', desc: 'Send your Cash App deposit and upload your confirmation.' },
-            { icon: 'fa-van-shuttle', title: 'We Show Up', desc: 'Mason arrives with professional gear, sets up at your location.' },
+            { icon: 'fa-van-shuttle', title: 'We Show Up', desc: 'Your engineer arrives with professional gear, sets up at your location.' },
             { icon: 'fa-record-vinyl', title: 'Record', desc: 'Record your session, then we break down and leave. Simple.' }
           ].map((step, i) => (
             <div class="bg-surface border border-gold/10 rounded-2xl p-7 hover:border-gold/30 transition">
@@ -93,7 +93,7 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
                 <div class="flex items-center justify-between">
                   <span class="text-gold font-semibold text-sm">{s.base_rate_note}</span>
                   {s.is_bookable === 1 ? (
-                    <a href="/book" class="text-sm font-semibold text-cream hover:text-gold transition">Book →</a>
+                    <a href="/engineers" class="text-sm font-semibold text-cream hover:text-gold transition">Book →</a>
                   ) : (
                     <a href="/#contact" class="text-sm font-semibold text-cream hover:text-gold transition">Inquire →</a>
                   )}
@@ -129,8 +129,8 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
                 <div class="text-muted text-xs uppercase tracking-wide mt-1">Years Experience</div>
               </div>
               <div>
-                <div class="text-2xl font-display font-bold text-gold">{engineer?.travel_radius_miles ?? 30}mi</div>
-                <div class="text-muted text-xs uppercase tracking-wide mt-1">Travel Radius</div>
+                <div class="text-2xl font-display font-bold text-gold">Growing</div>
+                <div class="text-muted text-xs uppercase tracking-wide mt-1">Engineer Network</div>
               </div>
               <div>
                 <div class="text-2xl font-display font-bold text-gold">M–F</div>
@@ -154,41 +154,37 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
       <section id="pricing" class="max-w-6xl mx-auto px-5 py-20">
         <div class="text-center max-w-2xl mx-auto mb-14">
           <p class="text-gold text-xs font-semibold uppercase tracking-[0.2em] mb-3">Pricing</p>
-          <h2 class="font-display text-3xl md:text-4xl font-bold">Simple, honest pricing</h2>
-          <p class="text-muted mt-4">You're not just paying for recording — you're paying for us to travel, set up, and break down at your location.</p>
+          <h2 class="font-display text-3xl md:text-4xl font-bold">Every engineer sets their own rate</h2>
+          <p class="text-muted mt-4">Rates vary by engineer based on experience, gear, and location. Many offer a first-session discount for new clients — you'll see the exact price before you book.</p>
         </div>
-        <div class="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-          <div class="relative bg-gradient-to-br from-wine/30 to-surface border-2 border-gold rounded-2xl p-8">
-            <span class="absolute -top-3 left-8 bg-gold text-ink text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Most Popular</span>
-            <h3 class="font-display text-xl font-bold mb-1 mt-2">First Session</h3>
-            <p class="text-muted text-sm mb-6">For new clients only</p>
-            <div class="mb-6">
-              <span class="text-5xl font-display font-bold text-gold">$100</span>
-              <span class="text-muted"> / 3 hours</span>
+        <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div class="bg-surface border border-gold/15 rounded-2xl p-7 text-center">
+            <div class="w-11 h-11 rounded-xl bg-gold/10 flex items-center justify-center text-gold text-lg mb-4 mx-auto">
+              <i class="fa-solid fa-tag"></i>
             </div>
-            <ul class="space-y-3 text-sm mb-8">
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Full mobile setup at your location</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Up to 3 hours of recording</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Professional mic & interface</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Raw stems delivered same week</li>
-            </ul>
-            <a href="/book" class="block text-center bg-gold hover:bg-gold-light text-ink font-semibold py-3.5 rounded-full transition">Book First Session</a>
+            <h3 class="font-display text-lg font-bold mb-2">Transparent Rates</h3>
+            <p class="text-sm text-muted leading-relaxed">Each engineer lists their own hourly rate on their profile — no hidden fees.</p>
           </div>
-          <div class="bg-surface border border-gold/15 rounded-2xl p-8">
-            <h3 class="font-display text-xl font-bold mb-1 mt-2">Standard Rate</h3>
-            <p class="text-muted text-sm mb-6">For returning clients</p>
-            <div class="mb-6">
-              <span class="text-5xl font-display font-bold text-cream">$40</span>
-              <span class="text-muted"> / hour</span>
+          <div class="relative bg-gradient-to-br from-wine/30 to-surface border-2 border-gold rounded-2xl p-7 text-center">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-ink text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
+            <div class="w-11 h-11 rounded-xl bg-gold/10 flex items-center justify-center text-gold text-lg mb-4 mx-auto mt-2">
+              <i class="fa-solid fa-star"></i>
             </div>
-            <ul class="space-y-3 text-sm mb-8">
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Same mobile setup, no travel fee</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Book any session length</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Priority scheduling</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-gold"></i> Raw stems delivered same week</li>
-            </ul>
-            <a href="/book" class="block text-center border border-gold/40 hover:bg-gold/10 text-cream font-semibold py-3.5 rounded-full transition">Book a Session</a>
+            <h3 class="font-display text-lg font-bold mb-2">First-Session Deals</h3>
+            <p class="text-sm text-muted leading-relaxed">Many engineers offer a flat rate for your first booking with them — look for the badge on their profile.</p>
           </div>
+          <div class="bg-surface border border-gold/15 rounded-2xl p-7 text-center">
+            <div class="w-11 h-11 rounded-xl bg-gold/10 flex items-center justify-center text-gold text-lg mb-4 mx-auto">
+              <i class="fa-solid fa-van-shuttle"></i>
+            </div>
+            <h3 class="font-display text-lg font-bold mb-2">They Travel To You</h3>
+            <p class="text-sm text-muted leading-relaxed">No travel fees — every engineer's rate already covers setup and breakdown at your location.</p>
+          </div>
+        </div>
+        <div class="text-center mt-10">
+          <a href="/engineers" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-7 py-3.5 rounded-full transition">
+            Browse Engineers & Rates <i class="fa-solid fa-arrow-right text-xs"></i>
+          </a>
         </div>
       </section>
 
@@ -223,7 +219,7 @@ export function HomePage({ engineer, services }: { engineer: Engineer | null; se
           <div class="relative">
             <h2 class="font-display text-3xl md:text-5xl font-bold mb-5">Ready to record tonight?</h2>
             <p class="text-cream/70 max-w-xl mx-auto mb-8">Stop searching for studios. Book your session now and we'll come to you.</p>
-            <a href="/book" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-8 py-4 rounded-full transition shadow-xl shadow-gold/30 text-base">
+            <a href="/engineers" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-8 py-4 rounded-full transition shadow-xl shadow-gold/30 text-base">
               Book Your Session <i class="fa-solid fa-arrow-right"></i>
             </a>
           </div>

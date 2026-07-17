@@ -1,4 +1,5 @@
 import type { Booking } from '../types'
+import type { EngineerProfile } from '../lib/db-engineers'
 
 const STATUS_STYLES: Record<string, string> = {
   pending_payment: 'bg-muted/20 text-muted border-muted/30',
@@ -18,7 +19,15 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: 'Rejected'
 }
 
-export function AdminDashboardPage({ bookings, statusFilter }: { bookings: Booking[]; statusFilter: string }) {
+export function AdminDashboardPage({
+  bookings,
+  statusFilter,
+  engineers
+}: {
+  bookings: Booking[]
+  statusFilter: string
+  engineers: EngineerProfile[]
+}) {
   const filters = ['all', 'pending_payment', 'pending_approval', 'confirmed', 'completed', 'cancelled', 'rejected']
 
   return (
@@ -26,7 +35,7 @@ export function AdminDashboardPage({ bookings, statusFilter }: { bookings: Booki
       <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
         <div>
           <p class="text-gold text-xs font-semibold uppercase tracking-[0.2em] mb-2">Admin</p>
-          <h1 class="font-display text-3xl font-bold">Booking Dashboard</h1>
+          <h1 class="font-display text-3xl font-bold">Platform Oversight</h1>
         </div>
         <form method="POST" action="/admin/logout">
           <button type="submit" class="text-sm text-muted hover:text-gold transition flex items-center gap-2">
@@ -35,6 +44,55 @@ export function AdminDashboardPage({ bookings, statusFilter }: { bookings: Booki
         </form>
       </div>
 
+      {/* ---------- Engineer kill switch ---------- */}
+      <section class="mb-14">
+        <h2 class="font-display text-xl font-bold mb-4">Engineers</h2>
+        <p class="text-muted text-sm mb-5">
+          Each engineer approves their own bookings and gets paid directly via their own Cash App. This panel is for
+          platform oversight only — suspend an engineer to instantly pull them off the public directory.
+        </p>
+        {engineers.length === 0 ? (
+          <div class="text-center py-10 text-muted bg-surface border border-gold/10 rounded-2xl text-sm">No engineers have signed up yet.</div>
+        ) : (
+          <div class="space-y-3">
+            {engineers.map((e) => (
+              <div class="bg-surface border border-gold/10 rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <div class="flex items-center gap-3">
+                    <span class="font-semibold text-cream">{e.display_name}</span>
+                    {e.is_suspended === 1 ? (
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-full border border-red-500/30 bg-red-500/15 text-red-400">Suspended</span>
+                    ) : e.is_published === 1 ? (
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-400">Live</span>
+                    ) : (
+                      <span class="text-xs font-semibold px-2.5 py-1 rounded-full border border-muted/30 bg-muted/10 text-muted">Draft</span>
+                    )}
+                    {e.is_new === 1 && <span class="text-xs font-semibold px-2.5 py-1 rounded-full border border-gold/30 bg-gold/10 text-gold">New</span>}
+                  </div>
+                  <div class="text-xs text-muted mt-1">${e.hourly_rate}/hr · {e.rating_count} review{e.rating_count !== 1 ? 's' : ''}</div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <a href={`/engineers/${e.id}`} target="_blank" class="text-xs font-semibold text-gold hover:underline">View Profile</a>
+                  <form method="POST" action={`/admin/engineers/${e.id}/suspend`}>
+                    <input type="hidden" name="suspended" value={e.is_suspended === 1 ? '0' : '1'} />
+                    {e.is_suspended === 1 ? (
+                      <button type="submit" class="text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-full px-4 py-2 hover:bg-emerald-500/25 transition">
+                        <i class="fa-solid fa-play mr-1"></i>Reactivate
+                      </button>
+                    ) : (
+                      <button type="submit" class="text-xs font-semibold bg-red-500/15 text-red-400 border border-red-500/30 rounded-full px-4 py-2 hover:bg-red-500/25 transition">
+                        <i class="fa-solid fa-ban mr-1"></i>Suspend
+                      </button>
+                    )}
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <h2 class="font-display text-xl font-bold mb-4">All Bookings</h2>
       <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
         {filters.map((f) => (
           <a

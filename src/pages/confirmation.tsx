@@ -1,7 +1,13 @@
-import type { Booking, Engineer } from '../types'
+import type { Booking } from '../types'
 
-export function ConfirmationPage({ booking, engineer }: { booking: Booking; engineer: Engineer | null }) {
-  const cashapp = engineer?.cashapp_handle || '$KEYZGMG'
+export function ConfirmationPage({
+  booking,
+  engineerDisplay
+}: {
+  booking: Booking
+  engineerDisplay: { name: string; cashappHandle: string | null; photoUrl: string | null }
+}) {
+  const cashapp = engineerDisplay.cashappHandle || '$KEYZGMG'
 
   return (
     <div class="max-w-xl mx-auto px-5 py-16">
@@ -11,6 +17,7 @@ export function ConfirmationPage({ booking, engineer }: { booking: Booking; engi
         </div>
         <h1 class="font-display text-3xl font-bold">Booking Received!</h1>
         <p class="text-muted mt-3">Booking #{booking.id} — {booking.session_date} @ {booking.session_time}</p>
+        <p class="text-muted text-sm mt-1">with {engineerDisplay.name}</p>
       </div>
 
       {booking.is_custom_time_request === 1 && (

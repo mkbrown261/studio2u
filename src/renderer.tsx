@@ -1,6 +1,8 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
+import { getSessionUser } from './lib/session'
 
-export const renderer = jsxRenderer(({ children, title }) => {
+export const renderer = jsxRenderer(async ({ children, title }, c) => {
+  const sessionUser = await getSessionUser(c.env.DB, c.req.raw)
   return (
     <html lang="en">
       <head>
@@ -63,15 +65,28 @@ export const renderer = jsxRenderer(({ children, title }) => {
               <span class="font-display text-lg tracking-wide">Studio<span class="text-gold">2</span>U</span>
             </a>
             <div class="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
-              <a href="/#services" class="hover:text-gold transition">Services</a>
+              <a href="/engineers" class="hover:text-gold transition">Engineers</a>
               <a href="/#pricing" class="hover:text-gold transition">Pricing</a>
               <a href="/#about" class="hover:text-gold transition">About</a>
               <a href="/#faq" class="hover:text-gold transition">FAQ</a>
               <a href="/status" class="hover:text-gold transition">My Bookings</a>
             </div>
-            <a href="/book" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-gold/20">
-              Book Now <i class="fa-solid fa-arrow-right text-xs"></i>
-            </a>
+            <div class="flex items-center gap-3">
+              {sessionUser ? (
+                <a href="/dashboard" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-gold/20">
+                  <i class="fa-solid fa-gauge text-xs"></i> Dashboard
+                </a>
+              ) : (
+                <>
+                  <a href="/login" class="hidden sm:inline-flex items-center text-sm font-medium text-muted hover:text-gold transition px-3 py-2.5">
+                    Log In
+                  </a>
+                  <a href="/signup" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-gold/20">
+                    Sign Up <i class="fa-solid fa-arrow-right text-xs"></i>
+                  </a>
+                </>
+              )}
+            </div>
           </nav>
         </header>
 
@@ -91,15 +106,16 @@ export const renderer = jsxRenderer(({ children, title }) => {
               <ul class="space-y-2 text-sm text-muted">
                 <li><a href="/#services" class="hover:text-gold transition">Services</a></li>
                 <li><a href="/#pricing" class="hover:text-gold transition">Pricing</a></li>
-                <li><a href="/#about" class="hover:text-gold transition">About Mason</a></li>
+                <li><a href="/#about" class="hover:text-gold transition">About Studio2You</a></li>
                 <li><a href="/#faq" class="hover:text-gold transition">FAQ</a></li>
               </ul>
             </div>
             <div>
               <h4 class="font-semibold text-cream mb-3 text-sm uppercase tracking-wider">Book</h4>
               <ul class="space-y-2 text-sm text-muted">
-                <li><a href="/book" class="hover:text-gold transition">New Session</a></li>
+                <li><a href="/engineers" class="hover:text-gold transition">Find an Engineer</a></li>
                 <li><a href="/status" class="hover:text-gold transition">Check Booking Status</a></li>
+                <li><a href="/signup" class="hover:text-gold transition">Become an Engineer</a></li>
               </ul>
             </div>
             <div id="contact">

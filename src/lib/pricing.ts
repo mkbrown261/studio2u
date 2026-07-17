@@ -1,6 +1,7 @@
-// Studio2U pricing logic
-// First-time clients: $100 flat for up to 3 hours. Extra hours beyond 3 (even for
-// first-timers) bill at the standard $40/hr rate. Returning clients: straight $40/hr.
+// Studio2U pricing logic — Phase 2: rate + first-time discount are per-engineer now
+// (each engineer sets their own hourly rate and can optionally offer their own
+// first-time discount). "First time" means first COMPLETED-or-any booking with THAT
+// SPECIFIC engineer, not a platform-wide flag.
 
 export interface PriceResult {
   amount: number
@@ -8,33 +9,44 @@ export interface PriceResult {
   isFirstTimeRate: boolean
 }
 
-const FIRST_TIME_FLAT_RATE = 100
-const FIRST_TIME_INCLUDED_HOURS = 3
-const STANDARD_HOURLY_RATE = 40
+export interface EngineerRateInfo {
+  hourlyRate: number
+  firstTimeDiscountAmount: number | null // null = engineer offers no intro discount
+  firstTimeDiscountHours: number | null
+}
 
-export function calculatePrice(durationHours: number, isFirstTime: boolean): PriceResult {
-  if (isFirstTime) {
-    if (durationHours <= FIRST_TIME_INCLUDED_HOURS) {
+export function calculatePrice(
+  durationHours: number,
+  isFirstTimeWithThisEngineer: boolean,
+  rate: EngineerRateInfo
+): PriceResult {
+  const hasDiscount = rate.firstTimeDiscountAmount != null && rate.firstTimeDiscountHours != null
+
+  if (isFirstTimeWithThisEngineer && hasDiscount) {
+    const flatRate = rate.firstTimeDiscountAmount as number
+    const includedHours = rate.firstTimeDiscountHours as number
+
+    if (durationHours <= includedHours) {
       return {
-        amount: FIRST_TIME_FLAT_RATE,
-        breakdown: `First session special: $${FIRST_TIME_FLAT_RATE} flat (covers up to ${FIRST_TIME_INCLUDED_HOURS} hours)`,
+        amount: flatRate,
+        breakdown: `First session special: $${flatRate} flat (covers up to ${includedHours} hours)`,
         isFirstTimeRate: true
       }
     }
-    const extraHours = durationHours - FIRST_TIME_INCLUDED_HOURS
-    const extraCost = extraHours * STANDARD_HOURLY_RATE
-    const total = FIRST_TIME_FLAT_RATE + extraCost
+    const extraHours = durationHours - includedHours
+    const extraCost = extraHours * rate.hourlyRate
+    const total = flatRate + extraCost
     return {
       amount: total,
-      breakdown: `First session special: $${FIRST_TIME_FLAT_RATE} (first ${FIRST_TIME_INCLUDED_HOURS} hrs) + $${STANDARD_HOURLY_RATE}/hr x ${extraHours} extra hr${extraHours !== 1 ? 's' : ''} = $${total}`,
+      breakdown: `First session special: $${flatRate} (first ${includedHours} hrs) + $${rate.hourlyRate}/hr x ${extraHours} extra hr${extraHours !== 1 ? 's' : ''} = $${total}`,
       isFirstTimeRate: true
     }
   }
 
-  const total = durationHours * STANDARD_HOURLY_RATE
+  const total = durationHours * rate.hourlyRate
   return {
     amount: total,
-    breakdown: `Standard rate: $${STANDARD_HOURLY_RATE}/hour x ${durationHours} hour${durationHours !== 1 ? 's' : ''} = $${total}`,
+    breakdown: `Standard rate: $${rate.hourlyRate}/hour x ${durationHours} hour${durationHours !== 1 ? 's' : ''} = $${total}`,
     isFirstTimeRate: false
   }
 }

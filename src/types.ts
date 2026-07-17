@@ -42,6 +42,9 @@ export interface Booking {
   id: number
   customer_id: number
   engineer_id: number
+  engineer_profile_id: number | null
+  customer_user_id: number | null
+  reviewed?: number
   service_id: number
   session_date: string
   session_time: string

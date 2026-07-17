@@ -29,3 +29,38 @@ body {
 details summary {
   list-style: none;
 }
+
+/* Pulsing gold dot marker for engineer map pins (Leaflet divIcon) */
+.engineer-pulse-icon {
+  position: relative;
+}
+.engineer-pulse-icon .pulse-dot {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background: #D9A448;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(217, 164, 72, 0.9);
+}
+.engineer-pulse-icon .pulse-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(217, 164, 72, 0.5);
+  animation: engineer-pulse 1.8s ease-out infinite;
+}
+@keyframes engineer-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}

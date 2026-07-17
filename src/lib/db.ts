@@ -52,6 +52,8 @@ export async function markCustomerFirstBookingUsed(db: D1Database, customerId: n
 export interface CreateBookingParams {
   customerId: number
   engineerId: number
+  engineerProfileId?: number | null
+  customerUserId?: number | null
   serviceId: number
   sessionDate: string
   sessionTime: string
@@ -74,17 +76,19 @@ export async function createBooking(db: D1Database, p: CreateBookingParams) {
   const result = await db
     .prepare(
       `INSERT INTO bookings (
-        customer_id, engineer_id, service_id,
+        customer_id, engineer_id, engineer_profile_id, customer_user_id, service_id,
         session_date, session_time, duration_hours, is_custom_time_request,
         location_type, location_address, special_notes, song_count, genre,
         customer_name, customer_email, customer_phone,
         is_first_time_rate, price_amount, price_breakdown,
         status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       p.customerId,
       p.engineerId,
+      p.engineerProfileId ?? null,
+      p.customerUserId ?? null,
       p.serviceId,
       p.sessionDate,
       p.sessionTime,
@@ -105,6 +109,38 @@ export async function createBooking(db: D1Database, p: CreateBookingParams) {
     )
     .run()
   return result.meta.last_row_id as number
+}
+
+// "First time" is now scoped per-engineer: has this email ever booked with THIS
+// specific engineer profile before?
+export async function hasCustomerBookedEngineerBefore(
+  db: D1Database,
+  email: string,
+  engineerProfileId: number
+): Promise<boolean> {
+  const row = await db
+    .prepare('SELECT id FROM bookings WHERE customer_email = ? AND engineer_profile_id = ? LIMIT 1')
+    .bind(email.trim().toLowerCase(), engineerProfileId)
+    .first()
+  return !!row
+}
+
+export async function getBookingsByEngineerProfile(db: D1Database, engineerProfileId: number): Promise<Booking[]> {
+  const { results } = await db
+    .prepare('SELECT * FROM bookings WHERE engineer_profile_id = ? ORDER BY created_at DESC')
+    .bind(engineerProfileId)
+    .all()
+  return (results as unknown as Booking[]) || []
+}
+
+export async function getCompletedUnreviewedBookingsByEmail(db: D1Database, email: string): Promise<Booking[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT * FROM bookings WHERE customer_email = ? AND status = 'completed' AND reviewed = 0 AND engineer_profile_id IS NOT NULL ORDER BY session_date DESC`
+    )
+    .bind(email.trim().toLowerCase())
+    .all()
+  return (results as unknown as Booking[]) || []
 }
 
 export async function getBookingById(db: D1Database, id: number): Promise<Booking | null> {

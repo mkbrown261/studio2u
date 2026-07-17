@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 import { renderer } from './renderer'
 import type { AppEnv } from './types'
 import {
-  getEngineer,
   getServices,
   getServiceById,
   findCustomerByEmail,
@@ -13,9 +12,11 @@ import {
   getBookingsByEmail,
   getAllBookings,
   attachPaymentProof,
-  updateBookingStatus
+  updateBookingStatus,
+  hasCustomerBookedEngineerBefore
 } from './lib/db'
 import { calculatePrice, isWithinStandardAvailability } from './lib/pricing'
+import { getEngineerProfileById, getEngineerDisplayForBooking, getAllEngineersForAdmin, setEngineerSuspended } from './lib/db-engineers'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
@@ -24,21 +25,41 @@ import { StatusPage } from './pages/status'
 import { AdminLoginPage } from './pages/admin-login'
 import { AdminDashboardPage } from './pages/admin-dashboard'
 import { buildSessionCookie, buildClearCookie, expectedSessionToken, isAdminAuthenticated } from './lib/auth'
+import { authRoutes } from './routes/auth'
+import { dashboardRoutes } from './routes/dashboard'
+import { engineersRoutes } from './routes/engineers'
+import { reviewsRoutes } from './routes/reviews'
 
 const app = new Hono<AppEnv>()
 
 app.use(renderer)
 
+app.route('/', authRoutes)
+app.route('/', dashboardRoutes)
+app.route('/', engineersRoutes)
+app.route('/', reviewsRoutes)
+
 // ---------- Public marketing pages ----------
 
 app.get('/', async (c) => {
-  const engineer = await getEngineer(c.env.DB, 1)
   const services = await getServices(c.env.DB)
-  return c.render(<HomePage engineer={engineer} services={services} />, { title: 'Home' })
+  return c.render(<HomePage services={services} />, { title: 'Home' })
 })
 
+// Customer picks an engineer first (from the directory), then books that specific
+// engineer here. Pricing is pulled from that engineer's own profile, not a fixed rate.
+app.get('/book/:engineerId', async (c) => {
+  const engineerId = parseInt(c.req.param('engineerId'), 10)
+  const engineer = await getEngineerProfileById(c.env.DB, engineerId)
+  if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1) {
+    return c.notFound()
+  }
+  return c.render(<BookPage engineer={engineer} />, { title: `Book ${engineer.display_name}` })
+})
+
+// Legacy /book with no engineer picked — send them to the directory instead.
 app.get('/book', async (c) => {
-  return c.render(<BookPage />, { title: 'Book a Session' })
+  return c.redirect('/engineers')
 })
 
 // ---------- Booking API ----------
@@ -51,16 +72,25 @@ app.get('/api/availability-check', async (c) => {
 })
 
 app.get('/api/price-check', async (c) => {
+  const engineerId = parseInt(c.req.query('engineerId') || '', 10)
   const email = (c.req.query('email') || '').trim().toLowerCase()
   const duration = parseFloat(c.req.query('duration') || '3')
+
+  const engineer = await getEngineerProfileById(c.env.DB, engineerId)
+  if (!engineer) {
+    return c.json({ error: 'Engineer not found.' }, 404)
+  }
+
   let isFirstTime = true
   if (email) {
-    const customer = await findCustomerByEmail(c.env.DB, email)
-    if (customer && customer.is_first_booking_used === 1) {
-      isFirstTime = false
-    }
+    isFirstTime = !(await hasCustomerBookedEngineerBefore(c.env.DB, email, engineer.id))
   }
-  const price = calculatePrice(duration, isFirstTime)
+
+  const price = calculatePrice(duration, isFirstTime, {
+    hourlyRate: engineer.hourly_rate,
+    firstTimeDiscountAmount: engineer.first_time_discount_amount,
+    firstTimeDiscountHours: engineer.first_time_discount_hours
+  })
   return c.json(price)
 })
 
@@ -68,6 +98,7 @@ app.post('/api/bookings', async (c) => {
   try {
     const body = await c.req.json()
     const {
+      engineerId,
       sessionDate,
       sessionTime,
       durationHours,
@@ -78,12 +109,25 @@ app.post('/api/bookings', async (c) => {
       genre,
       customerName,
       customerEmail,
-      customerPhone,
-      serviceSlug
+      customerPhone
     } = body
 
-    if (!sessionDate || !sessionTime || !durationHours || !locationType || !customerName || !customerEmail || !customerPhone) {
+    if (
+      !engineerId ||
+      !sessionDate ||
+      !sessionTime ||
+      !durationHours ||
+      !locationType ||
+      !customerName ||
+      !customerEmail ||
+      !customerPhone
+    ) {
       return c.json({ error: 'Missing required fields.' }, 400)
+    }
+
+    const engineer = await getEngineerProfileById(c.env.DB, parseInt(engineerId, 10))
+    if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1) {
+      return c.json({ error: 'This engineer is not available for booking.' }, 404)
     }
 
     const service = await getServiceById(c.env.DB, 1) // Recording — the only bookable service in V1
@@ -92,7 +136,7 @@ app.post('/api/bookings', async (c) => {
     }
 
     const existingCustomer = await findCustomerByEmail(c.env.DB, customerEmail)
-    const isFirstTime = !existingCustomer || existingCustomer.is_first_booking_used === 0
+    const isFirstTimeWithEngineer = !(await hasCustomerBookedEngineerBefore(c.env.DB, customerEmail, engineer.id))
 
     const customerId = await upsertCustomer(c.env.DB, {
       email: customerEmail,
@@ -100,12 +144,17 @@ app.post('/api/bookings', async (c) => {
       phone: customerPhone
     })
 
-    const price = calculatePrice(parseFloat(durationHours), isFirstTime)
+    const price = calculatePrice(parseFloat(durationHours), isFirstTimeWithEngineer, {
+      hourlyRate: engineer.hourly_rate,
+      firstTimeDiscountAmount: engineer.first_time_discount_amount,
+      firstTimeDiscountHours: engineer.first_time_discount_hours
+    })
     const isCustomTimeRequest = !isWithinStandardAvailability(sessionDate, sessionTime)
 
     const bookingId = await createBooking(c.env.DB, {
       customerId,
-      engineerId: 1,
+      engineerId: 1, // legacy FK kept for backward compat; real routing uses engineerProfileId
+      engineerProfileId: engineer.id,
       serviceId: service.id,
       sessionDate,
       sessionTime,
@@ -124,7 +173,7 @@ app.post('/api/bookings', async (c) => {
       priceBreakdown: price.breakdown
     })
 
-    if (isFirstTime) {
+    if (!existingCustomer) {
       await markCustomerFirstBookingUsed(c.env.DB, customerId)
     }
 
@@ -139,8 +188,8 @@ app.get('/book/confirmation/:id', async (c) => {
   const id = parseInt(c.req.param('id'), 10)
   const booking = await getBookingById(c.env.DB, id)
   if (!booking) return c.notFound()
-  const engineer = await getEngineer(c.env.DB, booking.engineer_id)
-  return c.render(<ConfirmationPage booking={booking} engineer={engineer} />, { title: 'Booking Confirmed' })
+  const engineerDisplay = await getEngineerDisplayForBooking(c.env.DB, booking)
+  return c.render(<ConfirmationPage booking={booking} engineerDisplay={engineerDisplay} />, { title: 'Booking Confirmed' })
 })
 
 // ---------- Payment proof upload ----------
@@ -149,15 +198,15 @@ app.get('/book/pay/:id', async (c) => {
   const id = parseInt(c.req.param('id'), 10)
   const booking = await getBookingById(c.env.DB, id)
   if (!booking) return c.notFound()
-  const engineer = await getEngineer(c.env.DB, booking.engineer_id)
-  return c.render(<PayPage booking={booking} engineer={engineer} />, { title: 'Submit Payment' })
+  const engineerDisplay = await getEngineerDisplayForBooking(c.env.DB, booking)
+  return c.render(<PayPage booking={booking} engineerDisplay={engineerDisplay} />, { title: 'Submit Payment' })
 })
 
 app.post('/book/pay/:id', async (c) => {
   const id = parseInt(c.req.param('id'), 10)
   const booking = await getBookingById(c.env.DB, id)
   if (!booking) return c.notFound()
-  const engineer = await getEngineer(c.env.DB, booking.engineer_id)
+  const engineerDisplay = await getEngineerDisplayForBooking(c.env.DB, booking)
 
   const formData = await c.req.formData()
   const file = formData.get('proof') as File | null
@@ -165,7 +214,7 @@ app.post('/book/pay/:id', async (c) => {
 
   if (!file && !transactionId) {
     return c.render(
-      <PayPage booking={booking} engineer={engineer} error="Please upload a screenshot or enter a transaction ID." />,
+      <PayPage booking={booking} engineerDisplay={engineerDisplay} error="Please upload a screenshot or enter a transaction ID." />,
       { title: 'Submit Payment' }
     )
   }
@@ -175,7 +224,7 @@ app.post('/book/pay/:id', async (c) => {
     const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf']
     if (!allowedTypes.includes(file.type)) {
       return c.render(
-        <PayPage booking={booking} engineer={engineer} error="File must be PNG, JPEG, or PDF." />,
+        <PayPage booking={booking} engineerDisplay={engineerDisplay} error="File must be PNG, JPEG, or PDF." />,
         { title: 'Submit Payment' }
       )
     }
@@ -252,10 +301,17 @@ app.use('/admin/proof/*', async (c, next) => {
   await next()
 })
 
+app.use('/admin/engineers/*', async (c, next) => {
+  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  if (!authed) return c.redirect('/admin/login')
+  await next()
+})
+
 app.get('/admin', async (c) => {
   const statusFilter = c.req.query('status') || 'all'
   const bookings = await getAllBookings(c.env.DB, statusFilter)
-  return c.render(<AdminDashboardPage bookings={bookings} statusFilter={statusFilter} />, { title: 'Admin Dashboard' })
+  const engineers = await getAllEngineersForAdmin(c.env.DB)
+  return c.render(<AdminDashboardPage bookings={bookings} statusFilter={statusFilter} engineers={engineers} />, { title: 'Admin Dashboard' })
 })
 
 app.post('/admin/bookings/:id/status', async (c) => {
@@ -282,6 +338,16 @@ app.get('/admin/proof/:id', async (c) => {
       'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream'
     }
   })
+})
+
+// Platform-oversight kill switch — suspend/reactivate any engineer profile. Separate
+// from each engineer's own booking approval flow (Option A payment routing).
+app.post('/admin/engineers/:id/suspend', async (c) => {
+  const id = parseInt(c.req.param('id'), 10)
+  const body = await c.req.parseBody()
+  const suspended = body['suspended'] === '1'
+  await setEngineerSuspended(c.env.DB, id, suspended)
+  return c.redirect('/admin?tab=engineers')
 })
 
 export default app
