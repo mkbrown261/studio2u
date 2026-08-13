@@ -84,23 +84,32 @@ export function EngineerProfilePage({
           {(profile.mic_spec || profile.daw_spec || profile.interface_spec) ? (
             <>
               <h2 class="font-display text-xl font-bold mb-3">Equipment</h2>
-              <div class="space-y-2.5 mb-4">
+              <div class="grid sm:grid-cols-2 gap-3 mb-4">
                 {profile.mic_spec && (
-                  <div class="flex items-center gap-3">
-                    <img src="/static/brand/icon-mic-64.png" alt="Microphone" class="w-6 h-6 object-contain shrink-0" />
-                    <span class="text-muted">{profile.mic_spec}</span>
+                  <div class="flex items-center gap-4 bg-ink/50 border border-gold/10 rounded-xl px-4 py-3.5">
+                    <img src="/static/brand/icon-mic-128.png" alt="Microphone" class="w-12 h-12 object-contain shrink-0" />
+                    <div>
+                      <div class="text-xs text-gold uppercase tracking-wide font-semibold mb-0.5">Microphone</div>
+                      <div class="text-cream text-sm leading-snug">{profile.mic_spec}</div>
+                    </div>
                   </div>
                 )}
                 {profile.daw_spec && (
-                  <div class="flex items-center gap-3">
-                    <img src="/static/brand/icon-daw-64.png" alt="DAW" class="w-6 h-6 object-contain shrink-0" />
-                    <span class="text-muted">{profile.daw_spec}</span>
+                  <div class="flex items-center gap-4 bg-ink/50 border border-gold/10 rounded-xl px-4 py-3.5">
+                    <img src="/static/brand/icon-daw-128.png" alt="DAW" class="w-12 h-12 object-contain shrink-0" />
+                    <div>
+                      <div class="text-xs text-gold uppercase tracking-wide font-semibold mb-0.5">DAW</div>
+                      <div class="text-cream text-sm leading-snug">{profile.daw_spec}</div>
+                    </div>
                   </div>
                 )}
                 {profile.interface_spec && (
-                  <div class="flex items-center gap-3">
-                    <img src="/static/brand/icon-interface-64.png" alt="Audio Interface" class="w-6 h-6 object-contain shrink-0" />
-                    <span class="text-muted">{profile.interface_spec}</span>
+                  <div class="flex items-center gap-4 bg-ink/50 border border-gold/10 rounded-xl px-4 py-3.5">
+                    <img src="/static/brand/icon-interface-128.png" alt="Audio Interface" class="w-12 h-12 object-contain shrink-0" />
+                    <div>
+                      <div class="text-xs text-gold uppercase tracking-wide font-semibold mb-0.5">Audio Interface</div>
+                      <div class="text-cream text-sm leading-snug">{profile.interface_spec}</div>
+                    </div>
                   </div>
                 )}
               </div>

@@ -76,7 +76,7 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
 
           <div>
             <label class="flex items-center gap-2 text-sm font-medium text-muted mb-2">
-              <img src="/static/brand/icon-mic-64.png" alt="" class="w-5 h-5 object-contain" />
+              <img src="/static/brand/icon-mic-64.png" alt="" class="w-7 h-7 object-contain" />
               Microphone
             </label>
             <input type="text" name="mic_spec" placeholder="e.g. Neumann TLM 103" value={profile?.mic_spec || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
@@ -84,7 +84,7 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
 
           <div>
             <label class="flex items-center gap-2 text-sm font-medium text-muted mb-2">
-              <img src="/static/brand/icon-daw-64.png" alt="" class="w-5 h-5 object-contain" />
+              <img src="/static/brand/icon-daw-64.png" alt="" class="w-7 h-7 object-contain" />
               DAW
             </label>
             <input type="text" name="daw_spec" placeholder="e.g. Pro Tools, Logic Pro, Ableton" value={profile?.daw_spec || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
@@ -92,7 +92,7 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
 
           <div>
             <label class="flex items-center gap-2 text-sm font-medium text-muted mb-2">
-              <img src="/static/brand/icon-interface-64.png" alt="" class="w-5 h-5 object-contain" />
+              <img src="/static/brand/icon-interface-64.png" alt="" class="w-7 h-7 object-contain" />
               Audio Interface
             </label>
             <input type="text" name="interface_spec" placeholder="e.g. Universal Audio Apollo Twin" value={profile?.interface_spec || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />

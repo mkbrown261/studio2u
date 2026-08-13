@@ -13,7 +13,9 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
           name="description"
           content="Studio2U is mobile recording. Book a professional recording engineer to come record your session tonight — no studio required."
         />
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/brand/favicon-16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/static/brand/favicon-48.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/static/brand/favicon-180.png" />
 
         <script src="https://cdn.tailwindcss.com"></script>
