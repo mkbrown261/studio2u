@@ -77,12 +77,11 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - Type-check cleanup: `tsconfig.json` lacks `@cloudflare/workers-types`/DOM lib, so `tsc --noEmit` reports many pre-existing type errors. These do not block the Vite/Wrangler build (the actual deploy pipeline) and were consciously left as-is.
 
 ## Recommended Next Steps
-1. **Deploy this build**: apply `migrations/0006_engineer_availability.sql` to the remote D1 (`npx wrangler d1 migrations apply studio2u-production --remote`) and run `wrangler pages deploy` — both are pending a valid Cloudflare API token (the previously configured one expired mid-session; see Deployment section below).
-2. Build **M4** — Resend transactional email (booking confirmation, status-change notifications), starting with a test/sandbox sender.
-3. Build **M5** — Stripe Connect: mandatory engineer onboarding, live commission split via `splitCommission()`, remove the Cash App payment-proof flow entirely once Stripe is live.
-4. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
-5. Add self-service reschedule/cancel requests from the customer status page.
-6. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
+1. Build **M4** — Resend transactional email (booking confirmation, status-change notifications), starting with a test/sandbox sender.
+2. Build **M5** — Stripe Connect: mandatory engineer onboarding, live commission split via `splitCommission()`, remove the Cash App payment-proof flow entirely once Stripe is live.
+3. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
+4. Add self-service reschedule/cancel requests from the customer status page.
+5. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
 
 ## Data Architecture
 - **Storage**: Cloudflare D1 (SQLite) for relational data; Cloudflare R2 for engineer photos/equipment images and payment-proof uploads.
@@ -103,5 +102,5 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - **Platform**: Cloudflare Pages (Workers) — user's own Cloudflare account (BYOK)
 - **Production URL**: https://studio2u.pages.dev
 - **Tech Stack**: Hono + TypeScript + TailwindCSS (CDN) + Leaflet/OpenStreetMap (CDN) + Cloudflare D1 + Cloudflare R2
-- **Status**: ⚠️ Production is on the M2 build. M1–M3 code is complete, built, and fully tested locally (including against local D1), but **not yet deployed** — the Cloudflare API token configured for this project expired mid-session. A fresh token needs to be entered in the Deploy tab before `wrangler d1 migrations apply --remote` and `wrangler pages deploy` can run.
+- **Status**: ✅ Production is live on the M1–M3 build (migration `0006_engineer_availability.sql` applied to remote D1; `wrangler pages deploy` completed and confirmed as the current Production deployment on `main`). Verified directly against `https://studio2u.pages.dev`: favicon links (16/32/48/180), the equipment-icon card grid on the one live engineer profile, and `/api/available-slots` all serve correctly.
 - **Admin password**: Set as the `ADMIN_PASSWORD` Cloudflare secret (not stored in code/repo). Rotate anytime with `wrangler pages secret put ADMIN_PASSWORD --project-name studio2u`.
