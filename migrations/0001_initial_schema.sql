@@ -101,7 +101,7 @@ VALUES (
 
 -- Seed: services
 INSERT OR IGNORE INTO services (id, slug, name, description, is_bookable, base_rate_note, sort_order) VALUES
-  (1, 'recording', 'Mobile Recording', 'Professional vocal recording session at your location — apartment, house, hotel, or studio.', 1, '$40/hour · First session $100 for 3 hours', 1),
+  (1, 'recording', 'Mobile Recording', 'Professional vocal recording session at your location — apartment, house, hotel, or studio.', 1, 'Rates vary by engineer', 1),
   (2, 'mixing', 'Mixing', 'Full mix of your recorded tracks, balanced and polished for release.', 0, 'Contact for pricing', 2),
   (3, 'mastering', 'Mastering', 'Final polish and loudness/EQ mastering so your track is ready for streaming platforms.', 0, 'Contact for pricing', 3),
   (4, 'songwriting', 'Songwriting', 'Collaborative songwriting and topline help for your next record.', 0, 'Contact for pricing', 4),

@@ -125,7 +125,6 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
               <h4 class="font-semibold text-cream mb-3 text-sm uppercase tracking-wider">Contact</h4>
               <ul class="space-y-2 text-sm text-muted">
                 <li><i class="fa-solid fa-envelope mr-2 text-gold"></i>booking@studio2u.com</li>
-                <li><i class="fa-brands fa-square-cash mr-2 text-gold"></i>$KEYZGMG</li>
                 <li><i class="fa-solid fa-location-dot mr-2 text-gold"></i>Mobile — we come to you</li>
               </ul>
             </div>
