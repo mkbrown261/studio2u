@@ -106,11 +106,6 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-muted mb-2">Cash App Handle</label>
-          <input type="text" name="cashapp_handle" required placeholder="$YourCashApp" value={profile?.cashapp_handle || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
-        </div>
-
-        <div>
           <label class="block text-sm font-medium text-muted mb-2">Location (City, State or Zip)</label>
           <input type="text" name="location_label" required placeholder="e.g. Atlanta, GA" value={profile?.location_label || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
           <p class="text-xs text-muted mt-1.5">We only show a rough, fuzzed pin on the map (1-2 miles off) — never your exact address.</p>

@@ -89,7 +89,7 @@ export function AdminDashboardPage({
       <section class="mb-14">
         <h2 class="font-display text-xl font-bold mb-4">Engineers</h2>
         <p class="text-muted text-sm mb-5">
-          Each engineer approves their own bookings and gets paid directly via their own Cash App. This panel is for
+          Each engineer approves their own bookings and gets paid automatically via Stripe Connect. This panel is for
           platform oversight only — suspend an engineer to instantly pull them off the public directory.
         </p>
         {engineers.length === 0 ? (
@@ -207,20 +207,10 @@ export function AdminDashboardPage({
 
               <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gold/10 pt-4">
                 <div class="flex items-center gap-3 text-sm">
-                  {b.payment_proof_url && (
-                    <a
-                      href={`/admin/proof/${b.id}`}
-                      target="_blank"
-                      class="inline-flex items-center gap-2 text-gold hover:underline font-medium"
-                    >
-                      <i class="fa-solid fa-receipt"></i> View Payment Proof
-                    </a>
-                  )}
-                  {b.payment_transaction_id && (
-                    <span class="text-muted">TXN: {b.payment_transaction_id}</span>
-                  )}
-                  {!b.payment_proof_url && !b.payment_transaction_id && (
-                    <span class="text-muted italic">No payment proof submitted yet</span>
+                  {b.stripe_payment_intent_id ? (
+                    <span class="text-muted"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Paid via Stripe</span>
+                  ) : (
+                    <span class="text-muted italic">Awaiting Stripe payment</span>
                   )}
                 </div>
 

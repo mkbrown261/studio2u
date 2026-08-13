@@ -45,7 +45,7 @@ export function HomePage({ services }: { services: Service[] }) {
         <div class="grid md:grid-cols-4 gap-6">
           {[
             { icon: 'fa-calendar-check', title: 'Book', desc: 'Pick your date, time, and location in under 2 minutes.' },
-            { icon: 'fa-mobile-screen-button', title: 'Pay Deposit', desc: 'Send your Cash App deposit and upload your confirmation.' },
+            { icon: 'fa-mobile-screen-button', title: 'Pay Securely', desc: 'Pay instantly through Stripe checkout — your session is confirmed the moment payment clears.' },
             { icon: 'fa-van-shuttle', title: 'We Show Up', desc: 'Your engineer arrives with professional gear, sets up at your location.' },
             { icon: 'fa-record-vinyl', title: 'Record', desc: 'Record your session, then we break down and leave. Simple.' }
           ].map((step, i) => (
@@ -196,7 +196,7 @@ export function HomePage({ services }: { services: Service[] }) {
         </div>
         <div class="space-y-3">
           {[
-            { q: 'How does payment work?', a: 'After you book, you\'ll get Cash App deposit instructions. Send your deposit, upload a screenshot or transaction ID, and your booking moves to pending approval. Once we confirm your payment, your session is locked in.' },
+            { q: 'How does payment work?', a: 'After you book, you\'ll be sent straight to a secure Stripe checkout page to pay for your session. Once payment clears, your booking is confirmed automatically — no waiting on manual approval.' },
             { q: 'What if I need a time outside Monday–Friday, 11am–11pm?', a: 'You can still submit a booking request for those times — it\'ll be flagged as a special request and we\'ll reach out to confirm availability directly instead of auto-confirming.' },
             { q: 'What locations do you record at?', a: 'Apartments, houses, hotel rooms, rented studios — wherever you have a quiet-ish space. We travel up to 30 miles; further out, just ask.' },
             { q: 'Do I need my own equipment?', a: 'No. We bring professional mics, an audio interface, headphones, and everything needed for a clean vocal recording session.' },

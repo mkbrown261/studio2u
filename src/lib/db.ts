@@ -168,24 +168,6 @@ export async function getAllBookings(db: D1Database, statusFilter?: string): Pro
   return (results as unknown as Booking[]) || []
 }
 
-export async function attachPaymentProof(
-  db: D1Database,
-  bookingId: number,
-  params: { proofUrl?: string; transactionId?: string }
-) {
-  await db
-    .prepare(
-      `UPDATE bookings SET
-        payment_proof_url = COALESCE(?, payment_proof_url),
-        payment_transaction_id = COALESCE(?, payment_transaction_id),
-        status = 'pending_approval',
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?`
-    )
-    .bind(params.proofUrl || null, params.transactionId || null, bookingId)
-    .run()
-}
-
 // ---------- Stripe Connect payments (Phase 3 M5) ----------
 
 // Stashes the Checkout Session id the moment we create it, so a booking can always be

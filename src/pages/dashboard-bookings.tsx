@@ -85,13 +85,11 @@ export function DashboardBookingsPage({ bookings }: { bookings: Booking[] }) {
 
               <div class="flex flex-wrap items-center justify-between gap-4 border-t border-gold/10 pt-4">
                 <div class="flex items-center gap-3 text-sm">
-                  {b.payment_proof_url && (
-                    <a href={`/dashboard/bookings/${b.id}/proof`} target="_blank" class="inline-flex items-center gap-2 text-gold hover:underline font-medium">
-                      <i class="fa-solid fa-receipt"></i> View Payment Proof
-                    </a>
+                  {b.stripe_payment_intent_id ? (
+                    <span class="text-muted"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Paid via Stripe</span>
+                  ) : (
+                    <span class="text-muted italic">Awaiting Stripe payment</span>
                   )}
-                  {b.payment_transaction_id && <span class="text-muted">TXN: {b.payment_transaction_id}</span>}
-                  {!b.payment_proof_url && !b.payment_transaction_id && <span class="text-muted italic">No payment proof submitted yet</span>}
                 </div>
 
                 <form method="POST" action={`/dashboard/bookings/${b.id}/status`} class="flex gap-2 flex-wrap">

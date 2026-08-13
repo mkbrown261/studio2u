@@ -98,10 +98,14 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
   const micSpec = ((formData.get('mic_spec') as string) || '').trim()
   const dawSpec = ((formData.get('daw_spec') as string) || '').trim()
   const interfaceSpec = ((formData.get('interface_spec') as string) || '').trim()
-  const cashappHandle = ((formData.get('cashapp_handle') as string) || '').trim()
+  // cashapp_handle is no longer collected on this form — Phase 3 M5 replaced the Cash
+  // App deposit flow with mandatory Stripe Connect onboarding (see /dashboard/payments).
+  // Preserve whatever value an existing pre-M5 profile already has (shown historically
+  // on old bookings only); never blank it out, but never require or re-collect it either.
+  const cashappHandle = existing?.cashapp_handle || ''
   const locationLabel = ((formData.get('location_label') as string) || '').trim()
 
-  if (!displayName || !bio || !cashappHandle || !locationLabel) {
+  if (!displayName || !bio || !locationLabel) {
     return c.render(<DashboardProfilePage profile={existing} error="Please fill out all required fields." />, { title: 'Your Profile' })
   }
 

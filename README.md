@@ -56,8 +56,11 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 | `/api/available-slots?engineerId=&date=` | GET | Returns `{ hours: number[] }` — every open start hour for that engineer on that date (weekly template + overrides, minus already-booked hours) |
 | `/api/price-check?engineerId=&email=&duration=` | GET | Returns `{ amount, breakdown, isFirstTimeRate }` for that engineer |
 | `/api/bookings` | POST (JSON) | Creates a booking (`engineerId` required); server re-validates the slot is still open and returns 409 if not, otherwise returns `{ bookingId }` |
-| `/book/confirmation/:id` | GET | Post-booking confirmation + that engineer's Cash App instructions |
-| `/book/pay/:id` | GET/POST | Upload payment screenshot or transaction ID |
+| `/book/confirmation/:id` | GET | Post-booking confirmation page — shows "confirming payment" (self-polls) until the Stripe webhook flips the booking to `confirmed` |
+| `/api/bookings/:id/status` | GET | Lightweight status poll used by the confirmation page while waiting on the Stripe webhook |
+| `/api/stripe/webhook` | POST | Stripe webhook endpoint — verifies signature, confirms bookings on `checkout.session.completed` |
+| `/dashboard/payments` | GET | Engineer's Stripe Connect onboarding status page |
+| `/dashboard/payments/connect` | POST | Creates (or resumes) the engineer's Stripe Connect account + onboarding link, redirects to Stripe |
 | `/review/:id?email=` | GET/POST | Leave a mic-rating review for a completed, unreviewed booking |
 | `/status?email=` | GET | Customer's booking history + live status + review prompts |
 | `/admin/login` | GET/POST | Admin password login |
@@ -69,7 +72,6 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 
 ## Features Not Yet Implemented
 - **M4 — Resend email** (transactional emails: booking confirmations, status updates) — not started. Test/sandbox sender approved for initial rollout.
-- **M5 — Stripe Connect** — automated customer payments, live commission split via `splitCommission()`, automatic engineer payouts, **mandatory engineer onboarding (no more Cash App fallback)**. Blocked on Stripe API keys. Cash App remains the only payment path until this ships.
 - Password reset / email verification (simple email+password only, by design for now)
 - Reschedule / cancel self-service (still goes through the engineer or admin)
 - Messaging between customer and engineer
@@ -78,14 +80,14 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 
 ## Recommended Next Steps
 1. Build **M4** — Resend transactional email (booking confirmation, status-change notifications), starting with a test/sandbox sender.
-2. Build **M5** — Stripe Connect: mandatory engineer onboarding, live commission split via `splitCommission()`, remove the Cash App payment-proof flow entirely once Stripe is live.
+2. Each existing/new engineer must click through Stripe's hosted onboarding link (`/dashboard/payments` → "Connect with Stripe") to actually activate their connected account — this is a real identity/bank-account form on Stripe's side and can't be skipped or scripted, even in test mode.
 3. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
 4. Add self-service reschedule/cancel requests from the customer status page.
 5. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
 
 ## Data Architecture
 - **Storage**: Cloudflare D1 (SQLite) for relational data; Cloudflare R2 for engineer photos/equipment images and payment-proof uploads.
-- **Tables**: `engineers` (legacy Phase 1 seed, kept for FK back-compat), `services`, `customers`, `bookings`, `users`, `sessions`, `engineer_profiles`, `portfolio_items`, `reviews`, `platform_settings` (M1), `engineer_availability` + `engineer_availability_overrides` (M3) — see `migrations/0001` through `0006`.
+- **Tables**: `engineers` (legacy Phase 1 seed, kept for FK back-compat), `services`, `customers`, `bookings`, `users`, `sessions`, `engineer_profiles`, `portfolio_items`, `reviews`, `platform_settings` (M1), `engineer_availability` + `engineer_availability_overrides` (M3) — see `migrations/0001` through `0007`. `engineer_profiles.stripe_account_id/stripe_onboarding_complete/stripe_charges_enabled` and `bookings.stripe_payment_intent_id/stripe_checkout_session_id/platform_fee_amount/engineer_payout_amount` were added in `migrations/0007_stripe_connect.sql` (M5).
 - **Availability model** (M3): `engineer_availability` is the weekly recurring template (`day_of_week` 0–6, `hour` 0–23 = "open to start a session at this hour on this weekday"). `engineer_availability_overrides` holds one-off exceptions for a specific `date` (force-open or force-close a given hour). An engineer with zero rows in `engineer_availability` hasn't customized their calendar yet and falls back to the legacy default (Mon–Fri, hours 11–22) — see `src/lib/db-availability.ts`. Actual booked-slot blocking is derived live from `bookings` (any row not `cancelled`/`rejected` occupies its hour range) rather than stored in a separate table, so a slot blocks the instant it's booked and frees automatically if the booking is cancelled.
 - **Pricing model**: `calculatePrice(durationHours, isFirstTimeWithThisEngineer, rate)` where `rate` is pulled from the specific `engineer_profiles` row being booked; "first time" is determined per (customer email, engineer) pair via `hasCustomerBookedEngineerBefore`.
 - **Location privacy**: engineers type a city/zip; it's geocoded once (Nominatim) and jittered 1–2 miles before being stored in `engineer_profiles.lat/lng`. The exact typed location and any street address are never stored or shown publicly.
@@ -95,12 +97,14 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - **To become an engineer**: Sign up at `/signup` (check "I'm an engineer"), then fill out your profile at `/dashboard/profile` — it publishes instantly. Add portfolio links at `/dashboard/portfolio`.
 - **To manage your bookings as an engineer**: `/dashboard/bookings` — approve, reject, or mark sessions completed; view uploaded payment proof.
 - **To leave a review**: after a session is marked completed, go to `/status` (enter the email you booked with) and use the "Leave a Review" link, or use the direct `/review/:id` link.
-- **To pay your deposit**: Send the amount shown to the engineer's Cash App handle (shown on the confirmation/pay page), then upload your screenshot or transaction ID.
+- **To pay for your session**: After booking, you're sent straight to a secure Stripe Checkout page. Pay there and your booking confirms automatically within a few seconds (no Cash App, no manual approval step).
 - **Admin**: Go to `/admin/login`, enter the admin password (set via the `ADMIN_PASSWORD` secret) to see all bookings across engineers, or `/admin/engineers` to suspend/reactivate an engineer's public profile.
 
 ## Deployment
 - **Platform**: Cloudflare Pages (Workers) — user's own Cloudflare account (BYOK)
 - **Production URL**: https://studio2u.pages.dev
 - **Tech Stack**: Hono + TypeScript + TailwindCSS (CDN) + Leaflet/OpenStreetMap (CDN) + Cloudflare D1 + Cloudflare R2
-- **Status**: ✅ Production is live on the M1–M3 build (migration `0006_engineer_availability.sql` applied to remote D1; `wrangler pages deploy` completed and confirmed as the current Production deployment on `main`). Verified directly against `https://studio2u.pages.dev`: favicon links (16/32/48/180), the equipment-icon card grid on the one live engineer profile, and `/api/available-slots` all serve correctly.
+- **Status**: ✅ Production is live through **M5 (Stripe Connect, test mode)**. Migration `0007_stripe_connect.sql` applied to remote D1; `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set as Cloudflare Pages production secrets; a live Stripe webhook endpoint is registered against `https://studio2u.pages.dev/api/stripe/webhook`. The full booking→Checkout→webhook→auto-confirm flow was verified with a synthetic signed webhook event (booking correctly flipped `pending_payment` → `confirmed` with `stripe_payment_intent_id` recorded).
+- **⚠️ Action needed before engineers can get booked**: every engineer (including the seeded Mason Brown profile) must click "Connect with Stripe" on `/dashboard/payments` and complete Stripe's hosted onboarding form (identity, bank account, ToS) — Stripe requires this real hosted-UI step for Express accounts and blocks it from being completed via API, even in test mode. Until an engineer finishes it, `stripe_charges_enabled` stays `0` and they won't appear as bookable.
+- **Stripe API version**: Uses Stripe's Accounts v2 API (`stripe.v2.core.accounts`, `stripe.v2.core.accountLinks`) — the current, non-deprecated Connect account-creation surface (v1 `stripe.accounts.create()` is blocked by Stripe for new Connect platforms). See `src/lib/stripe.ts` for details.
 - **Admin password**: Set as the `ADMIN_PASSWORD` Cloudflare secret (not stored in code/repo). Rotate anytime with `wrangler pages secret put ADMIN_PASSWORD --project-name studio2u`.
