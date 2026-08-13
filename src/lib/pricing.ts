@@ -51,17 +51,3 @@ export function calculatePrice(
   }
 }
 
-// Availability window: Mon-Fri, 11:00-23:00. Anything outside is flagged as a
-// special request that requires manual confirmation rather than auto-accepting.
-export function isWithinStandardAvailability(dateStr: string, timeStr: string): boolean {
-  const date = new Date(`${dateStr}T00:00:00`)
-  const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
-  if (dayOfWeek === 0 || dayOfWeek === 6) return false
-
-  const [hourStr] = timeStr.split(':')
-  const hour = parseInt(hourStr, 10)
-  if (Number.isNaN(hour)) return false
-
-  // Session must start between 11:00 and 22:59 (last hour starting before 11pm)
-  return hour >= 11 && hour < 23
-}

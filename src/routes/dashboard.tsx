@@ -11,10 +11,19 @@ import {
 import { getBookingsByEngineerProfile, updateBookingStatus, getBookingById } from '../lib/db'
 import { setUserRoles } from '../lib/db-users'
 import { geocodeLocation, jitterCoordinate } from '../lib/geocode'
+import {
+  getWeeklyAvailability,
+  setWeeklyAvailability,
+  getOverridesForDate,
+  setOverridesForDate,
+  deleteOverrideDate,
+  getUpcomingOverrides
+} from '../lib/db-availability'
 import { DashboardHomePage } from '../pages/dashboard-home'
 import { DashboardProfilePage } from '../pages/dashboard-profile'
 import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
 import { DashboardBookingsPage } from '../pages/dashboard-bookings'
+import { DashboardAvailabilityPage } from '../pages/dashboard-availability'
 import { BecomeEngineerPage } from '../pages/dashboard-become-engineer'
 
 export const dashboardRoutes = new Hono<AppEnv>()
@@ -221,6 +230,139 @@ dashboardRoutes.post('/dashboard/bookings/:id/status', async (c) => {
     await updateBookingStatus(c.env.DB, bookingId, status)
   }
   return c.redirect('/dashboard/bookings')
+})
+
+// ---------- Availability calendar ----------
+
+dashboardRoutes.get('/dashboard/availability', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const weekly = await getWeeklyAvailability(c.env.DB, profile.id)
+  const overrideDate = c.req.query('override_date') || ''
+  const overrideHours = new Set<number>()
+  if (overrideDate) {
+    const overrides = await getOverridesForDate(c.env.DB, profile.id, overrideDate)
+    // Seed the checkbox grid with the effective open hours for that date: start
+    // from the weekly template for that day-of-week, then apply overrides.
+    const dow = new Date(`${overrideDate}T00:00:00`).getDay()
+    for (const h of weekly[dow] || []) overrideHours.add(h)
+    for (const o of overrides) {
+      if (o.isAvailable) overrideHours.add(o.hour)
+      else overrideHours.delete(o.hour)
+    }
+  }
+  const today = new Date().toISOString().split('T')[0]
+  const upcoming = await getUpcomingOverrides(c.env.DB, profile.id, today)
+  const upcomingDates = Array.from(new Set(upcoming.map((o) => o.date))).sort()
+
+  return c.render(
+    <DashboardAvailabilityPage
+      weekly={weekly}
+      overrideDate={overrideDate}
+      overrideHours={overrideHours}
+      upcomingOverrideDates={upcomingDates}
+    />,
+    { title: 'Your Availability' }
+  )
+})
+
+dashboardRoutes.post('/dashboard/availability', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const body = await c.req.parseBody({ all: true })
+  const raw = body['slot']
+  const values = Array.isArray(raw) ? raw : raw ? [raw] : []
+  const slots = (values as string[])
+    .map((v) => {
+      const [dayStr, hourStr] = v.split('-')
+      return { dayOfWeek: parseInt(dayStr, 10), hour: parseInt(hourStr, 10) }
+    })
+    .filter((s) => !Number.isNaN(s.dayOfWeek) && !Number.isNaN(s.hour))
+
+  await setWeeklyAvailability(c.env.DB, profile.id, slots)
+
+  const weekly = await getWeeklyAvailability(c.env.DB, profile.id)
+  const today = new Date().toISOString().split('T')[0]
+  const upcoming = await getUpcomingOverrides(c.env.DB, profile.id, today)
+  const upcomingDates = Array.from(new Set(upcoming.map((o) => o.date))).sort()
+
+  return c.render(
+    <DashboardAvailabilityPage
+      weekly={weekly}
+      overrideDate=""
+      overrideHours={new Set()}
+      upcomingOverrideDates={upcomingDates}
+      success="Weekly availability saved."
+    />,
+    { title: 'Your Availability' }
+  )
+})
+
+dashboardRoutes.post('/dashboard/availability/override', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const body = await c.req.parseBody({ all: true })
+  const overrideDate = (body['override_date'] as string) || ''
+  const raw = body['ohour']
+  const values = Array.isArray(raw) ? raw : raw ? [raw] : []
+  const openHours = new Set((values as string[]).map((v) => parseInt(v, 10)).filter((n) => !Number.isNaN(n)))
+
+  if (overrideDate) {
+    const weekly = await getWeeklyAvailability(c.env.DB, profile.id)
+    const dow = new Date(`${overrideDate}T00:00:00`).getDay()
+    const templateOpen = new Set(weekly[dow] || [])
+
+    // Only store rows where the override actually DIFFERS from the weekly
+    // template (is_available=1 for hours opened beyond the template, =0 for
+    // hours in the template that got closed for this date).
+    const overrides: Array<{ hour: number; isAvailable: boolean }> = []
+    for (const h of Array.from({ length: 24 }, (_, i) => i)) {
+      const inTemplate = templateOpen.has(h)
+      const inSelection = openHours.has(h)
+      if (inSelection && !inTemplate) overrides.push({ hour: h, isAvailable: true })
+      if (!inSelection && inTemplate) overrides.push({ hour: h, isAvailable: false })
+    }
+    await setOverridesForDate(c.env.DB, profile.id, overrideDate, overrides)
+  }
+
+  const weekly = await getWeeklyAvailability(c.env.DB, profile.id)
+  const today = new Date().toISOString().split('T')[0]
+  const upcoming = await getUpcomingOverrides(c.env.DB, profile.id, today)
+  const upcomingDates = Array.from(new Set(upcoming.map((o) => o.date))).sort()
+
+  return c.render(
+    <DashboardAvailabilityPage
+      weekly={weekly}
+      overrideDate={overrideDate}
+      overrideHours={openHours}
+      upcomingOverrideDates={upcomingDates}
+      success={`Overrides saved for ${overrideDate}.`}
+    />,
+    { title: 'Your Availability' }
+  )
+})
+
+dashboardRoutes.post('/dashboard/availability/override/delete', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const body = await c.req.parseBody()
+  const overrideDate = (body['override_date'] as string) || ''
+  if (overrideDate) {
+    await deleteOverrideDate(c.env.DB, profile.id, overrideDate)
+  }
+  return c.redirect('/dashboard/availability')
 })
 
 dashboardRoutes.get('/dashboard/bookings/:id/proof', async (c) => {

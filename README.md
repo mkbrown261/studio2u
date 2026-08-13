@@ -5,9 +5,14 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 ## Project Overview
 - **Name**: Studio2U
 - **Goal**: Let clients browse a directory of mobile recording engineers, pick one based on rate/reviews/genres, book directly, pay a Cash App deposit, get confirmed, get recorded.
-- **Phase**: Phase 2 — real accounts (engineer/artist/both roles), full multi-engineer marketplace with public directory, per-engineer pricing, portfolios, reviews, and a directory-wide map. Payments remain manual Cash App per engineer (no Stripe yet); each engineer approves their own bookings from their own dashboard, with a separate platform-admin oversight view and suspend/reactivate kill switch.
+- **Phase**: Phase 3 in progress — M1 (admin-editable commission), M2 (branding), and M3 (per-engineer availability calendar) are complete. M4 (Resend email) and M5 (Stripe Connect, mandatory onboarding — no more Cash App) are still to come. Phase 2's full multi-engineer marketplace (public directory, per-engineer pricing, portfolios, reviews, directory-wide map) remains the foundation. Payments are still manual Cash App per engineer until M5 ships.
 
 ## Currently Completed Features
+
+### Phase 3 (in progress)
+- **M1 — Platform commission** (`/admin/settings/commission`): admin-editable commission percentage (default 10%), stored in `platform_settings` (key/value table), read live everywhere it's needed rather than hardcoded. `splitCommission()` in `src/lib/db-settings.ts` is pre-built for M5's Stripe Connect payout split (`application_fee_amount`) but not wired into any payout code yet since there is no Stripe integration yet.
+- **M2 — Branding**: custom favicon (16/32/48/180px, cropped tight to content so it reads clearly at browser-tab size), header/footer logo badge (transparent PNG), and a 3-way equipment field split (Microphone / DAW / Audio Interface) each shown on the public profile next to a matching 48px icon in a card grid — replacing the old single free-text "equipment" blob. Profiles saved before this migration still show their old free-text equipment via an automatic fallback.
+- **M3 — Engineer availability calendar** (`/dashboard/availability`): each engineer sets their own **weekly recurring schedule** (Mon–Sun day boxes, click a day to toggle open hours) plus **one-off date overrides** (close a specific date for vacation, or open extra hours beyond the weekly template, with a "reset to default" action). The public booking flow (`/book/:engineerId`) now shows only real, currently-open start times fetched live from `/api/available-slots` — no more free-text time entry with just an advisory note. Every booking is also **hard-validated server-side** on submit (`POST /api/bookings` returns 409 if the slot isn't actually open), and a slot **auto-blocks the instant it's booked** and **auto-frees if the booking is later cancelled/rejected** (blocking is derived live from the `bookings` table, not a separate lock table, so it's always in sync). Engineers who haven't touched their calendar yet automatically keep the old platform-wide default (Mon–Fri, 11am–10pm start times) — nothing breaks for existing profiles.
 
 ### Marketplace (Phase 2)
 - **Auth**: real email+password accounts (`/signup`, `/login`, `/logout`), PBKDF2 (Web Crypto) password hashing, session cookie. Users can be an engineer, an artist, or both.
@@ -44,9 +49,13 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 | `/dashboard/bookings` | GET | Engineer's own booking queue |
 | `/dashboard/bookings/:id/status` | POST | Engineer approves/rejects/completes/cancels a booking |
 | `/dashboard/bookings/:id/proof` | GET | Streams payment-proof file from R2 (engineer-owned only) |
-| `/book/:engineerId` | GET | Booking form for a specific engineer (client-rendered multi-step) |
+| `/dashboard/availability` | GET/POST | Engineer's weekly recurring availability calendar |
+| `/dashboard/availability/override` | POST | Save one-off open/closed hour overrides for a specific date |
+| `/dashboard/availability/override/delete` | POST | Reset a specific date's overrides back to the weekly default |
+| `/book/:engineerId` | GET | Booking form for a specific engineer (client-rendered multi-step; date/duration → live open-slot buttons) |
+| `/api/available-slots?engineerId=&date=` | GET | Returns `{ hours: number[] }` — every open start hour for that engineer on that date (weekly template + overrides, minus already-booked hours) |
 | `/api/price-check?engineerId=&email=&duration=` | GET | Returns `{ amount, breakdown, isFirstTimeRate }` for that engineer |
-| `/api/bookings` | POST (JSON) | Creates a booking (`engineerId` required), returns `{ bookingId }` |
+| `/api/bookings` | POST (JSON) | Creates a booking (`engineerId` required); server re-validates the slot is still open and returns 409 if not, otherwise returns `{ bookingId }` |
 | `/book/confirmation/:id` | GET | Post-booking confirmation + that engineer's Cash App instructions |
 | `/book/pay/:id` | GET/POST | Upload payment screenshot or transaction ID |
 | `/review/:id?email=` | GET/POST | Leave a mic-rating review for a completed, unreviewed booking |
@@ -59,7 +68,8 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 | `/admin/logout` | POST | Clears admin session |
 
 ## Features Not Yet Implemented
-- Stripe Connect — automated customer payments, platform commission, automatic engineer payouts (still manual Cash App per engineer)
+- **M4 — Resend email** (transactional emails: booking confirmations, status updates) — not started. Test/sandbox sender approved for initial rollout.
+- **M5 — Stripe Connect** — automated customer payments, live commission split via `splitCommission()`, automatic engineer payouts, **mandatory engineer onboarding (no more Cash App fallback)**. Blocked on Stripe API keys. Cash App remains the only payment path until this ships.
 - Password reset / email verification (simple email+password only, by design for now)
 - Reschedule / cancel self-service (still goes through the engineer or admin)
 - Messaging between customer and engineer
@@ -67,15 +77,17 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - Type-check cleanup: `tsconfig.json` lacks `@cloudflare/workers-types`/DOM lib, so `tsc --noEmit` reports many pre-existing type errors. These do not block the Vite/Wrangler build (the actual deploy pipeline) and were consciously left as-is.
 
 ## Recommended Next Steps
-1. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
-2. Have Mason log in (`mason@studio2u.com`, temp password issued out-of-band — reset via his dashboard or D1 once he has one) and fill in his location so he shows up correctly on the directory map and gets a distance readout on his profile.
-3. Add self-service reschedule/cancel requests from the customer status page.
-4. When ready for automated payments, integrate Stripe Connect (marketplace payouts per engineer instead of each engineer's own Cash App).
-5. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
+1. **Deploy this build**: apply `migrations/0006_engineer_availability.sql` to the remote D1 (`npx wrangler d1 migrations apply studio2u-production --remote`) and run `wrangler pages deploy` — both are pending a valid Cloudflare API token (the previously configured one expired mid-session; see Deployment section below).
+2. Build **M4** — Resend transactional email (booking confirmation, status-change notifications), starting with a test/sandbox sender.
+3. Build **M5** — Stripe Connect: mandatory engineer onboarding, live commission split via `splitCommission()`, remove the Cash App payment-proof flow entirely once Stripe is live.
+4. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
+5. Add self-service reschedule/cancel requests from the customer status page.
+6. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
 
 ## Data Architecture
 - **Storage**: Cloudflare D1 (SQLite) for relational data; Cloudflare R2 for engineer photos/equipment images and payment-proof uploads.
-- **Tables**: `engineers` (legacy Phase 1 seed, kept for FK back-compat), `services`, `customers`, `bookings`, `users`, `sessions`, `engineer_profiles`, `portfolio_items`, `reviews` — see `migrations/0001_initial_schema.sql`, `0002_phase2_accounts_marketplace.sql`, and `0003_migrate_mason_to_marketplace.sql`.
+- **Tables**: `engineers` (legacy Phase 1 seed, kept for FK back-compat), `services`, `customers`, `bookings`, `users`, `sessions`, `engineer_profiles`, `portfolio_items`, `reviews`, `platform_settings` (M1), `engineer_availability` + `engineer_availability_overrides` (M3) — see `migrations/0001` through `0006`.
+- **Availability model** (M3): `engineer_availability` is the weekly recurring template (`day_of_week` 0–6, `hour` 0–23 = "open to start a session at this hour on this weekday"). `engineer_availability_overrides` holds one-off exceptions for a specific `date` (force-open or force-close a given hour). An engineer with zero rows in `engineer_availability` hasn't customized their calendar yet and falls back to the legacy default (Mon–Fri, hours 11–22) — see `src/lib/db-availability.ts`. Actual booked-slot blocking is derived live from `bookings` (any row not `cancelled`/`rejected` occupies its hour range) rather than stored in a separate table, so a slot blocks the instant it's booked and frees automatically if the booking is cancelled.
 - **Pricing model**: `calculatePrice(durationHours, isFirstTimeWithThisEngineer, rate)` where `rate` is pulled from the specific `engineer_profiles` row being booked; "first time" is determined per (customer email, engineer) pair via `hasCustomerBookedEngineerBefore`.
 - **Location privacy**: engineers type a city/zip; it's geocoded once (Nominatim) and jittered 1–2 miles before being stored in `engineer_profiles.lat/lng`. The exact typed location and any street address are never stored or shown publicly.
 
@@ -91,5 +103,5 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - **Platform**: Cloudflare Pages (Workers) — user's own Cloudflare account (BYOK)
 - **Production URL**: https://studio2u.pages.dev
 - **Tech Stack**: Hono + TypeScript + TailwindCSS (CDN) + Leaflet/OpenStreetMap (CDN) + Cloudflare D1 + Cloudflare R2
-- **Status**: ✅ Active — Phase 2 marketplace deployed
+- **Status**: ⚠️ Production is on the M2 build. M1–M3 code is complete, built, and fully tested locally (including against local D1), but **not yet deployed** — the Cloudflare API token configured for this project expired mid-session. A fresh token needs to be entered in the Deploy tab before `wrangler d1 migrations apply --remote` and `wrangler pages deploy` can run.
 - **Admin password**: Set as the `ADMIN_PASSWORD` Cloudflare secret (not stored in code/repo). Rotate anytime with `wrangler pages secret put ADMIN_PASSWORD --project-name studio2u`.

@@ -37,6 +37,30 @@
   const inputClass =
     'w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold'
 
+  function formatHour(h) {
+    var period = h >= 12 ? 'PM' : 'AM'
+    var display = h % 12
+    if (display === 0) display = 12
+    return display + ' ' + period
+  }
+
+  // Given the engineer's open hours for a date, return which START hours have
+  // enough CONSECUTIVE open hours to fit the full session duration.
+  function computeValidStarts(openHours, durationHours) {
+    var openSet = {}
+    openHours.forEach(function (h) { openSet[h] = true })
+    var span = Math.max(1, Math.ceil(durationHours))
+    var valid = []
+    openHours.forEach(function (h) {
+      var fits = true
+      for (var i = 0; i < span; i++) {
+        if (!openSet[h + i]) { fits = false; break }
+      }
+      if (fits) valid.push(h)
+    })
+    return valid
+  }
+
   function renderStep1() {
     root.innerHTML = `
       <div class="flex items-center gap-2 mb-6 text-xs text-muted">
@@ -48,41 +72,38 @@
           `<input type="date" id="f-date" class="${inputClass}" value="${state.sessionDate}" min="${new Date().toISOString().split('T')[0]}" required />`
         )}
         ${fieldWrap(
-          'Time',
-          `<input type="time" id="f-time" class="${inputClass}" value="${state.sessionTime}" required />`
-        )}
-      </div>
-      <div id="availability-note" class="hidden mb-5 text-sm bg-gold/10 border border-gold/30 rounded-lg px-4 py-3 text-gold">
-        <i class="fa-solid fa-triangle-exclamation mr-2"></i>
-        This time is outside our standard Mon–Fri, 11am–11pm window. You can still submit it as a <strong>special request</strong> — we'll confirm availability directly.
-      </div>
-      ${fieldWrap(
-        'Session Length (hours)',
-        `<select id="f-duration" class="${inputClass}">
-          <option value="1">1 hour</option>
-          <option value="2">2 hours</option>
-          <option value="3" selected>3 hours</option>
-          <option value="4">4 hours</option>
-          <option value="5">5 hours</option>
-          <option value="6">6 hours</option>
-        </select>`
-      )}
-      <div class="grid sm:grid-cols-2 gap-4">
-        ${fieldWrap(
-          'Location Type',
-          `<select id="f-location-type" class="${inputClass}">
-            <option value="apartment">Apartment</option>
-            <option value="house">House</option>
-            <option value="hotel">Hotel</option>
-            <option value="studio">Studio</option>
-            <option value="other">Other</option>
+          'Session Length (hours)',
+          `<select id="f-duration" class="${inputClass}">
+            <option value="1">1 hour</option>
+            <option value="2">2 hours</option>
+            <option value="3" selected>3 hours</option>
+            <option value="4">4 hours</option>
+            <option value="5">5 hours</option>
+            <option value="6">6 hours</option>
           </select>`
         )}
-        ${fieldWrap(
-          'Genre',
-          `<input type="text" id="f-genre" class="${inputClass}" placeholder="e.g. Hip Hop, R&B, Pop" value="${state.genre}" />`
-        )}
       </div>
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-muted mb-2">Available Start Times</label>
+        <div id="slot-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <p class="col-span-full text-sm text-muted">Pick a date to see open times.</p>
+        </div>
+        <input type="hidden" id="f-time" value="${state.sessionTime}" />
+      </div>
+      ${fieldWrap(
+        'Location Type',
+        `<select id="f-location-type" class="${inputClass}">
+          <option value="apartment">Apartment</option>
+          <option value="house">House</option>
+          <option value="hotel">Hotel</option>
+          <option value="studio">Studio</option>
+          <option value="other">Other</option>
+        </select>`
+      )}
+      ${fieldWrap(
+        'Genre',
+        `<input type="text" id="f-genre" class="${inputClass}" placeholder="e.g. Hip Hop, R&B, Pop" value="${state.genre}" />`
+      )}
       ${fieldWrap(
         'Address / Location Details',
         `<input type="text" id="f-address" class="${inputClass}" placeholder="Street address or general area" value="${state.locationAddress}" />`
@@ -101,31 +122,71 @@
     `
 
     const dateInput = document.getElementById('f-date')
+    const durationSelect = document.getElementById('f-duration')
     const timeInput = document.getElementById('f-time')
-    const note = document.getElementById('availability-note')
+    const slotGrid = document.getElementById('slot-grid')
+    if (state.durationHours) durationSelect.value = String(state.durationHours)
 
-    function checkAvailability() {
-      const date = dateInput.value
-      const time = timeInput.value
-      if (!date || !time) {
-        note.classList.add('hidden')
+    function renderSlots(validStarts) {
+      if (!dateInput.value) {
+        slotGrid.innerHTML = '<p class="col-span-full text-sm text-muted">Pick a date to see open times.</p>'
         return
       }
-      fetch(`/api/availability-check?date=${date}&time=${time}`)
-        .then((r) => r.json())
-        .then((data) => {
-          note.classList.toggle('hidden', data.withinStandardHours)
+      if (validStarts.length === 0) {
+        slotGrid.innerHTML = '<p class="col-span-full text-sm text-muted">No open times for this date at this duration. Try a shorter session or a different date.</p>'
+        timeInput.value = ''
+        return
+      }
+      slotGrid.innerHTML = validStarts
+        .map(function (h) {
+          const selected = String(h) === String(timeInput.value).split(':')[0] ? '1' : ''
+          return `<button type="button" data-hour="${h}" class="slot-btn text-xs sm:text-sm py-2.5 rounded-lg border transition ${
+            selected ? 'bg-gold text-ink border-gold font-semibold' : 'border-gold/20 text-cream hover:border-gold/50'
+          }">${formatHour(h)}</button>`
         })
-        .catch(() => {})
+        .join('')
+      slotGrid.querySelectorAll('.slot-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const h = btn.getAttribute('data-hour')
+          timeInput.value = (h.length === 1 ? '0' + h : h) + ':00'
+          slotGrid.querySelectorAll('.slot-btn').forEach(function (b) {
+            b.classList.remove('bg-gold', 'text-ink', 'border-gold', 'font-semibold')
+            b.classList.add('border-gold/20', 'text-cream')
+          })
+          btn.classList.add('bg-gold', 'text-ink', 'border-gold', 'font-semibold')
+          btn.classList.remove('border-gold/20', 'text-cream')
+        })
+      })
     }
 
-    dateInput.addEventListener('change', checkAvailability)
-    timeInput.addEventListener('change', checkAvailability)
+    function loadSlots() {
+      const date = dateInput.value
+      const duration = parseFloat(durationSelect.value)
+      timeInput.value = ''
+      if (!date) {
+        renderSlots([])
+        return
+      }
+      slotGrid.innerHTML = '<p class="col-span-full text-sm text-muted"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking availability...</p>'
+      fetch(`/api/available-slots?engineerId=${encodeURIComponent(engineerId)}&date=${date}`)
+        .then((r) => r.json())
+        .then((data) => {
+          const validStarts = computeValidStarts(data.hours || [], duration)
+          renderSlots(validStarts)
+        })
+        .catch(() => {
+          slotGrid.innerHTML = '<p class="col-span-full text-sm text-wine-light">Could not load availability. Please try again.</p>'
+        })
+    }
+
+    dateInput.addEventListener('change', loadSlots)
+    durationSelect.addEventListener('change', loadSlots)
+    if (dateInput.value) loadSlots()
 
     document.getElementById('next-1').addEventListener('click', () => {
       state.sessionDate = dateInput.value
       state.sessionTime = timeInput.value
-      state.durationHours = parseFloat(document.getElementById('f-duration').value)
+      state.durationHours = parseFloat(durationSelect.value)
       state.locationType = document.getElementById('f-location-type').value
       state.locationAddress = document.getElementById('f-address').value
       state.genre = document.getElementById('f-genre').value
@@ -133,7 +194,7 @@
       state.specialNotes = document.getElementById('f-notes').value
 
       if (!state.sessionDate || !state.sessionTime) {
-        alert('Please select a date and time.')
+        alert('Please select a date and an available start time.')
         return
       }
       step = 2

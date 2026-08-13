@@ -15,9 +15,10 @@ import {
   updateBookingStatus,
   hasCustomerBookedEngineerBefore
 } from './lib/db'
-import { calculatePrice, isWithinStandardAvailability } from './lib/pricing'
+import { calculatePrice } from './lib/pricing'
 import { getEngineerProfileById, getEngineerDisplayForBooking, getAllEngineersForAdmin, setEngineerSuspended } from './lib/db-engineers'
 import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
+import { getAvailableHoursForDate, isRangeAvailable } from './lib/db-availability'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
@@ -65,11 +66,17 @@ app.get('/book', async (c) => {
 
 // ---------- Booking API ----------
 
-app.get('/api/availability-check', async (c) => {
+// Returns every open hour for this engineer on this date (weekly template +
+// overrides, minus anything already booked) so the booking UI can only ever
+// show real, currently-open slots.
+app.get('/api/available-slots', async (c) => {
+  const engineerId = parseInt(c.req.query('engineerId') || '', 10)
   const date = c.req.query('date') || ''
-  const time = c.req.query('time') || ''
-  const ok = isWithinStandardAvailability(date, time)
-  return c.json({ withinStandardHours: ok })
+  if (!engineerId || !date) {
+    return c.json({ hours: [] })
+  }
+  const hours = await getAvailableHoursForDate(c.env.DB, engineerId, date)
+  return c.json({ hours })
 })
 
 app.get('/api/price-check', async (c) => {
@@ -136,6 +143,15 @@ app.post('/api/bookings', async (c) => {
       return c.json({ error: 'Booking service unavailable.' }, 500)
     }
 
+    // Hard server-side enforcement against this engineer's real calendar — never
+    // trust the client's earlier /api/available-slots read, since availability
+    // can change between page load and submit (e.g. another booking landed first).
+    const startHour = parseInt((sessionTime as string).split(':')[0], 10)
+    const durationOk = await isRangeAvailable(c.env.DB, engineer.id, sessionDate, startHour, parseFloat(durationHours))
+    if (!durationOk) {
+      return c.json({ error: 'That time is no longer available. Please pick an open slot.' }, 409)
+    }
+
     const existingCustomer = await findCustomerByEmail(c.env.DB, customerEmail)
     const isFirstTimeWithEngineer = !(await hasCustomerBookedEngineerBefore(c.env.DB, customerEmail, engineer.id))
 
@@ -150,7 +166,6 @@ app.post('/api/bookings', async (c) => {
       firstTimeDiscountAmount: engineer.first_time_discount_amount,
       firstTimeDiscountHours: engineer.first_time_discount_hours
     })
-    const isCustomTimeRequest = !isWithinStandardAvailability(sessionDate, sessionTime)
 
     const bookingId = await createBooking(c.env.DB, {
       customerId,
@@ -160,7 +175,10 @@ app.post('/api/bookings', async (c) => {
       sessionDate,
       sessionTime,
       durationHours: parseFloat(durationHours),
-      isCustomTimeRequest,
+      // Every booking is now hard-validated against the engineer's real calendar
+      // above, so there's no more "outside standard hours, needs manual OK" case —
+      // column kept for backward-compat with pre-M3 bookings.
+      isCustomTimeRequest: false,
       locationType,
       locationAddress: locationAddress || '',
       specialNotes: specialNotes || '',
