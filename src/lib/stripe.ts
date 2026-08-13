@@ -25,43 +25,78 @@ export function getStripeClient(secretKey: string): Stripe {
 
 // ---------- Connect onboarding ----------
 
-// Creates a new Express connected account for an engineer who doesn't have one yet.
-// Express = Stripe hosts the entire onboarding form (identity, bank account, TOS).
+// Creates a new connected account for an engineer who doesn't have one yet, using
+// Stripe's Accounts v2 API (/v2/core/accounts) — the current, non-deprecated way to
+// create Connect accounts (v1 stripe.accounts.create() is blocked by Stripe for any
+// brand-new Connect platform: "Stripe no longer recommends Accounts v1 for new
+// Connect integrations. Create connected accounts with POST /v2/core/accounts
+// instead.").
+//
+// Studio2U only ever charges customers directly on the platform account and then
+// moves money to the engineer via Checkout's transfer_data.destination — it never
+// creates direct charges or destination charges with on_behalf_of, and it never
+// needs the connected account to accept card payments itself. That means the engineer
+// only needs the `recipient` configuration (receive transfers into their Stripe
+// balance), not `merchant` (which is for accounts that themselves process card
+// payments). See https://docs.stripe.com/connect/marketplace/tasks/create.
+//
+// dashboard: 'express' gives the engineer the same hosted Express Dashboard UX as
+// before. Because Studio2U (the platform), not the engineer, absorbs Stripe's fees
+// and any negative-balance risk, both responsibilities must be 'application'
+// (Express dashboards require this pairing — see error
+// account_controller_express_dash_without_application_losses_or_fees).
 export async function createConnectAccount(
   stripe: Stripe,
   params: { email: string; name: string }
 ): Promise<string> {
-  const account = await stripe.accounts.create({
-    type: 'express',
-    email: params.email,
-    business_type: 'individual',
-    business_profile: {
-      // "Recording engineer" services rendered through the Studio2U marketplace —
-      // helps Stripe's risk review match declared activity to actual charge volume.
-      product_description: 'Mobile audio recording engineering services booked through the Studio2U marketplace'
+  const account = await stripe.v2.core.accounts.create({
+    contact_email: params.email,
+    display_name: params.name,
+    dashboard: 'express',
+    identity: {
+      country: 'us'
     },
-    capabilities: {
-      card_payments: { requested: true },
-      transfers: { requested: true }
-    }
+    defaults: {
+      responsibilities: {
+        fees_collector: 'application',
+        losses_collector: 'application'
+      }
+    },
+    configuration: {
+      recipient: {
+        capabilities: {
+          stripe_balance: {
+            stripe_transfers: { requested: true }
+          }
+        }
+      }
+    },
+    include: ['configuration.recipient', 'identity', 'requirements']
   })
   return account.id
 }
 
 // Generates a fresh, single-use onboarding link. Must be called every time the
 // engineer clicks "Connect with Stripe" (or "Finish onboarding") — links expire
-// after a short time and can't be reused.
+// after a short time and can't be reused. Uses the v2 account_links endpoint
+// (/v2/core/account_links), the v2 counterpart of v1's stripe.accountLinks.create().
 export async function createAccountOnboardingLink(
   stripe: Stripe,
   accountId: string,
   returnUrl: string,
   refreshUrl: string
 ): Promise<string> {
-  const link = await stripe.accountLinks.create({
+  const link = await stripe.v2.core.accountLinks.create({
     account: accountId,
-    type: 'account_onboarding',
-    return_url: returnUrl,
-    refresh_url: refreshUrl
+    use_case: {
+      type: 'account_onboarding',
+      account_onboarding: {
+        // Must match the configuration(s) actually enabled on the account above.
+        configurations: ['recipient'],
+        return_url: returnUrl,
+        refresh_url: refreshUrl
+      }
+    }
   })
   return link.url
 }
@@ -69,14 +104,34 @@ export async function createAccountOnboardingLink(
 // Re-checks the live status of a connected account against Stripe (call this when
 // the engineer lands back on /dashboard/payments after onboarding, since Stripe
 // doesn't push a webhook for every intermediate onboarding step).
+//
+// v2 accounts don't have v1's flat charges_enabled/details_submitted booleans.
+// Instead, the recipient configuration's transfer capability has its own status
+// ('active' | 'pending' | 'restricted' | 'unsupported'), and outstanding onboarding
+// items show up as entries in `requirements.entries`. See
+// https://docs.stripe.com/connect/end-to-end-marketplace — "check if
+// configuration.recipient.capabilities.stripe_balance.stripe_transfers.status is
+// active... if status_details.code is requirements_past_due, prompt the user to
+// continue onboarding."
+//
+// We map that back onto the same two-boolean shape the rest of the app (D1 columns
+// stripe_charges_enabled / stripe_onboarding_complete, updateEngineerStripeStatus())
+// already expects, so no downstream code needs to change:
+//   - chargesEnabled  -> transfers capability status is 'active'
+//   - detailsSubmitted -> no outstanding requirement entries left
 export async function getAccountStatus(
   stripe: Stripe,
   accountId: string
 ): Promise<{ chargesEnabled: boolean; detailsSubmitted: boolean }> {
-  const account = await stripe.accounts.retrieve(accountId)
+  const account = await stripe.v2.core.accounts.retrieve(accountId, {
+    include: ['configuration.recipient', 'requirements']
+  })
+  const transfersStatus = account.configuration?.recipient?.capabilities?.stripe_balance?.stripe_transfers?.status
+  const chargesEnabled = transfersStatus === 'active'
+  const hasOutstandingRequirements = (account.requirements?.entries ?? []).length > 0
   return {
-    chargesEnabled: !!account.charges_enabled,
-    detailsSubmitted: !!account.details_submitted
+    chargesEnabled,
+    detailsSubmitted: !hasOutstandingRequirements
   }
 }
 
