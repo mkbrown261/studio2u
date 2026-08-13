@@ -16,6 +16,21 @@ export function DashboardHomePage({ user, engineerProfile }: { user: SessionUser
         </form>
       </div>
 
+      {user.is_engineer === 1 && engineerProfile && engineerProfile.stripe_charges_enabled !== 1 && (
+        <div class="mb-6 bg-wine/15 border border-wine/40 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-triangle-exclamation text-gold text-lg"></i>
+            <p class="text-sm text-cream/90">
+              <strong>Connect Stripe to get booked.</strong> Studio2U requires every engineer to finish Stripe
+              onboarding before appearing in the directory or accepting bookings.
+            </p>
+          </div>
+          <a href="/dashboard/payments" class="text-sm font-semibold bg-gold hover:bg-gold-light text-ink px-4 py-2 rounded-full transition whitespace-nowrap">
+            Connect Now
+          </a>
+        </div>
+      )}
+
       <div class="grid md:grid-cols-2 gap-6">
         {user.is_engineer === 1 && (
           <div class="bg-surface border border-gold/10 rounded-2xl p-7">
@@ -38,6 +53,14 @@ export function DashboardHomePage({ user, engineerProfile }: { user: SessionUser
                   <a href="/dashboard/profile" class="text-sm font-semibold bg-gold hover:bg-gold-light text-ink px-4 py-2.5 rounded-full transition">Edit Profile</a>
                   <a href="/dashboard/portfolio" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">Manage Portfolio</a>
                   <a href="/dashboard/availability" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">Manage Availability</a>
+                  <a href="/dashboard/payments" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">
+                    Payments
+                    {engineerProfile.stripe_charges_enabled === 1 ? (
+                      <i class="fa-solid fa-circle-check text-emerald-400 ml-1.5"></i>
+                    ) : (
+                      <i class="fa-solid fa-triangle-exclamation text-gold ml-1.5"></i>
+                    )}
+                  </a>
                   <a href="/dashboard/bookings" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">My Bookings</a>
                   <a href={`/engineers/${engineerProfile.id}`} class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">View Public Page</a>
                 </div>

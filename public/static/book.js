@@ -304,7 +304,9 @@
         if (!res.ok) {
           throw new Error(data.error || 'Something went wrong.')
         }
-        window.location.href = `/book/confirmation/${data.bookingId}`
+        // Send the customer straight into Stripe's hosted Checkout page — payment
+        // happens there, then Stripe redirects back to our confirmation page.
+        window.location.href = data.checkoutUrl
       } catch (err) {
         errBox.textContent = err.message
         errBox.classList.remove('hidden')

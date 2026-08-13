@@ -11,18 +11,18 @@ import {
   getBookingById,
   getBookingsByEmail,
   getAllBookings,
-  attachPaymentProof,
+  attachCheckoutSession,
   updateBookingStatus,
   hasCustomerBookedEngineerBefore
 } from './lib/db'
 import { calculatePrice } from './lib/pricing'
 import { getEngineerProfileById, getEngineerDisplayForBooking, getAllEngineersForAdmin, setEngineerSuspended } from './lib/db-engineers'
-import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
+import { getCommissionPercent, setCommissionPercent, splitCommission } from './lib/db-settings'
 import { getAvailableHoursForDate, isRangeAvailable } from './lib/db-availability'
+import { getStripeClient, createBookingCheckoutSession, toCents } from './lib/stripe'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
-import { PayPage } from './pages/pay'
 import { StatusPage } from './pages/status'
 import { AdminLoginPage } from './pages/admin-login'
 import { AdminDashboardPage } from './pages/admin-dashboard'
@@ -31,8 +31,15 @@ import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
 import { reviewsRoutes } from './routes/reviews'
+import { stripeWebhookRoutes } from './routes/stripe-webhook'
 
 const app = new Hono<AppEnv>()
+
+// Stripe webhook must be mounted BEFORE `app.use(renderer)` — the renderer middleware
+// calls getSessionUser() on every request, which is harmless here but unnecessary
+// overhead on a high-frequency webhook endpoint, and more importantly this route
+// needs the raw, untouched request body for signature verification.
+app.route('/', stripeWebhookRoutes)
 
 app.use(renderer)
 
@@ -53,7 +60,7 @@ app.get('/', async (c) => {
 app.get('/book/:engineerId', async (c) => {
   const engineerId = parseInt(c.req.param('engineerId'), 10)
   const engineer = await getEngineerProfileById(c.env.DB, engineerId)
-  if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1) {
+  if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1 || engineer.stripe_charges_enabled !== 1) {
     return c.notFound()
   }
   return c.render(<BookPage engineer={engineer} />, { title: `Book ${engineer.display_name}` })
@@ -137,6 +144,12 @@ app.post('/api/bookings', async (c) => {
     if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1) {
       return c.json({ error: 'This engineer is not available for booking.' }, 404)
     }
+    if (!engineer.stripe_account_id || engineer.stripe_charges_enabled !== 1) {
+      return c.json({ error: 'This engineer has not finished payment setup yet. Please try another engineer.' }, 409)
+    }
+    if (!c.env.STRIPE_SECRET_KEY) {
+      return c.json({ error: 'Payments are not configured on this deployment yet.' }, 500)
+    }
 
     const service = await getServiceById(c.env.DB, 1) // Recording — the only bookable service in V1
     if (!service) {
@@ -196,7 +209,34 @@ app.post('/api/bookings', async (c) => {
       await markCustomerFirstBookingUsed(c.env.DB, customerId)
     }
 
-    return c.json({ bookingId })
+    // Create the Stripe Checkout Session right away — the customer is sent straight
+    // into Stripe's hosted payment page next; there's no more "book now, pay later
+    // via Cash App" gap. Commission math reuses the same splitCommission() helper
+    // built in M1, now finally wired into a real payment.
+    const commissionPercent = await getCommissionPercent(c.env.DB)
+    const { platformFee, engineerPayout } = splitCommission(price.amount, commissionPercent)
+
+    const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+    const origin = new URL(c.req.url).origin
+
+    const checkout = await createBookingCheckoutSession(stripe, {
+      bookingId,
+      engineerStripeAccountId: engineer.stripe_account_id,
+      grossAmountCents: toCents(price.amount),
+      platformFeeCents: toCents(platformFee),
+      customerEmail,
+      description: `Recording session with ${engineer.display_name} — ${sessionDate} @ ${sessionTime} (${durationHours}h)`,
+      successUrl: `${origin}/book/confirmation/${bookingId}?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origin}/book/${engineer.id}`
+    })
+
+    await attachCheckoutSession(c.env.DB, bookingId, {
+      checkoutSessionId: checkout.sessionId,
+      platformFeeAmount: platformFee,
+      engineerPayoutAmount: engineerPayout
+    })
+
+    return c.json({ bookingId, checkoutUrl: checkout.url })
   } catch (err) {
     console.error(err)
     return c.json({ error: 'Something went wrong creating your booking.' }, 500)
@@ -211,53 +251,19 @@ app.get('/book/confirmation/:id', async (c) => {
   return c.render(<ConfirmationPage booking={booking} engineerDisplay={engineerDisplay} />, { title: 'Booking Confirmed' })
 })
 
-// ---------- Payment proof upload ----------
-
-app.get('/book/pay/:id', async (c) => {
+// Lightweight polling endpoint the confirmation page hits a few times in case the
+// Stripe webhook hasn't landed yet by the time the customer's browser redirects back
+// from Checkout. Intentionally minimal — just the status, nothing sensitive.
+app.get('/api/bookings/:id/status', async (c) => {
   const id = parseInt(c.req.param('id'), 10)
   const booking = await getBookingById(c.env.DB, id)
-  if (!booking) return c.notFound()
-  const engineerDisplay = await getEngineerDisplayForBooking(c.env.DB, booking)
-  return c.render(<PayPage booking={booking} engineerDisplay={engineerDisplay} />, { title: 'Submit Payment' })
+  if (!booking) return c.json({ status: null }, 404)
+  return c.json({ status: booking.status })
 })
 
-app.post('/book/pay/:id', async (c) => {
-  const id = parseInt(c.req.param('id'), 10)
-  const booking = await getBookingById(c.env.DB, id)
-  if (!booking) return c.notFound()
-  const engineerDisplay = await getEngineerDisplayForBooking(c.env.DB, booking)
-
-  const formData = await c.req.formData()
-  const file = formData.get('proof') as File | null
-  const transactionId = (formData.get('transaction_id') as string) || ''
-
-  if (!file && !transactionId) {
-    return c.render(
-      <PayPage booking={booking} engineerDisplay={engineerDisplay} error="Please upload a screenshot or enter a transaction ID." />,
-      { title: 'Submit Payment' }
-    )
-  }
-
-  let proofUrl: string | undefined
-  if (file && file.size > 0) {
-    const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf']
-    if (!allowedTypes.includes(file.type)) {
-      return c.render(
-        <PayPage booking={booking} engineerDisplay={engineerDisplay} error="File must be PNG, JPEG, or PDF." />,
-        { title: 'Submit Payment' }
-      )
-    }
-    const ext = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg'
-    const key = `payment-proofs/booking-${id}-${Date.now()}.${ext}`
-    const arrayBuffer = await file.arrayBuffer()
-    await c.env.R2.put(key, arrayBuffer, { httpMetadata: { contentType: file.type } })
-    proofUrl = key
-  }
-
-  await attachPaymentProof(c.env.DB, id, { proofUrl, transactionId })
-
-  return c.redirect(`/status?email=${encodeURIComponent(booking.customer_email)}`)
-})
+// Note: the old Cash App deposit-screenshot flow (/book/pay/:id) was retired in
+// Phase 3 M5 — payment now happens entirely inside Stripe Checkout, confirmed
+// automatically via webhook (see src/routes/stripe-webhook.ts). "NO MORE CASHAPP."
 
 // ---------- Customer status lookup ----------
 

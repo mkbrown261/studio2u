@@ -21,7 +21,7 @@ engineersRoutes.get('/engineers', async (c) => {
 engineersRoutes.get('/engineers/:id', async (c) => {
   const id = parseInt(c.req.param('id'), 10)
   const profile = await getEngineerProfileById(c.env.DB, id)
-  if (!profile || profile.is_published !== 1 || profile.is_suspended === 1) {
+  if (!profile || profile.is_published !== 1 || profile.is_suspended === 1 || profile.stripe_charges_enabled !== 1) {
     return c.notFound()
   }
 

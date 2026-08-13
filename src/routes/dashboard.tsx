@@ -6,7 +6,9 @@ import {
   upsertEngineerProfile,
   getPortfolioItems,
   addPortfolioItem,
-  deletePortfolioItem
+  deletePortfolioItem,
+  setEngineerStripeAccountId,
+  updateEngineerStripeStatus
 } from '../lib/db-engineers'
 import { getBookingsByEngineerProfile, updateBookingStatus, getBookingById } from '../lib/db'
 import { setUserRoles } from '../lib/db-users'
@@ -19,11 +21,13 @@ import {
   deleteOverrideDate,
   getUpcomingOverrides
 } from '../lib/db-availability'
+import { getStripeClient, createConnectAccount, createAccountOnboardingLink, getAccountStatus } from '../lib/stripe'
 import { DashboardHomePage } from '../pages/dashboard-home'
 import { DashboardProfilePage } from '../pages/dashboard-profile'
 import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
 import { DashboardBookingsPage } from '../pages/dashboard-bookings'
 import { DashboardAvailabilityPage } from '../pages/dashboard-availability'
+import { DashboardPaymentsPage } from '../pages/dashboard-payments'
 import { BecomeEngineerPage } from '../pages/dashboard-become-engineer'
 
 export const dashboardRoutes = new Hono<AppEnv>()
@@ -383,4 +387,70 @@ dashboardRoutes.get('/dashboard/bookings/:id/proof', async (c) => {
   return new Response(object.body, {
     headers: { 'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream' }
   })
+})
+
+// ---------- Stripe Connect onboarding (Phase 3 M5) ----------
+
+dashboardRoutes.get('/dashboard/payments', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  // If they already have a connected account but our local flags haven't been
+  // refreshed (e.g. they just returned from Stripe's hosted onboarding), re-check
+  // live status against Stripe before rendering so the page never shows stale info.
+  if (profile.stripe_account_id && !profile.stripe_charges_enabled && c.env.STRIPE_SECRET_KEY) {
+    try {
+      const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+      const status = await getAccountStatus(stripe, profile.stripe_account_id)
+      await updateEngineerStripeStatus(c.env.DB, profile.id, status)
+      profile.stripe_charges_enabled = status.chargesEnabled ? 1 : 0
+      profile.stripe_onboarding_complete = status.detailsSubmitted ? 1 : 0
+    } catch (err) {
+      console.error('Failed to refresh Stripe account status', err)
+    }
+  }
+
+  return c.render(<DashboardPaymentsPage profile={profile} />, { title: 'Payments' })
+})
+
+dashboardRoutes.post('/dashboard/payments/connect', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  if (!c.env.STRIPE_SECRET_KEY) {
+    return c.render(
+      <DashboardPaymentsPage profile={profile} error="Stripe is not configured on this deployment yet." />,
+      { title: 'Payments' }
+    )
+  }
+
+  const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+  const origin = new URL(c.req.url).origin
+
+  try {
+    let accountId = profile.stripe_account_id
+    if (!accountId) {
+      accountId = await createConnectAccount(stripe, { email: user.email, name: profile.display_name })
+      await setEngineerStripeAccountId(c.env.DB, profile.id, accountId)
+    }
+
+    const onboardingUrl = await createAccountOnboardingLink(
+      stripe,
+      accountId,
+      `${origin}/dashboard/payments`, // return_url
+      `${origin}/dashboard/payments/connect` // refresh_url — re-hit this route to get a fresh link
+    )
+
+    return c.redirect(onboardingUrl)
+  } catch (err) {
+    console.error('Stripe Connect onboarding error', err)
+    return c.render(
+      <DashboardPaymentsPage profile={profile} error="Could not start Stripe onboarding. Please try again." />,
+      { title: 'Payments' }
+    )
+  }
 })

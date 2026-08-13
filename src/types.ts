@@ -2,6 +2,8 @@ export type Bindings = {
   DB: D1Database
   R2: R2Bucket
   ADMIN_PASSWORD?: string
+  STRIPE_SECRET_KEY?: string
+  STRIPE_WEBHOOK_SECRET?: string
 }
 
 export type AppEnv = {
@@ -64,6 +66,10 @@ export interface Booking {
   payment_method: string
   payment_proof_url: string | null
   payment_transaction_id: string | null
+  stripe_payment_intent_id: string | null
+  stripe_checkout_session_id: string | null
+  platform_fee_amount: number | null
+  engineer_payout_amount: number | null
   status: BookingStatus
   admin_notes: string | null
   created_at: string

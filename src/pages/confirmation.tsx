@@ -1,5 +1,10 @@
 import type { Booking } from '../types'
 
+// Phase 3 M5: no more Cash App deposit step. The customer lands here straight from
+// Stripe Checkout's success_url. Stripe's webhook (src/routes/stripe-webhook.ts) is
+// what actually flips the booking to "confirmed" — usually within a second or two —
+// so this page shows a short "confirming payment" state that self-refreshes if the
+// webhook hasn't landed yet by the time the customer's browser redirects back.
 export function ConfirmationPage({
   booking,
   engineerDisplay
@@ -7,42 +12,44 @@ export function ConfirmationPage({
   booking: Booking
   engineerDisplay: { name: string; cashappHandle: string | null; photoUrl: string | null }
 }) {
-  const cashapp = engineerDisplay.cashappHandle || '$KEYZGMG'
+  const paid = booking.status !== 'pending_payment'
 
   return (
     <div class="max-w-xl mx-auto px-5 py-16">
       <div class="text-center mb-8">
         <div class="w-14 h-14 rounded-full bg-gold/15 flex items-center justify-center text-gold text-2xl mx-auto mb-4">
-          <i class="fa-solid fa-calendar-check"></i>
+          <i class={`fa-solid ${paid ? 'fa-circle-check' : 'fa-spinner fa-spin'}`}></i>
         </div>
-        <h1 class="font-display text-3xl font-bold">Booking Received!</h1>
+        <h1 class="font-display text-3xl font-bold">{paid ? 'Booking Confirmed!' : 'Confirming Payment...'}</h1>
         <p class="text-muted mt-3">Booking #{booking.id} — {booking.session_date} @ {booking.session_time}</p>
         <p class="text-muted text-sm mt-1">with {engineerDisplay.name}</p>
       </div>
 
-      {booking.is_custom_time_request === 1 && (
-        <div class="bg-wine/15 border border-wine/40 rounded-xl px-5 py-4 mb-6 text-sm text-cream/90">
-          <i class="fa-solid fa-triangle-exclamation text-gold mr-2"></i>
-          Your requested time is outside our standard Mon–Fri, 11am–11pm availability. We'll reach out directly to confirm this time works before your deposit is required.
+      {paid ? (
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-7 mb-8 text-center">
+          <p class="text-emerald-400 font-semibold mb-2">
+            <i class="fa-solid fa-check mr-2"></i>Payment received
+          </p>
+          <div class="text-2xl font-bold text-cream mb-1">${booking.price_amount}</div>
+          <p class="text-xs text-muted mb-1">{booking.price_breakdown}</p>
+          <p class="text-sm text-cream/70 mt-4">
+            You're all set — {engineerDisplay.name.split(' ')[0]} has been notified and your session is confirmed.
+          </p>
+        </div>
+      ) : (
+        <div
+          id="confirming-box"
+          class="bg-gold/10 border border-gold/30 rounded-2xl p-7 mb-8 text-center"
+          data-booking-id={booking.id}
+        >
+          <p class="text-cream/80 mb-2">
+            <i class="fa-solid fa-clock mr-2 text-gold"></i>
+            Stripe is finalizing your payment — this usually takes just a moment.
+          </p>
+          <div class="text-2xl font-bold text-cream mb-1">${booking.price_amount}</div>
+          <p class="text-xs text-muted">{booking.price_breakdown}</p>
         </div>
       )}
-
-      <div class="bg-gold/10 border border-gold/30 rounded-2xl p-7 mb-8 text-center">
-        <p class="text-cream/80 mb-4 font-semibold">
-          <i class="fa-solid fa-clock mr-2"></i>Deposit Required
-        </p>
-        <p class="text-sm text-cream/70 mb-4">Please send your deposit using Cash App:</p>
-        <div class="text-4xl font-display font-bold text-gold mb-4">{cashapp}</div>
-        <div class="text-2xl font-bold text-cream mb-1">${booking.price_amount}</div>
-        <p class="text-xs text-muted mb-6">{booking.price_breakdown}</p>
-        <p class="text-sm text-cream/70 mb-5">Once payment is received, your booking will be confirmed.</p>
-        <a
-          href={`/book/pay/${booking.id}`}
-          class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-6 py-3 rounded-full transition"
-        >
-          Upload Payment Confirmation <i class="fa-solid fa-arrow-right text-xs"></i>
-        </a>
-      </div>
 
       <div class="text-center text-sm text-muted">
         You can check your booking status anytime at{' '}
@@ -50,6 +57,36 @@ export function ConfirmationPage({
           Studio2U → My Bookings
         </a>
       </div>
+
+      {!paid && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            // Poll our own status endpoint briefly in case the Stripe webhook hasn't
+            // landed yet by the time the browser redirects back from Checkout.
+            (function () {
+              var box = document.getElementById('confirming-box')
+              if (!box) return
+              var bookingId = box.getAttribute('data-booking-id')
+              var attempts = 0
+              var interval = setInterval(function () {
+                attempts++
+                fetch('/api/bookings/' + bookingId + '/status')
+                  .then(function (r) { return r.json() })
+                  .then(function (data) {
+                    if (data.status && data.status !== 'pending_payment') {
+                      clearInterval(interval)
+                      window.location.reload()
+                    }
+                  })
+                  .catch(function () {})
+                if (attempts >= 15) clearInterval(interval)
+              }, 2000)
+            })()
+          `
+          }}
+        ></script>
+      )}
     </div>
   )
 }

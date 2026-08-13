@@ -13,7 +13,8 @@
     "db:migrate:prod": "wrangler d1 migrations apply studio2u-production --remote"
   },
   "dependencies": {
-    "hono": "^4.12.30"
+    "hono": "^4.12.30",
+    "stripe": "^22.5.0"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.11.1",

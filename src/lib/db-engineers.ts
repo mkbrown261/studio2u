@@ -23,6 +23,9 @@ export interface EngineerProfile {
   is_suspended: number
   rating_avg: number
   rating_count: number
+  stripe_account_id: string | null
+  stripe_onboarding_complete: number
+  stripe_charges_enabled: number
   created_at: string
   updated_at: string
 }
@@ -37,10 +40,15 @@ export async function getEngineerProfileById(db: D1Database, id: number): Promis
   return (row as unknown as EngineerProfile) || null
 }
 
+// Phase 3 M5: mandatory Stripe onboarding — an engineer never appears in the public
+// directory (and can't be booked) until Stripe confirms charges_enabled on their
+// connected account. No exceptions, no Cash App fallback.
 export async function getPublishedEngineers(db: D1Database): Promise<EngineerProfile[]> {
   const { results } = await db
     .prepare(
-      `SELECT * FROM engineer_profiles WHERE is_published = 1 AND is_suspended = 0 ORDER BY rating_avg DESC, created_at ASC`
+      `SELECT * FROM engineer_profiles
+       WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1
+       ORDER BY rating_avg DESC, created_at ASC`
     )
     .all()
   return (results as unknown as EngineerProfile[]) || []
@@ -148,6 +156,39 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
 
 export async function setEngineerSuspended(db: D1Database, id: number, suspended: boolean) {
   await db.prepare('UPDATE engineer_profiles SET is_suspended = ? WHERE id = ?').bind(suspended ? 1 : 0, id).run()
+}
+
+// ---------- Stripe Connect (Phase 3 M5) ----------
+
+// Persists the newly-created Connect account id the first time an engineer clicks
+// "Connect with Stripe". Onboarding status columns start at 0/false and only flip
+// once we re-check the account against Stripe's API (see refreshEngineerStripeStatus).
+export async function setEngineerStripeAccountId(db: D1Database, engineerProfileId: number, stripeAccountId: string) {
+  await db
+    .prepare('UPDATE engineer_profiles SET stripe_account_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .bind(stripeAccountId, engineerProfileId)
+    .run()
+}
+
+// Called after the engineer returns from Stripe's hosted onboarding flow (or any time
+// we want a fresh read) — reflects Stripe's own account.charges_enabled /
+// details_submitted flags into our local row so booking-eligibility checks never have
+// to call Stripe's API on the hot path.
+export async function updateEngineerStripeStatus(
+  db: D1Database,
+  engineerProfileId: number,
+  params: { chargesEnabled: boolean; detailsSubmitted: boolean }
+) {
+  await db
+    .prepare(
+      `UPDATE engineer_profiles SET
+        stripe_charges_enabled = ?,
+        stripe_onboarding_complete = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`
+    )
+    .bind(params.chargesEnabled ? 1 : 0, params.detailsSubmitted ? 1 : 0, engineerProfileId)
+    .run()
 }
 
 // Resolve display name / Cash App handle / photo for a booking — used on confirmation,

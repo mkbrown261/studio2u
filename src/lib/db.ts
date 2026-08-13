@@ -186,6 +186,55 @@ export async function attachPaymentProof(
     .run()
 }
 
+// ---------- Stripe Connect payments (Phase 3 M5) ----------
+
+// Stashes the Checkout Session id the moment we create it, so a booking can always be
+// traced back to its Stripe session even if the customer abandons checkout and the
+// webhook never fires.
+export async function attachCheckoutSession(
+  db: D1Database,
+  bookingId: number,
+  params: { checkoutSessionId: string; platformFeeAmount: number; engineerPayoutAmount: number }
+) {
+  await db
+    .prepare(
+      `UPDATE bookings SET
+        stripe_checkout_session_id = ?,
+        platform_fee_amount = ?,
+        engineer_payout_amount = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`
+    )
+    .bind(params.checkoutSessionId, params.platformFeeAmount, params.engineerPayoutAmount, bookingId)
+    .run()
+}
+
+export async function getBookingByCheckoutSessionId(db: D1Database, sessionId: string): Promise<Booking | null> {
+  const row = await db.prepare('SELECT * FROM bookings WHERE stripe_checkout_session_id = ?').bind(sessionId).first()
+  return (row as unknown as Booking) || null
+}
+
+// Called by the Stripe webhook once checkout.session.completed fires — this is what
+// actually confirms the booking now; there's no more manual "engineer approves after
+// seeing a screenshot" step in the Stripe flow.
+export async function markBookingPaid(
+  db: D1Database,
+  bookingId: number,
+  params: { paymentIntentId: string }
+) {
+  await db
+    .prepare(
+      `UPDATE bookings SET
+        stripe_payment_intent_id = ?,
+        payment_method = 'stripe',
+        status = 'confirmed',
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`
+    )
+    .bind(params.paymentIntentId, bookingId)
+    .run()
+}
+
 export async function updateBookingStatus(
   db: D1Database,
   bookingId: number,
