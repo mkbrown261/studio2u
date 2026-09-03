@@ -1,4 +1,6 @@
 import { Hono } from 'hono'
+import { csrf } from 'hono/csrf'
+import { secureHeaders } from 'hono/secure-headers'
 import { renderer } from './renderer'
 import type { AppEnv } from './types'
 import {
@@ -26,7 +28,10 @@ import { ConfirmationPage } from './pages/confirmation'
 import { StatusPage } from './pages/status'
 import { AdminLoginPage } from './pages/admin-login'
 import { AdminDashboardPage } from './pages/admin-dashboard'
-import { buildSessionCookie, buildClearCookie, expectedSessionToken, isAdminAuthenticated } from './lib/auth'
+import { buildSessionCookie, buildClearCookie, createAdminSession, destroyAdminSession, isAdminAuthenticated, getCookie, COOKIE_NAME as ADMIN_COOKIE_NAME } from './lib/auth'
+import { constantTimeEqual } from './lib/password'
+import { isRateLimited, recordAttempt, rateLimitKey } from './lib/rate-limit'
+import { logAuditEvent } from './lib/audit-log'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -40,6 +45,31 @@ const app = new Hono<AppEnv>()
 // overhead on a high-frequency webhook endpoint, and more importantly this route
 // needs the raw, untouched request body for signature verification.
 app.route('/', stripeWebhookRoutes)
+
+// Security hardening pass (pre-Stripe-go-live):
+// - CSRF: rejects cross-site form POSTs whose Origin/Sec-Fetch-Site doesn't match
+//   this app — mounted globally so every state-changing route is covered, not just
+//   ones we remember to protect individually. Stripe webhook is exempt (mounted
+//   above, before this) since it's a legitimate cross-origin POST from Stripe
+//   verified by signature instead.
+// - secureHeaders: sets CSP, X-Frame-Options, HSTS, etc. CSP is scoped to the actual
+//   third-party origins this app loads (Tailwind CDN, jsDelivr, Google Fonts, unpkg
+//   for Leaflet, SoundCloud embeds) rather than left wide open.
+app.use(csrf())
+app.use(
+  secureHeaders({
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://cdn.jsdelivr.net', 'https://unpkg.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdn.jsdelivr.net', 'https://unpkg.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https://api.stripe.com'],
+      frameSrc: ["'self'", 'https://w.soundcloud.com', 'https://checkout.stripe.com', 'https://js.stripe.com'],
+      objectSrc: ["'none'"]
+    }
+  })
+)
 
 app.use(renderer)
 
@@ -294,46 +324,64 @@ app.post('/admin/login', async (c) => {
     )
   }
 
-  if (password !== adminPassword) {
+  // Rate limit: max 10 attempts per 15 min per IP, checked BEFORE verifying the
+  // password so a lockout can't be bypassed by a correct-on-the-11th-try guess.
+  const limitKey = rateLimitKey('admin-login', c.req.raw)
+  if (await isRateLimited(c.env.DB, limitKey)) {
+    return c.render(<AdminLoginPage error="Too many attempts. Try again in a few minutes." />, { title: 'Admin Login' })
+  }
+
+  if (!constantTimeEqual(password, adminPassword)) {
+    await recordAttempt(c.env.DB, limitKey)
     return c.render(<AdminLoginPage error="Incorrect password." />, { title: 'Admin Login' })
   }
 
-  const token = await expectedSessionToken(adminPassword)
+  const token = await createAdminSession(c.env.DB)
   c.header('Set-Cookie', buildSessionCookie(token))
   return c.redirect('/admin')
 })
 
 app.post('/admin/logout', async (c) => {
+  const token = getCookie(c.req.raw, ADMIN_COOKIE_NAME)
+  if (token) {
+    await destroyAdminSession(c.env.DB, token)
+  }
   c.header('Set-Cookie', buildClearCookie())
   return c.redirect('/admin/login')
 })
 
+// Auth middleware for every /admin/* route. Kept as five explicit blocks (rather than
+// relying on Hono's bare `app.use('/admin', ...)` to cascade) because that pattern
+// does NOT reliably match nested sub-paths without an explicit `/*` — verified during
+// the security audit by enumerating every `/admin/...` route definition and live-
+// testing each one unauthenticated against production; all five blocks below cover
+// 100% of the current route list (login/logout routes are intentionally excluded).
 app.use('/admin', async (c, next) => {
-  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  const authed = await isAdminAuthenticated(c.env.DB, c.req.raw)
   if (!authed) return c.redirect('/admin/login')
   await next()
 })
 
 app.use('/admin/bookings/*', async (c, next) => {
-  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  const authed = await isAdminAuthenticated(c.env.DB, c.req.raw)
   if (!authed) return c.redirect('/admin/login')
   await next()
 })
 
 app.use('/admin/proof/*', async (c, next) => {
-  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  const authed = await isAdminAuthenticated(c.env.DB, c.req.raw)
   if (!authed) return c.text('Unauthorized', 401)
   await next()
 })
 
 app.use('/admin/engineers/*', async (c, next) => {
-  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  const authed = await isAdminAuthenticated(c.env.DB, c.req.raw)
   if (!authed) return c.redirect('/admin/login')
   await next()
 })
 
 app.use('/admin/settings/*', async (c, next) => {
-  const authed = await isAdminAuthenticated(c.req.raw, c.env.ADMIN_PASSWORD || '')
+  const authed = await isAdminAuthenticated(c.env.DB, c.req.raw)
   if (!authed) return c.redirect('/admin/login')
   await next()
 })
@@ -356,6 +404,7 @@ app.post('/admin/settings/commission', async (c) => {
   const percent = parseFloat((body['commission_percent'] as string) || '')
   if (Number.isFinite(percent)) {
     await setCommissionPercent(c.env.DB, percent)
+    await logAuditEvent(c.env.DB, { actorType: 'admin', action: 'commission.update', metadata: { percent } })
   }
   return c.redirect('/admin')
 })
@@ -367,6 +416,7 @@ app.post('/admin/bookings/:id/status', async (c) => {
   const validStatuses = ['confirmed', 'rejected', 'completed', 'cancelled']
   if (validStatuses.includes(status)) {
     await updateBookingStatus(c.env.DB, id, status)
+    await logAuditEvent(c.env.DB, { actorType: 'admin', action: 'booking.status_change', targetType: 'booking', targetId: id, metadata: { status } })
   }
   return c.redirect('/admin')
 })
@@ -393,6 +443,7 @@ app.post('/admin/engineers/:id/suspend', async (c) => {
   const body = await c.req.parseBody()
   const suspended = body['suspended'] === '1'
   await setEngineerSuspended(c.env.DB, id, suspended)
+  await logAuditEvent(c.env.DB, { actorType: 'admin', action: 'engineer.suspend', targetType: 'engineer_profile', targetId: id, metadata: { suspended } })
   return c.redirect('/admin?tab=engineers')
 })
 

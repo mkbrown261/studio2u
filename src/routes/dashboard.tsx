@@ -22,6 +22,8 @@ import {
   getUpcomingOverrides
 } from '../lib/db-availability'
 import { getStripeClient, createConnectAccount, createAccountOnboardingLink, getAccountStatus } from '../lib/stripe'
+import { validateImageUpload } from '../lib/upload-validation'
+import { logAuditEvent } from '../lib/audit-log'
 import { DashboardHomePage } from '../pages/dashboard-home'
 import { DashboardProfilePage } from '../pages/dashboard-profile'
 import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
@@ -109,12 +111,16 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
     return c.render(<DashboardProfilePage profile={existing} error="Please fill out all required fields." />, { title: 'Your Profile' })
   }
 
-  // Photo uploads
+  // Photo uploads — validated against an image-type allowlist + 5MB size cap
+  // (security hardening pass) before ever touching R2.
   let photoUrl: string | undefined
   const photoFile = formData.get('photo') as File | null
   if (photoFile && photoFile.size > 0) {
-    const ext = photoFile.type === 'image/png' ? 'png' : 'jpg'
-    const key = `engineer-photos/${user.id}-${Date.now()}.${ext}`
+    const check = validateImageUpload(photoFile)
+    if (!check.valid) {
+      return c.render(<DashboardProfilePage profile={existing} error={check.error} />, { title: 'Your Profile' })
+    }
+    const key = `engineer-photos/${user.id}-${Date.now()}.${check.extension}`
     await c.env.R2.put(key, await photoFile.arrayBuffer(), { httpMetadata: { contentType: photoFile.type } })
     photoUrl = key
   }
@@ -122,8 +128,11 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
   let equipmentPhotoUrl: string | undefined
   const equipmentPhotoFile = formData.get('equipment_photo') as File | null
   if (equipmentPhotoFile && equipmentPhotoFile.size > 0) {
-    const ext = equipmentPhotoFile.type === 'image/png' ? 'png' : 'jpg'
-    const key = `engineer-equipment/${user.id}-${Date.now()}.${ext}`
+    const check = validateImageUpload(equipmentPhotoFile)
+    if (!check.valid) {
+      return c.render(<DashboardProfilePage profile={existing} error={check.error} />, { title: 'Your Profile' })
+    }
+    const key = `engineer-equipment/${user.id}-${Date.now()}.${check.extension}`
     await c.env.R2.put(key, await equipmentPhotoFile.arrayBuffer(), { httpMetadata: { contentType: equipmentPhotoFile.type } })
     equipmentPhotoUrl = key
   }
@@ -236,6 +245,7 @@ dashboardRoutes.post('/dashboard/bookings/:id/status', async (c) => {
   const validStatuses = ['confirmed', 'rejected', 'completed', 'cancelled']
   if (validStatuses.includes(status)) {
     await updateBookingStatus(c.env.DB, bookingId, status)
+    await logAuditEvent(c.env.DB, { actorType: 'user', actorId: user.id, action: 'booking.status_change', targetType: 'booking', targetId: bookingId, metadata: { status } })
   }
   return c.redirect('/dashboard/bookings')
 })

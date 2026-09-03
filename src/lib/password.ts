@@ -54,3 +54,14 @@ export async function verifyPassword(password: string, stored: string): Promise<
   }
   return mismatch === 0
 }
+
+// Constant-time string comparison for plain secrets (e.g. ADMIN_PASSWORD checks)
+// where there's no hash to derive — same charCode-XOR approach as verifyPassword.
+export function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let mismatch = 0
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return mismatch === 0
+}

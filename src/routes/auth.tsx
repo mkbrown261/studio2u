@@ -3,6 +3,7 @@ import type { AppEnv } from '../types'
 import { hashPassword, verifyPassword } from '../lib/password'
 import { findUserByEmail, createUser } from '../lib/db-users'
 import { createSession, destroySession, buildSessionCookieHeader, buildClearSessionCookieHeader, getCookieValue, SESSION_COOKIE } from '../lib/session'
+import { isRateLimited, recordAttempt, rateLimitKey } from '../lib/rate-limit'
 import { SignupPage } from '../pages/signup'
 import { LoginPage } from '../pages/login'
 
@@ -30,6 +31,13 @@ authRoutes.post('/signup', async (c) => {
   if (!roleArtist && !roleEngineer) {
     return c.render(<SignupPage error="Please select at least one: Artist or Engineer." />, { title: 'Sign Up' })
   }
+
+  // Rate limit signup attempts per IP to slow down automated account-farming.
+  const signupLimitKey = rateLimitKey('signup', c.req.raw)
+  if (await isRateLimited(c.env.DB, signupLimitKey)) {
+    return c.render(<SignupPage error="Too many attempts. Please try again in a few minutes." />, { title: 'Sign Up' })
+  }
+  await recordAttempt(c.env.DB, signupLimitKey)
 
   const existing = await findUserByEmail(c.env.DB, email)
   if (existing) {
@@ -68,13 +76,23 @@ authRoutes.post('/login', async (c) => {
     return c.render(<LoginPage error="Please enter your email and password." />, { title: 'Log In' })
   }
 
+  // Rate limit by IP so a brute-force script can't hammer one or many accounts
+  // unlimited times; checked before the DB lookup so it also caps user-enumeration
+  // attempts against emails that don't exist.
+  const loginLimitKey = rateLimitKey('login', c.req.raw)
+  if (await isRateLimited(c.env.DB, loginLimitKey)) {
+    return c.render(<LoginPage error="Too many attempts. Please try again in a few minutes." />, { title: 'Log In' })
+  }
+
   const user = await findUserByEmail(c.env.DB, email)
   if (!user) {
+    await recordAttempt(c.env.DB, loginLimitKey)
     return c.render(<LoginPage error="Incorrect email or password." />, { title: 'Log In' })
   }
 
   const valid = await verifyPassword(password, user.password_hash)
   if (!valid) {
+    await recordAttempt(c.env.DB, loginLimitKey)
     return c.render(<LoginPage error="Incorrect email or password." />, { title: 'Log In' })
   }
 
