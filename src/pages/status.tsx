@@ -27,16 +27,16 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
         <p class="text-muted mt-3">Enter the email you used when booking.</p>
       </div>
 
-      <form method="GET" action="/status" class="flex gap-3 mb-10">
+      <form method="GET" action="/status" class="flex flex-col sm:flex-row gap-3 mb-10">
         <input
           type="email"
           name="email"
           required
           value={email || ''}
           placeholder="you@example.com"
-          class="flex-1 bg-surface border border-gold/20 rounded-full px-5 py-3 text-cream focus:outline-none focus:border-gold"
+          class="flex-1 min-w-0 w-full bg-surface border border-gold/20 rounded-full px-5 py-3 text-cream focus:outline-none focus:border-gold"
         />
-        <button type="submit" class="bg-gold hover:bg-gold-light text-ink font-semibold px-6 py-3 rounded-full transition">
+        <button type="submit" class="bg-gold hover:bg-gold-light text-ink font-semibold px-6 py-3 rounded-full transition shrink-0 sm:w-auto w-full">
           Search
         </button>
       </form>
