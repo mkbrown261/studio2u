@@ -15,7 +15,8 @@
     genre: '',
     customerName: '',
     customerEmail: '',
-    customerPhone: ''
+    customerPhone: '',
+    recordingConsentAccepted: false
   }
 
   function el(html) {
@@ -261,12 +262,19 @@
         <div id="price-amount" class="text-3xl font-display font-bold text-gold">Calculating...</div>
         <div id="price-breakdown" class="text-xs text-muted mt-1"></div>
       </div>
+      <label id="consent-label" class="flex items-start gap-3 bg-ink/50 border border-gold/20 rounded-xl p-4 mb-6 cursor-pointer hover:border-gold/40 transition">
+        <input type="checkbox" id="recording-consent-checkbox" class="accent-gold mt-0.5 w-4 h-4 flex-shrink-0" ${state.recordingConsentAccepted ? 'checked' : ''} />
+        <span class="text-sm text-muted leading-relaxed">
+          I confirm that I have obtained all legally required recording consent and agree to the
+          <a href="/consent" target="_blank" class="text-gold hover:underline">Studio2U Recording Consent &amp; User Responsibility Agreement</a>.
+        </span>
+      </label>
       <div id="submit-error" class="hidden text-sm text-wine-light bg-wine/20 border border-wine/40 rounded-lg px-4 py-3 mb-4"></div>
       <div class="flex gap-3">
         <button id="back-3" class="flex-1 border border-gold/30 hover:bg-gold/10 text-cream font-semibold py-3.5 rounded-full transition">
           <i class="fa-solid fa-arrow-left mr-1"></i> Back
         </button>
-        <button id="submit-booking" class="flex-1 bg-gold hover:bg-gold-light text-ink font-semibold py-3.5 rounded-full transition">
+        <button id="submit-booking" class="flex-1 bg-gold hover:bg-gold-light text-ink font-semibold py-3.5 rounded-full transition disabled:opacity-40 disabled:cursor-not-allowed" ${state.recordingConsentAccepted ? '' : 'disabled'}>
           Confirm Booking
         </button>
       </div>
@@ -287,7 +295,15 @@
       renderStep2()
     })
 
+    // "Confirm Booking" stays disabled until the Recording Consent checkbox is
+    // checked — a mandatory click-through, not a PDF someone can ignore.
+    document.getElementById('recording-consent-checkbox').addEventListener('change', (e) => {
+      state.recordingConsentAccepted = e.currentTarget.checked
+      document.getElementById('submit-booking').disabled = !state.recordingConsentAccepted
+    })
+
     document.getElementById('submit-booking').addEventListener('click', async (e) => {
+      if (!state.recordingConsentAccepted) return
       const btn = e.currentTarget
       btn.disabled = true
       btn.textContent = 'Booking...'

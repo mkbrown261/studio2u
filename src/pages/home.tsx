@@ -133,8 +133,8 @@ export function HomePage({ services }: { services: Service[] }) {
                 <div class="text-muted text-xs uppercase tracking-wide mt-1">Engineer Network</div>
               </div>
               <div>
-                <div class="text-2xl font-display font-bold text-gold">M–F</div>
-                <div class="text-muted text-xs uppercase tracking-wide mt-1">11am – 11pm</div>
+                <div class="text-2xl font-display font-bold text-gold">On-Demand</div>
+                <div class="text-muted text-xs uppercase tracking-wide mt-1">Every Day</div>
               </div>
             </div>
           </div>
@@ -197,7 +197,7 @@ export function HomePage({ services }: { services: Service[] }) {
         <div class="space-y-3">
           {[
             { q: 'How does payment work?', a: 'After you book, you\'ll be sent straight to a secure Stripe checkout page to pay for your session. Once payment clears, your booking is confirmed automatically — no waiting on manual approval.' },
-            { q: 'What if I need a time outside Monday–Friday, 11am–11pm?', a: 'You can still submit a booking request for those times — it\'ll be flagged as a special request and we\'ll reach out to confirm availability directly instead of auto-confirming.' },
+            { q: 'What if my session time isn\'t showing as available?', a: 'Studio2U is on-demand — every engineer sets their own real-time calendar, so availability varies engineer to engineer, any day of the week. If the time you want isn\'t open on their calendar, try another time slot or another engineer nearby.' },
             { q: 'What locations do you record at?', a: 'Apartments, houses, hotel rooms, rented studios — wherever you have a quiet-ish space. We travel up to 30 miles; further out, just ask.' },
             { q: 'Do I need my own equipment?', a: 'No. We bring professional mics, an audio interface, headphones, and everything needed for a clean vocal recording session.' },
             { q: 'What do I get after the session?', a: 'Raw recorded stems, delivered digitally within the week. Need mixing or mastering too? Just ask — those are add-on services.' }

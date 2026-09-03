@@ -30,8 +30,11 @@ import { AdminLoginPage } from './pages/admin-login'
 import { AdminDashboardPage } from './pages/admin-dashboard'
 import { buildSessionCookie, buildClearCookie, createAdminSession, destroyAdminSession, isAdminAuthenticated, getCookie, COOKIE_NAME as ADMIN_COOKIE_NAME } from './lib/auth'
 import { constantTimeEqual } from './lib/password'
-import { isRateLimited, recordAttempt, rateLimitKey } from './lib/rate-limit'
+import { isRateLimited, recordAttempt, rateLimitKey, getClientIp } from './lib/rate-limit'
 import { logAuditEvent } from './lib/audit-log'
+import { logConsentEvent, CURRENT_RECORDING_CONSENT_VERSION } from './lib/consent-log'
+import { TermsPage } from './pages/terms'
+import { ConsentPage } from './pages/consent'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -101,6 +104,19 @@ app.get('/book', async (c) => {
   return c.redirect('/engineers')
 })
 
+// ---------- Legal documents ----------
+// Real, linkable pages for the legal docs stored in /legal/*.md (source of
+// truth). Both the signup ToS checkbox and the booking-flow recording-consent
+// checkbox link here so users can actually read what they're agreeing to
+// instead of trusting an unopened PDF.
+app.get('/terms', async (c) => {
+  return c.render(<TermsPage />, { title: 'Terms of Service' })
+})
+
+app.get('/consent', async (c) => {
+  return c.render(<ConsentPage />, { title: 'Recording Consent Agreement' })
+})
+
 // ---------- Booking API ----------
 
 // Returns every open hour for this engineer on this date (weekly template +
@@ -154,7 +170,8 @@ app.post('/api/bookings', async (c) => {
       genre,
       customerName,
       customerEmail,
-      customerPhone
+      customerPhone,
+      recordingConsentAccepted
     } = body
 
     if (
@@ -168,6 +185,14 @@ app.post('/api/bookings', async (c) => {
       !customerPhone
     ) {
       return c.json({ error: 'Missing required fields.' }, 400)
+    }
+
+    // Server-side enforcement of the Recording Consent Agreement checkbox — never
+    // trust the client's disabled-button UX alone, since a direct API call could
+    // skip it entirely. Mirrors the "never trust the client" pattern already used
+    // below for calendar availability.
+    if (recordingConsentAccepted !== true) {
+      return c.json({ error: 'You must confirm the Recording Consent Agreement before booking.' }, 400)
     }
 
     const engineer = await getEngineerProfileById(c.env.DB, parseInt(engineerId, 10))
@@ -238,6 +263,17 @@ app.post('/api/bookings', async (c) => {
     if (!existingCustomer) {
       await markCustomerFirstBookingUsed(c.env.DB, customerId)
     }
+
+    // Evidence-trail write: who accepted the Recording Consent Agreement, which
+    // version, tied to this exact booking. Best-effort — never blocks the booking.
+    await logConsentEvent(c.env.DB, {
+      bookingId,
+      documentType: 'recording_consent',
+      documentVersion: CURRENT_RECORDING_CONSENT_VERSION,
+      email: customerEmail,
+      ipAddress: getClientIp(c.req.raw),
+      userAgent: c.req.header('User-Agent') || null
+    })
 
     // Create the Stripe Checkout Session right away — the customer is sent straight
     // into Stripe's hosted payment page next; there's no more "book now, pay later

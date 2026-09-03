@@ -44,6 +44,14 @@ export function SignupPage({ error }: { error?: string }) {
           <p class="text-xs text-muted mt-1.5">You can check both — you're not locked in.</p>
         </div>
 
+        <label class="flex items-start gap-3 bg-ink border border-gold/20 rounded-lg px-4 py-3 cursor-pointer hover:border-gold/40 transition">
+          <input type="checkbox" name="terms_accepted" value="1" required class="accent-gold mt-0.5 w-4 h-4 flex-shrink-0" />
+          <span class="text-sm text-muted leading-relaxed">
+            I have read and agree to the Studio2U{' '}
+            <a href="/terms" target="_blank" class="text-gold hover:underline">Terms of Service</a>.
+          </span>
+        </label>
+
         <button type="submit" class="w-full bg-gold hover:bg-gold-light text-ink font-semibold py-3 rounded-lg transition">
           Create Account
         </button>

@@ -17,7 +17,7 @@ export function DashboardPaymentsPage({
         <h1 class="font-display text-3xl font-bold mt-4">Payments</h1>
         <p class="text-muted mt-2">
           Studio2U pays engineers automatically through Stripe. When a client books and pays,
-          Stripe splits the charge instantly — our commission stays with the platform, and
+          Stripe splits the charge instantly — the Studio2U Platform Fee stays with the platform, and
           the rest lands directly in your connected bank account. No manual invoicing, no Cash App.
         </p>
       </div>
@@ -97,7 +97,7 @@ export function DashboardPaymentsPage({
       <div class="mt-6 bg-ink/50 border border-gold/10 rounded-xl p-5 text-sm text-muted">
         <p class="font-semibold text-cream mb-2"><i class="fa-solid fa-circle-info text-gold mr-1.5"></i>How the split works</p>
         <p>
-          When a client pays for a session, Stripe automatically takes Studio2U's platform commission
+          When a client pays for a session, Stripe automatically takes the Studio2U Platform Fee
           and sends the rest directly to your connected account. Payouts follow Stripe's normal payout
           schedule to your bank — no waiting on the platform to send money manually.
         </p>

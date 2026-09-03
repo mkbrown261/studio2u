@@ -3,7 +3,8 @@ import type { AppEnv } from '../types'
 import { hashPassword, verifyPassword } from '../lib/password'
 import { findUserByEmail, createUser } from '../lib/db-users'
 import { createSession, destroySession, buildSessionCookieHeader, buildClearSessionCookieHeader, getCookieValue, SESSION_COOKIE } from '../lib/session'
-import { isRateLimited, recordAttempt, rateLimitKey } from '../lib/rate-limit'
+import { isRateLimited, recordAttempt, rateLimitKey, getClientIp } from '../lib/rate-limit'
+import { logConsentEvent, CURRENT_TERMS_VERSION } from '../lib/consent-log'
 import { SignupPage } from '../pages/signup'
 import { LoginPage } from '../pages/login'
 
@@ -21,6 +22,7 @@ authRoutes.post('/signup', async (c) => {
   const password = (body['password'] as string) || ''
   const roleArtist = body['role_artist'] === '1'
   const roleEngineer = body['role_engineer'] === '1'
+  const termsAccepted = body['terms_accepted'] === '1'
 
   if (!name || !email || !phone || !password) {
     return c.render(<SignupPage error="Please fill out all fields." />, { title: 'Sign Up' })
@@ -30,6 +32,11 @@ authRoutes.post('/signup', async (c) => {
   }
   if (!roleArtist && !roleEngineer) {
     return c.render(<SignupPage error="Please select at least one: Artist or Engineer." />, { title: 'Sign Up' })
+  }
+  // Server-side enforcement of the Terms of Service checkbox — the HTML `required`
+  // attribute is a UX nicety, not a control; a direct POST could skip it.
+  if (!termsAccepted) {
+    return c.render(<SignupPage error="You must agree to the Terms of Service to create an account." />, { title: 'Sign Up' })
   }
 
   // Rate limit signup attempts per IP to slow down automated account-farming.
@@ -52,6 +59,17 @@ authRoutes.post('/signup', async (c) => {
     phone,
     isEngineer: roleEngineer,
     isArtist: roleArtist
+  })
+
+  // Evidence-trail write: who accepted the Terms of Service, which version, at
+  // signup. Best-effort — never blocks account creation.
+  await logConsentEvent(c.env.DB, {
+    userId,
+    documentType: 'terms',
+    documentVersion: CURRENT_TERMS_VERSION,
+    email,
+    ipAddress: getClientIp(c.req.raw),
+    userAgent: c.req.header('User-Agent') || null
   })
 
   const token = await createSession(c.env.DB, userId)
