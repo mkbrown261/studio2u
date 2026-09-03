@@ -60,7 +60,7 @@ app.route('/', stripeWebhookRoutes)
 //   verified by signature instead.
 // - secureHeaders: sets CSP, X-Frame-Options, HSTS, etc. CSP is scoped to the actual
 //   third-party origins this app loads (Tailwind CDN, jsDelivr, Google Fonts, unpkg
-//   for Leaflet, SoundCloud embeds) rather than left wide open.
+//   for Leaflet, SoundCloud/YouTube portfolio embeds) rather than left wide open.
 app.use(csrf())
 app.use(
   secureHeaders({
@@ -71,7 +71,7 @@ app.use(
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'", 'https://api.stripe.com'],
-      frameSrc: ["'self'", 'https://w.soundcloud.com', 'https://checkout.stripe.com', 'https://js.stripe.com'],
+      frameSrc: ["'self'", 'https://w.soundcloud.com', 'https://www.youtube.com', 'https://youtube.com', 'https://www.youtube-nocookie.com', 'https://checkout.stripe.com', 'https://js.stripe.com'],
       objectSrc: ["'none'"]
     }
   })
