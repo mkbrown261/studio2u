@@ -96,8 +96,8 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
         <main class="pt-20">{children}</main>
 
         <footer class="border-t border-gold/10 bg-surface mt-24">
-          <div class="max-w-6xl mx-auto px-5 py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
-            <div>
+          <div class="max-w-6xl mx-auto px-5 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10">
+            <div class="sm:col-span-2 md:col-span-1">
               <div class="flex items-center gap-2 mb-3">
                 <img src="/static/brand/header-badge.png" alt="Studio2U" class="w-8 h-8 object-contain" />
                 <span class="font-display text-base">Studio2U</span>
@@ -121,6 +121,14 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
                 <li><a href="/signup" class="hover:text-gold transition">Become an Engineer</a></li>
               </ul>
             </div>
+            <div id="legal">
+              <h4 class="font-semibold text-cream mb-3 text-sm uppercase tracking-wider">Legal</h4>
+              <ul class="space-y-2 text-sm text-muted">
+                <li><a href="/terms" class="hover:text-gold transition">Terms of Service</a></li>
+                <li><a href="/privacy" class="hover:text-gold transition">Privacy Policy</a></li>
+                <li><a href="/consent" class="hover:text-gold transition">Recording Consent Agreement</a></li>
+              </ul>
+            </div>
             <div id="contact">
               <h4 class="font-semibold text-cream mb-3 text-sm uppercase tracking-wider">Contact</h4>
               <ul class="space-y-2 text-sm text-muted">
@@ -130,7 +138,7 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
             </div>
           </div>
           <div class="border-t border-gold/10 py-5 text-center text-xs text-muted">
-            © 2026 Studio2U. All rights reserved. We bring the studio to you.
+            © 2026 Studio2U LLC · Wilmington, Delaware. All rights reserved. We bring the studio to you.
           </div>
         </footer>
       </body>

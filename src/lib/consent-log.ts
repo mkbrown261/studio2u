@@ -44,3 +44,4 @@ export async function logConsentEvent(db: D1Database, entry: ConsentLogEntry): P
 // served at /terms and /consent.
 export const CURRENT_TERMS_VERSION = '1.0'
 export const CURRENT_RECORDING_CONSENT_VERSION = '1.0'
+export const CURRENT_PRIVACY_VERSION = '1.0'

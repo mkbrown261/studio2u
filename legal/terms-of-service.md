@@ -224,9 +224,11 @@ Nothing in this section prevents either party from seeking emergency injunctive 
 
 ## 18. GOVERNING LAW
 
-These Terms shall be governed by the laws applicable to Studio2U's designated jurisdiction, without regard to conflict-of-law principles, except where applicable law requires otherwise.
+Studio2U ("the Company," referenced throughout these Terms) is Studio2U LLC, headquartered in Wilmington, Delaware.
 
-**Studio2U should have counsel insert the Company's actual legal entity name, state of formation, governing-law state, and venue before publication.**
+These Terms shall be governed by the laws of the State of Delaware, without regard to conflict-of-law principles, except where applicable law requires otherwise. Venue for any dispute not subject to arbitration shall lie in the state or federal courts located in Delaware, except where applicable law requires otherwise.
+
+**A specific registered-agent address/suite and any additional venue detail should be added once available; a Delaware-licensed attorney should confirm this section, particularly the arbitration/class-action language, before this is relied upon in a live dispute.**
 
 ## 19. CHANGES
 

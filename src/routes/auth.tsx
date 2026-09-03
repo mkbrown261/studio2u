@@ -4,7 +4,7 @@ import { hashPassword, verifyPassword } from '../lib/password'
 import { findUserByEmail, createUser } from '../lib/db-users'
 import { createSession, destroySession, buildSessionCookieHeader, buildClearSessionCookieHeader, getCookieValue, SESSION_COOKIE } from '../lib/session'
 import { isRateLimited, recordAttempt, rateLimitKey, getClientIp } from '../lib/rate-limit'
-import { logConsentEvent, CURRENT_TERMS_VERSION } from '../lib/consent-log'
+import { logConsentEvent, CURRENT_TERMS_VERSION, CURRENT_PRIVACY_VERSION } from '../lib/consent-log'
 import { SignupPage } from '../pages/signup'
 import { LoginPage } from '../pages/login'
 
@@ -34,9 +34,11 @@ authRoutes.post('/signup', async (c) => {
     return c.render(<SignupPage error="Please select at least one: Artist or Engineer." />, { title: 'Sign Up' })
   }
   // Server-side enforcement of the Terms of Service checkbox — the HTML `required`
-  // attribute is a UX nicety, not a control; a direct POST could skip it.
+  // attribute is a UX nicety, not a control; a direct POST could skip it. This single
+  // checkbox covers both agreeing to the Terms (contractual) and acknowledging the
+  // Privacy Policy (notice) — see the two separate consent_log rows written below.
   if (!termsAccepted) {
-    return c.render(<SignupPage error="You must agree to the Terms of Service to create an account." />, { title: 'Sign Up' })
+    return c.render(<SignupPage error="You must agree to the Terms of Service and acknowledge the Privacy Policy to create an account." />, { title: 'Sign Up' })
   }
 
   // Rate limit signup attempts per IP to slow down automated account-farming.
@@ -61,15 +63,26 @@ authRoutes.post('/signup', async (c) => {
     isArtist: roleArtist
   })
 
-  // Evidence-trail write: who accepted the Terms of Service, which version, at
-  // signup. Best-effort — never blocks account creation.
+  // Evidence-trail write: who accepted the Terms of Service (contractual) and
+  // acknowledged the Privacy Policy (notice), which versions, at signup.
+  // Best-effort — never blocks account creation.
+  const ip = getClientIp(c.req.raw)
+  const userAgent = c.req.header('User-Agent') || null
   await logConsentEvent(c.env.DB, {
     userId,
     documentType: 'terms',
     documentVersion: CURRENT_TERMS_VERSION,
     email,
-    ipAddress: getClientIp(c.req.raw),
-    userAgent: c.req.header('User-Agent') || null
+    ipAddress: ip,
+    userAgent
+  })
+  await logConsentEvent(c.env.DB, {
+    userId,
+    documentType: 'privacy',
+    documentVersion: CURRENT_PRIVACY_VERSION,
+    email,
+    ipAddress: ip,
+    userAgent
   })
 
   const token = await createSession(c.env.DB, userId)

@@ -35,6 +35,7 @@ import { logAuditEvent } from './lib/audit-log'
 import { logConsentEvent, CURRENT_RECORDING_CONSENT_VERSION } from './lib/consent-log'
 import { TermsPage } from './pages/terms'
 import { ConsentPage } from './pages/consent'
+import { PrivacyPage } from './pages/privacy'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -115,6 +116,10 @@ app.get('/terms', async (c) => {
 
 app.get('/consent', async (c) => {
   return c.render(<ConsentPage />, { title: 'Recording Consent Agreement' })
+})
+
+app.get('/privacy', async (c) => {
+  return c.render(<PrivacyPage />, { title: 'Privacy Policy' })
 })
 
 // ---------- Booking API ----------
