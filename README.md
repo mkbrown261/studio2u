@@ -5,11 +5,25 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 ## Project Overview
 - **Name**: Studio2U
 - **Goal**: Let clients browse a directory of mobile recording engineers, pick one based on rate/reviews/genres, book directly, pay a Cash App deposit, get confirmed, get recorded.
-- **Phase**: Phase 3 in progress — M1 (admin-editable commission), M2 (branding), and M3 (per-engineer availability calendar) are complete. M4 (Resend email) and M5 (Stripe Connect, mandatory onboarding — no more Cash App) are still to come. Phase 2's full multi-engineer marketplace (public directory, per-engineer pricing, portfolios, reviews, directory-wide map) remains the foundation. Payments are still manual Cash App per engineer until M5 ships.
+- **Phase**: Phase 3 — M1 (admin-editable commission), M2 (branding), M3 (per-engineer availability calendar), M5 (Stripe Connect, live payments), a pre-Stripe-go-live security hardening pass, and a legal/consent-gate pass are all complete. M4 (Resend email) is still to come.
 
 ## Currently Completed Features
 
-### Phase 3 (in progress)
+### Legal & Consent (pre-Stripe-go-live)
+- **Legal documents** (`/legal/*.md` — source of truth, mirrored into `/terms` and `/consent` pages at build time via a small custom markdown renderer, `src/lib/markdown.ts`): **Master Terms of Service & Platform User Agreement** (v1.0, effective Aug 13 2026) and **Recording Consent, Authorization & User Responsibility Agreement** (v1.0, effective Sep 3 2026) — a separate, recording-specific consent doc. Both are versioned so future revisions can be tracked (`Recording Agreement v1.0`, `v1.1`, etc.) and both use "Studio2U 10% Platform Fee" framing rather than "commission."
+- **Mandatory ToS click-through at signup** (`/signup`): a required checkbox ("I have read and agree to the Studio2U Terms of Service") gates account creation — enforced server-side in `POST /signup`, not just via the HTML `required` attribute. On success, an acceptance row is written to `consent_log`.
+- **Mandatory Recording Consent click-through at booking** (`/book/:engineerId`, step 3 of the vanilla-JS booking wizard in `public/static/book.js`): "Confirm Booking" stays **disabled** until the customer checks "I confirm that I have obtained all legally required recording consent and agree to the Studio2U Recording Consent & User Responsibility Agreement" (links to `/consent`). Enforced server-side in `POST /api/bookings` (rejects with 400 if not accepted) — never trusts the disabled-button UX alone. On success, an acceptance row is written to `consent_log`, tied to the specific `bookingId`.
+- **`consent_log` table** (`migrations/0009_consent_log.sql`): evidence trail of every legal-document acceptance — `document_type` (`terms`/`privacy`/`recording_consent`), `document_version`, `user_id` or `booking_id`, email snapshot, IP, and user agent — so Studio2U can prove who accepted what, when, and in connection with which booking. Still open: a **Privacy Policy** document (the third piece of this set) has not yet been drafted or provided.
+
+### Security Hardening (pre-Stripe-go-live audit)
+- **Revocable admin sessions**: replaced a stateless signed-cookie admin auth scheme with DB-backed sessions (`admin_sessions` table) — a leaked cookie is no longer a forever-valid credential, and sessions can be individually killed without rotating `ADMIN_PASSWORD`.
+- **CSRF protection**: Hono's `csrf()` middleware mounted globally, rejecting cross-site form POSTs whose Origin doesn't match. The Stripe webhook route is exempt (verified by signature instead) and JSON API routes like `/api/bookings` are unaffected.
+- **Rate limiting**: D1-backed sliding-window rate limiter (`rate_limit_attempts` table) on `/login`, `/signup`, and `/admin/login` to slow down brute-force/account-farming scripts.
+- **Security headers**: `secureHeaders()` middleware sets a scoped Content-Security-Policy (only the actual third-party origins this app loads), X-Frame-Options, HSTS, etc.
+- **R2 upload validation**: `validateImageUpload()` enforces a MIME-type allowlist (PNG/JPEG/WebP) and a 5MB cap before any file reaches R2.
+- **Audit logging**: `audit_log` table records sensitive admin/engineer actions (suspensions, status overrides, commission changes) for later investigation — best-effort, never blocks the underlying action.
+
+### Phase 3
 - **M1 — Platform commission** (`/admin/settings/commission`): admin-editable commission percentage (default 10%), stored in `platform_settings` (key/value table), read live everywhere it's needed rather than hardcoded. `splitCommission()` in `src/lib/db-settings.ts` is pre-built for M5's Stripe Connect payout split (`application_fee_amount`) but not wired into any payout code yet since there is no Stripe integration yet.
 - **M2 — Branding**: custom favicon (16/32/48/180px, cropped tight to content so it reads clearly at browser-tab size), header/footer logo badge (transparent PNG), and a 3-way equipment field split (Microphone / DAW / Audio Interface) each shown on the public profile next to a matching 48px icon in a card grid — replacing the old single free-text "equipment" blob. Profiles saved before this migration still show their old free-text equipment via an automatic fallback.
 - **M3 — Engineer availability calendar** (`/dashboard/availability`): each engineer sets their own **weekly recurring schedule** (Mon–Sun day boxes, click a day to toggle open hours) plus **one-off date overrides** (close a specific date for vacation, or open extra hours beyond the weekly template, with a "reset to default" action). The public booking flow (`/book/:engineerId`) now shows only real, currently-open start times fetched live from `/api/available-slots` — no more free-text time entry with just an advisory note. Every booking is also **hard-validated server-side** on submit (`POST /api/bookings` returns 409 if the slot isn't actually open), and a slot **auto-blocks the instant it's booked** and **auto-frees if the booking is later cancelled/rejected** (blocking is derived live from the `bookings` table, not a separate lock table, so it's always in sync). Engineers who haven't touched their calendar yet automatically keep the old platform-wide default (Mon–Fri, 11am–10pm start times) — nothing breaks for existing profiles.
@@ -69,25 +83,31 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 | `/admin/engineers/:id/suspend` | POST | Suspend/reactivate an engineer profile (kill switch) |
 | `/admin/proof/:id` | GET | Streams the uploaded payment-proof file from R2 |
 | `/admin/logout` | POST | Clears admin session |
+| `/terms` | GET | Master Terms of Service & Platform User Agreement (v1.0) |
+| `/consent` | GET | Recording Consent, Authorization & User Responsibility Agreement (v1.0) |
 
 ## Features Not Yet Implemented
-- **M4 — Resend email** (transactional emails: booking confirmations, status updates) — not started. Test/sandbox sender approved for initial rollout.
+- **M4 — Resend email** (transactional emails: booking confirmations, status updates, engineer/admin notifications, signup email verification) — not started. Awaiting a Resend API key.
+- **Privacy Policy / Data Processing Policy** — the third piece of the legal-document set (alongside ToS and Recording Consent); not yet drafted. Needs the user to either provide a draft or approve an AI-drafted one before a `/privacy` page and signup checkbox can be added.
 - Password reset / email verification (simple email+password only, by design for now)
 - Reschedule / cancel self-service (still goes through the engineer or admin)
 - Messaging between customer and engineer
 - Upsell services beyond "contact for pricing" listing (Mixing, Mastering, etc.)
+- Equipment icon sizing pass on the engineer profile page (+5px requested, not yet applied)
+- Mobile optimization audit (not yet started)
 - Type-check cleanup: `tsconfig.json` lacks `@cloudflare/workers-types`/DOM lib, so `tsc --noEmit` reports many pre-existing type errors. These do not block the Vite/Wrangler build (the actual deploy pipeline) and were consciously left as-is.
 
 ## Recommended Next Steps
-1. Build **M4** — Resend transactional email (booking confirmation, status-change notifications), starting with a test/sandbox sender.
-2. Each existing/new engineer must click through Stripe's hosted onboarding link (`/dashboard/payments` → "Connect with Stripe") to actually activate their connected account — this is a real identity/bank-account form on Stripe's side and can't be skipped or scripted, even in test mode.
-3. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
-4. Add self-service reschedule/cancel requests from the customer status page.
-5. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
+1. Decide on the **Privacy Policy** — provide a draft or approve an AI-drafted one — then add a `/privacy` page and a second signup checkbox alongside the existing ToS checkbox.
+2. Build **M4** — Resend transactional email, starting with a test/sandbox sender (needs an API key).
+3. Equipment icon sizing (+5px) and a mobile optimization audit across all major pages.
+4. Each existing/new engineer must click through Stripe's hosted onboarding link (`/dashboard/payments` → "Connect with Stripe") to actually activate their connected account.
+5. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
+6. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
 
 ## Data Architecture
 - **Storage**: Cloudflare D1 (SQLite) for relational data; Cloudflare R2 for engineer photos/equipment images and payment-proof uploads.
-- **Tables**: `engineers` (legacy Phase 1 seed, kept for FK back-compat), `services`, `customers`, `bookings`, `users`, `sessions`, `engineer_profiles`, `portfolio_items`, `reviews`, `platform_settings` (M1), `engineer_availability` + `engineer_availability_overrides` (M3) — see `migrations/0001` through `0007`. `engineer_profiles.stripe_account_id/stripe_onboarding_complete/stripe_charges_enabled` and `bookings.stripe_payment_intent_id/stripe_checkout_session_id/platform_fee_amount/engineer_payout_amount` were added in `migrations/0007_stripe_connect.sql` (M5).
+- **Tables**: `engineers` (legacy Phase 1 seed, kept for FK back-compat), `services`, `customers`, `bookings`, `users`, `sessions`, `engineer_profiles`, `portfolio_items`, `reviews`, `platform_settings` (M1), `engineer_availability` + `engineer_availability_overrides` (M3) — see `migrations/0001` through `0007`. `engineer_profiles.stripe_account_id/stripe_onboarding_complete/stripe_charges_enabled` and `bookings.stripe_payment_intent_id/stripe_checkout_session_id/platform_fee_amount/engineer_payout_amount` were added in `migrations/0007_stripe_connect.sql` (M5). `admin_sessions`, `rate_limit_attempts`, `audit_log` were added in `migrations/0008_security_hardening.sql`. `consent_log` was added in `migrations/0009_consent_log.sql`.
 - **Availability model** (M3): `engineer_availability` is the weekly recurring template (`day_of_week` 0–6, `hour` 0–23 = "open to start a session at this hour on this weekday"). `engineer_availability_overrides` holds one-off exceptions for a specific `date` (force-open or force-close a given hour). An engineer with zero rows in `engineer_availability` hasn't customized their calendar yet and falls back to the legacy default (Mon–Fri, hours 11–22) — see `src/lib/db-availability.ts`. Actual booked-slot blocking is derived live from `bookings` (any row not `cancelled`/`rejected` occupies its hour range) rather than stored in a separate table, so a slot blocks the instant it's booked and frees automatically if the booking is cancelled.
 - **Pricing model**: `calculatePrice(durationHours, isFirstTimeWithThisEngineer, rate)` where `rate` is pulled from the specific `engineer_profiles` row being booked; "first time" is determined per (customer email, engineer) pair via `hasCustomerBookedEngineerBefore`.
 - **Location privacy**: engineers type a city/zip; it's geocoded once (Nominatim) and jittered 1–2 miles before being stored in `engineer_profiles.lat/lng`. The exact typed location and any street address are never stored or shown publicly.
