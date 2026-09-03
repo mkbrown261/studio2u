@@ -73,7 +73,15 @@ app.use(
       connectSrc: ["'self'", 'https://api.stripe.com'],
       frameSrc: ["'self'", 'https://w.soundcloud.com', 'https://www.youtube.com', 'https://youtube.com', 'https://www.youtube-nocookie.com', 'https://checkout.stripe.com', 'https://js.stripe.com'],
       objectSrc: ["'none'"]
-    }
+    },
+    // hono's secureHeaders() defaults Referrer-Policy to "no-referrer" when this
+    // isn't set explicitly. YouTube's embedded player uses the referrer to
+    // validate which site is embedding it — with no referrer at all, YouTube
+    // rejects the embed with a "video player config error" even though the
+    // iframe src/CSP are otherwise correct. strict-origin-when-cross-origin
+    // still sends only the origin (not full path/query) to cross-origin
+    // destinations, which is enough for YouTube while staying privacy-conscious.
+    referrerPolicy: 'strict-origin-when-cross-origin'
   })
 )
 
