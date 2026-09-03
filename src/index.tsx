@@ -36,6 +36,8 @@ import { logConsentEvent, CURRENT_RECORDING_CONSENT_VERSION } from './lib/consen
 import { TermsPage } from './pages/terms'
 import { ConsentPage } from './pages/consent'
 import { PrivacyPage } from './pages/privacy'
+import { SecurityPolicyPage } from './pages/security-policy'
+import { RefundPolicyPage } from './pages/refund-policy'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -120,6 +122,14 @@ app.get('/consent', async (c) => {
 
 app.get('/privacy', async (c) => {
   return c.render(<PrivacyPage />, { title: 'Privacy Policy' })
+})
+
+app.get('/security', async (c) => {
+  return c.render(<SecurityPolicyPage />, { title: 'Security & Acceptable Use Policy' })
+})
+
+app.get('/refund-policy', async (c) => {
+  return c.render(<RefundPolicyPage />, { title: 'Refund & Cancellation Policy' })
 })
 
 // ---------- Booking API ----------

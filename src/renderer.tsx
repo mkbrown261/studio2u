@@ -127,6 +127,8 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
                 <li><a href="/terms" class="hover:text-gold transition">Terms of Service</a></li>
                 <li><a href="/privacy" class="hover:text-gold transition">Privacy Policy</a></li>
                 <li><a href="/consent" class="hover:text-gold transition">Recording Consent Agreement</a></li>
+                <li><a href="/security" class="hover:text-gold transition">Security & Acceptable Use Policy</a></li>
+                <li><a href="/refund-policy" class="hover:text-gold transition">Refund/Cancellation Policy</a></li>
               </ul>
             </div>
             <div id="contact">
