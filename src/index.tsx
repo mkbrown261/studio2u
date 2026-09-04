@@ -33,6 +33,7 @@ import { constantTimeEqual } from './lib/password'
 import { isRateLimited, recordAttempt, rateLimitKey, getClientIp } from './lib/rate-limit'
 import { logAuditEvent } from './lib/audit-log'
 import { logConsentEvent, CURRENT_RECORDING_CONSENT_VERSION } from './lib/consent-log'
+import { getSessionUser } from './lib/session'
 import { TermsPage } from './pages/terms'
 import { ConsentPage } from './pages/consent'
 import { PrivacyPage } from './pages/privacy'
@@ -246,6 +247,13 @@ app.post('/api/bookings', async (c) => {
     const existingCustomer = await findCustomerByEmail(c.env.DB, customerEmail)
     const isFirstTimeWithEngineer = !(await hasCustomerBookedEngineerBefore(c.env.DB, customerEmail, engineer.id))
 
+    // Link this booking to a real account when the customer is logged in, so
+    // "My Bookings" and rebooking can eventually be account-based instead of an
+    // email lookup every time. Guest checkout (no session) still works fine —
+    // this column just stays null for those, same as before.
+    const sessionUser = await getSessionUser(c.env.DB, c.req.raw)
+    const customerUserId = sessionUser ? sessionUser.id : null
+
     const customerId = await upsertCustomer(c.env.DB, {
       email: customerEmail,
       name: customerName,
@@ -262,6 +270,7 @@ app.post('/api/bookings', async (c) => {
       customerId,
       engineerId: 1, // legacy FK kept for backward compat; real routing uses engineerProfileId
       engineerProfileId: engineer.id,
+      customerUserId,
       serviceId: service.id,
       sessionDate,
       sessionTime,

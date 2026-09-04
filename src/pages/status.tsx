@@ -27,7 +27,7 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
         <p class="text-muted mt-3">Enter the email you used when booking.</p>
       </div>
 
-      <form method="GET" action="/status" class="flex flex-col sm:flex-row gap-3 mb-10">
+      <form method="GET" action="/status" class="flex flex-col sm:flex-row gap-3 mb-6">
         <input
           type="email"
           name="email"
@@ -40,6 +40,11 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
           Search
         </button>
       </form>
+
+      <div class="flex items-start gap-3 text-xs text-muted bg-surface border border-gold/10 rounded-xl px-4 py-3 mb-10">
+        <i class="fa-solid fa-shield-halved text-gold mt-0.5"></i>
+        <span>Every session booked through Studio2U is covered by our <a href="/refund-policy" class="text-gold hover:underline">Refund &amp; Cancellation Policy</a> — payment is held securely and only released per that policy, whether or not anything goes as planned.</span>
+      </div>
 
       {searched && bookings.length === 0 && (
         <div class="text-center py-16 text-muted bg-surface border border-gold/10 rounded-2xl">
@@ -93,6 +98,17 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
                     class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold text-sm px-5 py-2.5 rounded-full transition"
                   >
                     Leave a Review <i class="fa-solid fa-arrow-right text-xs"></i>
+                  </a>
+                </div>
+              )}
+
+              {b.status === 'completed' && b.engineer_profile_id != null && (
+                <div class="mt-3">
+                  <a
+                    href={`/book/${b.engineer_profile_id}`}
+                    class="inline-flex items-center gap-2 border border-gold/30 hover:bg-gold/10 text-cream font-semibold text-sm px-5 py-2.5 rounded-full transition"
+                  >
+                    <i class="fa-solid fa-rotate-right text-xs"></i> Book This Engineer Again
                   </a>
                 </div>
               )}

@@ -19,6 +19,11 @@ export function BookPage({ engineer }: { engineer: EngineerProfile }) {
 
       <div id="booking-app" class="bg-surface border border-gold/10 rounded-2xl p-6 md:p-8" data-engineer-id={engineer.id}></div>
 
+      <div class="flex items-start gap-3 text-xs text-muted mt-6 px-1">
+        <i class="fa-solid fa-shield-halved text-gold mt-0.5"></i>
+        <span>Payment is processed securely through Stripe and held per our <a href="/refund-policy" class="text-gold hover:underline">Refund &amp; Cancellation Policy</a> — you're protected whether or not the session goes as planned.</span>
+      </div>
+
       <script src="/static/book.js"></script>
     </div>
   )
