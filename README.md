@@ -13,7 +13,7 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - **Legal documents** (`/legal/*.md` — source of truth, mirrored into `/terms` and `/consent` pages at build time via a small custom markdown renderer, `src/lib/markdown.ts`): **Master Terms of Service & Platform User Agreement** (v1.0, effective Aug 13 2026) and **Recording Consent, Authorization & User Responsibility Agreement** (v1.0, effective Sep 3 2026) — a separate, recording-specific consent doc. Both are versioned so future revisions can be tracked (`Recording Agreement v1.0`, `v1.1`, etc.) and both use "Studio2U 10% Platform Fee" framing rather than "commission."
 - **Mandatory ToS click-through at signup** (`/signup`): a required checkbox ("I have read and agree to the Studio2U Terms of Service") gates account creation — enforced server-side in `POST /signup`, not just via the HTML `required` attribute. On success, an acceptance row is written to `consent_log`.
 - **Mandatory Recording Consent click-through at booking** (`/book/:engineerId`, step 3 of the vanilla-JS booking wizard in `public/static/book.js`): "Confirm Booking" stays **disabled** until the customer checks "I confirm that I have obtained all legally required recording consent and agree to the Studio2U Recording Consent & User Responsibility Agreement" (links to `/consent`). Enforced server-side in `POST /api/bookings` (rejects with 400 if not accepted) — never trusts the disabled-button UX alone. On success, an acceptance row is written to `consent_log`, tied to the specific `bookingId`.
-- **`consent_log` table** (`migrations/0009_consent_log.sql`): evidence trail of every legal-document acceptance — `document_type` (`terms`/`privacy`/`recording_consent`), `document_version`, `user_id` or `booking_id`, email snapshot, IP, and user agent — so Studio2U can prove who accepted what, when, and in connection with which booking. Still open: a **Privacy Policy** document (the third piece of this set) has not yet been drafted or provided.
+- **`consent_log` table** (`migrations/0009_consent_log.sql`): evidence trail of every legal-document acceptance — `document_type` (`terms`/`privacy`/`recording_consent`), `document_version`, `user_id` or `booking_id`, email snapshot, IP, and user agent — so Studio2U can prove who accepted what, when, and in connection with which booking. Privacy Policy (v1.0, Wilmington DE entity info) is drafted and live at `/privacy`, with its own signup acknowledgment logged alongside the ToS acceptance.
 
 ### Security Hardening (pre-Stripe-go-live audit)
 - **Revocable admin sessions**: replaced a stateless signed-cookie admin auth scheme with DB-backed sessions (`admin_sessions` table) — a leaked cookie is no longer a forever-valid credential, and sessions can be individually killed without rotating `ADMIN_PASSWORD`.
@@ -105,7 +105,6 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - **Free-tier portfolio slot cap**: decided in principle (free engineers will get a capped number of portfolio slots, Pro removes the cap) but **not yet implemented** — intentionally held until the Pro tier actually exists, since shipping a cap with no upgrade path would just be a downgrade with no offsetting benefit. Will ship same-day as Pro launch.
 - **Referral/repeat-client credits**: discussed as a customer-retention lever, not yet built. Current thinking leans toward a Stripe coupon/promo-code model (discount-only) over a cash-equivalent credit ledger, to avoid refund liability and commission-split ambiguity — deferred pending more usage data to know if it's actually needed.
 - **M4 — Resend email** (transactional emails: booking confirmations, status updates, engineer/admin notifications, signup email verification) — not started. Awaiting a Resend API key.
-- **Privacy Policy / Data Processing Policy** — the third piece of the legal-document set (alongside ToS and Recording Consent); not yet drafted. Needs the user to either provide a draft or approve an AI-drafted one before a `/privacy` page and signup checkbox can be added.
 - Password reset / email verification (simple email+password only, by design for now)
 - Reschedule / cancel self-service (still goes through the engineer or admin)
 - Messaging between customer and engineer
@@ -115,11 +114,11 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - Type-check cleanup: `tsconfig.json` lacks `@cloudflare/workers-types`/DOM lib, so `tsc --noEmit` reports many pre-existing type errors. These do not block the Vite/Wrangler build (the actual deploy pipeline) and were consciously left as-is.
 
 ## Recommended Next Steps
-1. Decide on the **Privacy Policy** — provide a draft or approve an AI-drafted one — then add a `/privacy` page and a second signup checkbox alongside the existing ToS checkbox.
-2. Build **M4** — Resend transactional email, starting with a test/sandbox sender (needs an API key).
-3. Equipment icon sizing (+5px) and a mobile optimization audit across all major pages.
-4. Each existing/new engineer must click through Stripe's hosted onboarding link (`/dashboard/payments` → "Connect with Stripe") to actually activate their connected account.
-5. Get real engineers signed up and publishing profiles; validate directory/booking conversion.
+1. **Confirm whether Stripe is in test or live mode for production** — as of this writing, production has just 1 engineer profile (Mason Brown, seeded) and 0 real bookings, so nothing has been transacted yet. This needs an explicit answer before any real customer money should touch the platform.
+2. Each existing/new engineer must click through Stripe's hosted onboarding link (`/dashboard/payments` → "Connect with Stripe") to actually activate their connected account — they're not bookable (`stripe_charges_enabled = 0`) until they do.
+3. Get real engineers signed up and publishing profiles; validate directory/booking conversion end-to-end with a real transaction.
+4. Build **M4** — Resend transactional email, starting with a test/sandbox sender (needs an API key).
+5. Equipment icon sizing (+5px) and a mobile optimization audit across all major pages.
 6. Fix the `tsconfig.json` type-config gap (`@cloudflare/workers-types` + `"lib": ["ESNext", "DOM"]`) for a clean `tsc --noEmit` pass.
 
 ## Data Architecture
