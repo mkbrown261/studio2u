@@ -39,6 +39,11 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
                       light: '#8C3B4D',
                       dark: '#4E1D29'
                     },
+                    teal: {
+                      DEFAULT: '#3ED8CC',
+                      light: '#6EE5DB',
+                      dark: '#1E9E93'
+                    },
                     cream: '#F3ECE0',
                     muted: '#A89A8C'
                   },

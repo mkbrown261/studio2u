@@ -18,6 +18,8 @@ export interface EngineerProfile {
   location_label: string | null
   lat: number | null
   lng: number | null
+  offers_remote: number
+  remote_details: string | null
   is_published: number
   is_new: number
   is_suspended: number
@@ -43,11 +45,12 @@ export async function getEngineerProfileById(db: D1Database, id: number): Promis
 // Phase 3 M5: mandatory Stripe onboarding — an engineer never appears in the public
 // directory (and can't be booked) until Stripe confirms charges_enabled on their
 // connected account. No exceptions, no Cash App fallback.
-export async function getPublishedEngineers(db: D1Database): Promise<EngineerProfile[]> {
+export async function getPublishedEngineers(db: D1Database, remoteOnly?: boolean): Promise<EngineerProfile[]> {
+  const remoteClause = remoteOnly ? 'AND offers_remote = 1' : ''
   const { results } = await db
     .prepare(
       `SELECT * FROM engineer_profiles
-       WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1
+       WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1 ${remoteClause}
        ORDER BY rating_avg DESC, created_at ASC`
     )
     .all()
@@ -78,6 +81,8 @@ export interface UpsertEngineerParams {
   locationLabel: string
   lat: number | null
   lng: number | null
+  offersRemote: boolean
+  remoteDetails: string
 }
 
 export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerParams): Promise<number> {
@@ -93,6 +98,7 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
           equipment_text = ?, equipment_photo_url = COALESCE(?, equipment_photo_url),
           mic_spec = ?, daw_spec = ?, interface_spec = ?,
           cashapp_handle = ?, location_label = ?, lat = ?, lng = ?,
+          offers_remote = ?, remote_details = ?,
           is_published = 1, updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ?`
       )
@@ -114,6 +120,8 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
         p.locationLabel,
         p.lat,
         p.lng,
+        p.offersRemote ? 1 : 0,
+        p.remoteDetails || null,
         p.userId
       )
       .run()
@@ -127,8 +135,8 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
         first_time_discount_amount, first_time_discount_hours,
         genres, travel_radius_miles, equipment_text, equipment_photo_url,
         mic_spec, daw_spec, interface_spec,
-        cashapp_handle, location_label, lat, lng, is_published
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`
+        cashapp_handle, location_label, lat, lng, offers_remote, remote_details, is_published
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`
     )
     .bind(
       p.userId,
@@ -148,7 +156,9 @@ export async function upsertEngineerProfile(db: D1Database, p: UpsertEngineerPar
       p.cashappHandle,
       p.locationLabel,
       p.lat,
-      p.lng
+      p.lng,
+      p.offersRemote ? 1 : 0,
+      p.remoteDetails || null
     )
     .run()
   return result.meta.last_row_id as number

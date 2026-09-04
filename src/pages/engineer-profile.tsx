@@ -40,6 +40,12 @@ export function EngineerProfilePage({
             </div>
           )}
           <h1 class="font-display text-2xl font-bold mb-1">{profile.display_name}</h1>
+          {profile.offers_remote === 1 && (
+            <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-teal bg-teal/10 border border-teal/30 rounded-full px-3 py-1 mb-3">
+              <img src="/static/brand/icon-remote-64.png" alt="" class="w-3.5 h-3.5 object-contain" />
+              Remote Available
+            </span>
+          )}
           <div class="text-muted text-sm mb-5">{profile.location_label || 'Location on request'} · {profile.travel_radius_miles}mi radius</div>
 
           <div
@@ -80,6 +86,18 @@ export function EngineerProfilePage({
         <div class="md:col-span-2">
           <h2 class="font-display text-xl font-bold mb-3">About</h2>
           <p class="text-muted leading-relaxed mb-8 whitespace-pre-line">{profile.bio}</p>
+
+          {profile.offers_remote === 1 && (
+            <div class="flex items-start gap-4 bg-teal/5 border border-teal/30 rounded-xl px-5 py-4 mb-8">
+              <img src="/static/brand/icon-remote-128.png" alt="Remote Recording" class="w-12 h-12 object-contain shrink-0" />
+              <div>
+                <div class="text-teal uppercase tracking-wide font-bold text-sm mb-1">Remote Recording Available</div>
+                <p class="text-cream text-sm leading-relaxed whitespace-pre-line">
+                  {profile.remote_details || 'This engineer can record or mix with you remotely — ask for details when you book.'}
+                </p>
+              </div>
+            </div>
+          )}
 
           {(profile.mic_spec || profile.daw_spec || profile.interface_spec) ? (
             <>

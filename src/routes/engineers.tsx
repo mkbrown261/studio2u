@@ -8,14 +8,15 @@ export const engineersRoutes = new Hono<AppEnv>()
 
 engineersRoutes.get('/engineers', async (c) => {
   const genre = (c.req.query('genre') || '').trim()
-  let engineers = await getPublishedEngineers(c.env.DB)
+  const remoteOnly = c.req.query('remote') === '1'
+  let engineers = await getPublishedEngineers(c.env.DB, remoteOnly)
 
   if (genre) {
     const needle = genre.toLowerCase()
     engineers = engineers.filter((e) => (e.genres || '').toLowerCase().includes(needle))
   }
 
-  return c.render(<EngineersDirectoryPage engineers={engineers} genre={genre} />, { title: 'Find an Engineer' })
+  return c.render(<EngineersDirectoryPage engineers={engineers} genre={genre} remoteOnly={remoteOnly} />, { title: 'Find an Engineer' })
 })
 
 engineersRoutes.get('/engineers/:id', async (c) => {

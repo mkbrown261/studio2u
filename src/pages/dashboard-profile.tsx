@@ -105,6 +105,31 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
           {profile?.equipment_photo_url && <p class="text-xs text-muted mt-1.5">Current photo on file — upload a new one to replace it.</p>}
         </div>
 
+        <div class="bg-ink/50 rounded-xl p-5">
+          <label class="flex items-center gap-3 mb-3 cursor-pointer">
+            <input
+              type="checkbox"
+              id="remote-toggle"
+              name="offers_remote"
+              value="1"
+              checked={profile?.offers_remote === 1}
+              class="accent-teal"
+            />
+            <img src="/static/brand/icon-remote-64.png" alt="" class="w-7 h-7 object-contain" />
+            <span class="text-sm font-medium text-cream">I offer remote recording / mixing</span>
+          </label>
+          <div id="remote-fields" class={profile?.offers_remote === 1 ? '' : 'hidden'}>
+            <label class="block text-xs text-muted mb-1.5">How does it work? (shown on your public profile)</label>
+            <textarea
+              name="remote_details"
+              rows="3"
+              placeholder="e.g. We hop on a Zoom call while I record/mix in real time, or you send me your files and I turn it around within 48 hours."
+              class="w-full bg-ink border border-teal/30 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-teal"
+            >{profile?.remote_details || ''}</textarea>
+          </div>
+          <p class="text-xs text-muted mt-2">Clients can filter the directory to remote-only engineers, and it's called out with a badge on your profile.</p>
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-muted mb-2">Location (City, State or Zip)</label>
           <input type="text" name="location_label" required placeholder="e.g. Atlanta, GA" value={profile?.location_label || ''} class="w-full bg-ink border border-gold/20 rounded-lg px-4 py-3 text-cream focus:outline-none focus:border-gold" />
@@ -121,6 +146,9 @@ export function DashboardProfilePage({ profile, error, success }: { profile: Eng
           __html: `
           document.getElementById('offer-discount-toggle').addEventListener('change', function(e) {
             document.getElementById('discount-fields').classList.toggle('hidden', !e.target.checked)
+          })
+          document.getElementById('remote-toggle').addEventListener('change', function(e) {
+            document.getElementById('remote-fields').classList.toggle('hidden', !e.target.checked)
           })
         `
         }}

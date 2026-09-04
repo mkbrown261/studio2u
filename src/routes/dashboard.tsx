@@ -106,6 +106,8 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
   // on old bookings only); never blank it out, but never require or re-collect it either.
   const cashappHandle = existing?.cashapp_handle || ''
   const locationLabel = ((formData.get('location_label') as string) || '').trim()
+  const offersRemote = formData.get('offers_remote') === '1'
+  const remoteDetails = ((formData.get('remote_details') as string) || '').trim()
 
   if (!displayName || !bio || !locationLabel) {
     return c.render(<DashboardProfilePage profile={existing} error="Please fill out all required fields." />, { title: 'Your Profile' })
@@ -167,7 +169,9 @@ dashboardRoutes.post('/dashboard/profile', async (c) => {
     cashappHandle,
     locationLabel,
     lat,
-    lng
+    lng,
+    offersRemote,
+    remoteDetails
   })
 
   const updated = await getEngineerProfileByUserId(c.env.DB, user.id)

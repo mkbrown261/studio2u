@@ -1,6 +1,14 @@
 import type { EngineerProfile } from '../lib/db-engineers'
 
-export function EngineersDirectoryPage({ engineers, genre }: { engineers: EngineerProfile[]; genre?: string }) {
+export function EngineersDirectoryPage({
+  engineers,
+  genre,
+  remoteOnly
+}: {
+  engineers: EngineerProfile[]
+  genre?: string
+  remoteOnly?: boolean
+}) {
   return (
     <div class="max-w-6xl mx-auto px-5 py-16">
       <div class="text-center max-w-2xl mx-auto mb-12">
@@ -17,10 +25,15 @@ export function EngineersDirectoryPage({ engineers, genre }: { engineers: Engine
           placeholder="Filter by genre (e.g. Hip Hop)"
           class="bg-surface border border-gold/20 rounded-full px-5 py-3 text-cream text-sm focus:outline-none focus:border-gold w-64"
         />
+        <label class="flex items-center gap-2 bg-surface border border-teal/30 rounded-full px-5 py-3 text-sm cursor-pointer">
+          <input type="checkbox" name="remote" value="1" checked={remoteOnly} class="accent-teal" />
+          <img src="/static/brand/icon-remote-64.png" alt="" class="w-4 h-4 object-contain" />
+          <span class="text-teal font-semibold">Remote available</span>
+        </label>
         <button type="submit" class="bg-gold hover:bg-gold-light text-ink font-semibold px-6 py-3 rounded-full transition text-sm">
           Filter
         </button>
-        {genre && (
+        {(genre || remoteOnly) && (
           <a href="/engineers" class="border border-gold/30 hover:bg-gold/10 text-cream font-semibold px-6 py-3 rounded-full transition text-sm">
             Clear
           </a>
@@ -64,6 +77,11 @@ export function EngineersDirectoryPage({ engineers, genre }: { engineers: Engine
                         <img src="/static/images/mic-rating.png" alt="rating" class="w-3.5 h-3.5" />
                         <span>{e.rating_avg.toFixed(1)} ({e.rating_count})</span>
                       </div>
+                    )}
+                    {e.offers_remote === 1 && (
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-teal bg-teal/10 border border-teal/30 rounded-full px-2.5 py-0.5">
+                        Remote
+                      </span>
                     )}
                   </div>
                 </div>
