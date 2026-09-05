@@ -113,8 +113,31 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
                   </a>
                 </>
               )}
+              <button
+                type="button"
+                id="mobile-nav-toggle"
+                aria-label="Open menu"
+                aria-expanded="false"
+                aria-controls="mobile-nav-menu"
+                class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full border border-gold/20 text-cream hover:border-gold/50 transition"
+              >
+                <i class="fa-solid fa-bars text-sm"></i>
+              </button>
             </div>
           </nav>
+          <div id="mobile-nav-menu" class="hidden md:hidden border-t border-gold/10 bg-ink/95 backdrop-blur-md">
+            <div class="max-w-6xl mx-auto px-5 py-4 flex flex-col gap-1 text-sm font-medium text-muted">
+              <a href="/engineers" class="py-2.5 hover:text-gold transition">Engineers</a>
+              <a href="/#pricing" class="py-2.5 hover:text-gold transition">Pricing</a>
+              <a href="/pricing" class="py-2.5 hover:text-gold transition">Engineer Plans</a>
+              <a href="/#about" class="py-2.5 hover:text-gold transition">About</a>
+              <a href="/#faq" class="py-2.5 hover:text-gold transition">FAQ</a>
+              <a href="/status" class="py-2.5 hover:text-gold transition">My Bookings</a>
+              {!sessionUser && (
+                <a href="/login" class="py-2.5 hover:text-gold transition border-t border-gold/10 mt-1 pt-3">Log In</a>
+              )}
+            </div>
+          </div>
         </header>
 
         <main class="pt-20">{children}</main>
@@ -170,6 +193,29 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
         <script
           dangerouslySetInnerHTML={{
             __html: `
+            (function() {
+              var toggle = document.getElementById('mobile-nav-toggle');
+              var menu = document.getElementById('mobile-nav-menu');
+              if (toggle && menu) {
+                var icon = toggle.querySelector('i');
+                function closeMenu() {
+                  menu.classList.add('hidden');
+                  toggle.setAttribute('aria-expanded', 'false');
+                  if (icon) { icon.className = 'fa-solid fa-bars text-sm'; }
+                }
+                function openMenu() {
+                  menu.classList.remove('hidden');
+                  toggle.setAttribute('aria-expanded', 'true');
+                  if (icon) { icon.className = 'fa-solid fa-xmark text-sm'; }
+                }
+                toggle.addEventListener('click', function() {
+                  if (menu.classList.contains('hidden')) { openMenu(); } else { closeMenu(); }
+                });
+                menu.querySelectorAll('a').forEach(function(a) {
+                  a.addEventListener('click', closeMenu);
+                });
+              }
+            })();
             (function() {
               try {
                 var sid = sessionStorage.getItem('s2u_sid');

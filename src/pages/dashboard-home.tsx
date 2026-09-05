@@ -135,18 +135,18 @@ export function DashboardHomePage({
             </button>
           </div>
 
-          <div class="grid grid-cols-3 gap-3 text-center">
-            <div class="bg-ink rounded-xl px-3 py-3">
-              <div class="text-2xl font-bold text-cream">{referralStats?.total_referred ?? 0}</div>
-              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Invited</div>
+          <div class="grid grid-cols-3 gap-1.5 xs:gap-2 sm:gap-3 text-center">
+            <div class="bg-ink rounded-xl px-1.5 sm:px-3 py-3">
+              <div class="text-xl sm:text-2xl font-bold text-cream">{referralStats?.total_referred ?? 0}</div>
+              <div class="text-[9px] sm:text-[11px] text-muted uppercase tracking-wide mt-1 leading-tight">Invited</div>
             </div>
-            <div class="bg-ink rounded-xl px-3 py-3">
-              <div class="text-2xl font-bold text-emerald-400">{referralStats?.total_rewards_credited ?? 0}</div>
-              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Rewards Earned</div>
+            <div class="bg-ink rounded-xl px-1.5 sm:px-3 py-3">
+              <div class="text-xl sm:text-2xl font-bold text-emerald-400">{referralStats?.total_rewards_credited ?? 0}</div>
+              <div class="text-[9px] sm:text-[11px] text-muted uppercase tracking-wide mt-1 leading-tight">Rewards Earned</div>
             </div>
-            <div class="bg-ink rounded-xl px-3 py-3">
-              <div class="text-2xl font-bold text-gold">${(creditBalance ?? 0).toFixed(0)}</div>
-              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Credit Balance</div>
+            <div class="bg-ink rounded-xl px-1.5 sm:px-3 py-3">
+              <div class="text-xl sm:text-2xl font-bold text-gold">${(creditBalance ?? 0).toFixed(0)}</div>
+              <div class="text-[9px] sm:text-[11px] text-muted uppercase tracking-wide mt-1 leading-tight">Credit Balance</div>
             </div>
           </div>
         </div>
