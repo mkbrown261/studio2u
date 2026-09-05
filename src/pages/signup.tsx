@@ -1,4 +1,4 @@
-export function SignupPage({ error }: { error?: string }) {
+export function SignupPage({ error, refCode }: { error?: string; refCode?: string }) {
   return (
     <div class="max-w-md mx-auto px-5 py-16">
       <div class="text-center mb-8">
@@ -8,8 +8,17 @@ export function SignupPage({ error }: { error?: string }) {
         <h1 class="font-display text-2xl font-bold">Create Your Account</h1>
         <p class="text-muted text-sm mt-2">Sign up as an artist, an engineer, or both.</p>
       </div>
+
+      {refCode && (
+        <div class="flex items-center gap-2 text-sm text-gold bg-gold/10 border border-gold/30 rounded-lg px-4 py-3 mb-4">
+          <i class="fa-solid fa-gift"></i>
+          <span>You were invited by a friend — sign up to unlock your welcome credit.</span>
+        </div>
+      )}
+
       <form method="POST" action="/signup" class="bg-surface border border-gold/10 rounded-2xl p-7 space-y-4">
         {error && <div class="bg-wine/20 border border-wine/40 text-wine-light text-sm rounded-lg px-4 py-3">{error}</div>}
+        {refCode && <input type="hidden" name="ref_code" value={refCode} />}
 
         <div>
           <label class="block text-sm font-medium text-muted mb-2">Full Name</label>

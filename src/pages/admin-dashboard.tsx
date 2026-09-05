@@ -1,5 +1,7 @@
 import type { Booking } from '../types'
 import type { EngineerProfile } from '../lib/db-engineers'
+import type { Dispute } from '../lib/db-disputes'
+import type { ReviewRequestQueueRow } from '../lib/db-review-requests'
 
 const STATUS_STYLES: Record<string, string> = {
   pending_payment: 'bg-muted/20 text-muted border-muted/30',
@@ -24,14 +26,20 @@ export function AdminDashboardPage({
   statusFilter,
   engineers,
   commissionPercent,
-  subscriptionPricesConfigured
+  subscriptionPricesConfigured,
+  disputes = [],
+  reviewRequestQueue = []
 }: {
   bookings: Booking[]
   statusFilter: string
   engineers: EngineerProfile[]
   commissionPercent: number
   subscriptionPricesConfigured?: boolean
+  disputes?: Dispute[]
+  reviewRequestQueue?: ReviewRequestQueueRow[]
 }) {
+  const openDisputes = disputes.filter((d) => d.status === 'open')
+  const resolvedDisputes = disputes.filter((d) => d.status !== 'open')
   const filters = ['all', 'pending_payment', 'pending_approval', 'confirmed', 'completed', 'cancelled', 'rejected']
 
   return (
@@ -112,6 +120,95 @@ export function AdminDashboardPage({
             </>
           )}
         </div>
+      </section>
+
+      {/* ---------- Trust & Safety: Disputes ---------- */}
+      <section class="mb-14">
+        <h2 class="font-display text-xl font-bold mb-4">
+          Disputes {openDisputes.length > 0 && <span class="text-sm font-semibold text-red-400">({openDisputes.length} open)</span>}
+        </h2>
+        {disputes.length === 0 ? (
+          <div class="text-center py-10 text-muted bg-surface border border-gold/10 rounded-2xl text-sm">No disputes reported.</div>
+        ) : (
+          <div class="space-y-3">
+            {[...openDisputes, ...resolvedDisputes].map((d) => (
+              <div class="bg-surface border border-gold/10 rounded-xl p-5">
+                <div class="flex items-center justify-between gap-4 flex-wrap mb-2">
+                  <div class="font-semibold text-cream">
+                    Booking #{d.booking_id} · <span class="capitalize">{d.reason.replace(/_/g, ' ')}</span> · raised by {d.raised_by}
+                  </div>
+                  <span
+                    class={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                      d.status === 'open'
+                        ? 'border-red-500/30 bg-red-500/15 text-red-400'
+                        : 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'
+                    }`}
+                  >
+                    {d.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <p class="text-sm text-muted mb-3">{d.description}</p>
+                {d.status === 'open' ? (
+                  <form method="POST" action={`/admin/disputes/${d.id}/resolve`} class="flex items-center gap-2 flex-wrap">
+                    <select name="status" class="bg-ink border border-gold/20 rounded-lg px-3 py-2 text-sm text-cream" required>
+                      <option value="">Resolve as...</option>
+                      <option value="resolved_refunded">Full Refund</option>
+                      <option value="resolved_partial_refund">Partial Refund</option>
+                      <option value="resolved_no_refund">No Refund</option>
+                      <option value="dismissed">Dismiss</option>
+                    </select>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="refund_amount"
+                      placeholder="Partial $ amount"
+                      class="bg-ink border border-gold/20 rounded-lg px-3 py-2 text-sm text-cream w-36"
+                    />
+                    <input
+                      type="text"
+                      name="admin_notes"
+                      placeholder="Internal notes"
+                      class="bg-ink border border-gold/20 rounded-lg px-3 py-2 text-sm text-cream flex-1 min-w-[150px]"
+                    />
+                    <button type="submit" class="text-xs font-semibold bg-gold text-ink rounded-full px-4 py-2 hover:bg-gold-light transition">
+                      Submit
+                    </button>
+                  </form>
+                ) : (
+                  <div class="text-xs text-muted">
+                    {d.refund_amount ? `Refunded $${d.refund_amount}. ` : ''}
+                    {d.admin_notes || ''}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ---------- Review Requests (manual nudge queue, pre-Resend) ---------- */}
+      <section class="mb-14">
+        <h2 class="font-display text-xl font-bold mb-4">Review Requests</h2>
+        <p class="text-muted text-sm mb-5">
+          Completed bookings awaiting a review nudge. Copy the link and send it manually until email sending is wired up.
+        </p>
+        {reviewRequestQueue.length === 0 ? (
+          <div class="text-center py-10 text-muted bg-surface border border-gold/10 rounded-2xl text-sm">All caught up.</div>
+        ) : (
+          <div class="space-y-3">
+            {reviewRequestQueue.map((r) => (
+              <div class="bg-surface border border-gold/10 rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <div class="font-semibold text-cream">{r.customer_name} · Booking #{r.booking_id}</div>
+                  <div class="text-xs text-muted mt-1">{r.customer_email} · session {r.session_date}</div>
+                </div>
+                <code class="text-xs bg-ink border border-gold/20 rounded-lg px-3 py-2 text-gold break-all">
+                  /r/{r.token}
+                </code>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ---------- Engineer kill switch ---------- */}

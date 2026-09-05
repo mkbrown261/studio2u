@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import type { AppEnv } from '../types'
 import { hashPassword, verifyPassword } from '../lib/password'
 import { findUserByEmail, createUser } from '../lib/db-users'
+import { generateUniqueReferralCode, findUserByReferralCode } from '../lib/db-referrals'
+import { logEvent } from '../lib/analytics'
 import { createSession, destroySession, buildSessionCookieHeader, buildClearSessionCookieHeader, getCookieValue, SESSION_COOKIE } from '../lib/session'
 import { isRateLimited, recordAttempt, rateLimitKey, getClientIp } from '../lib/rate-limit'
 import { logConsentEvent, CURRENT_TERMS_VERSION, CURRENT_PRIVACY_VERSION } from '../lib/consent-log'
@@ -11,7 +13,8 @@ import { LoginPage } from '../pages/login'
 export const authRoutes = new Hono<AppEnv>()
 
 authRoutes.get('/signup', async (c) => {
-  return c.render(<SignupPage />, { title: 'Sign Up' })
+  const ref = c.req.query('ref') || ''
+  return c.render(<SignupPage refCode={ref} />, { title: 'Sign Up' })
 })
 
 authRoutes.post('/signup', async (c) => {
@@ -23,6 +26,7 @@ authRoutes.post('/signup', async (c) => {
   const roleArtist = body['role_artist'] === '1'
   const roleEngineer = body['role_engineer'] === '1'
   const termsAccepted = body['terms_accepted'] === '1'
+  const refCode = ((body['ref_code'] as string) || '').trim()
 
   if (!name || !email || !phone || !password) {
     return c.render(<SignupPage error="Please fill out all fields." />, { title: 'Sign Up' })
@@ -53,15 +57,24 @@ authRoutes.post('/signup', async (c) => {
     return c.render(<SignupPage error="An account with that email already exists. Try logging in instead." />, { title: 'Sign Up' })
   }
 
+  // Referral capture: if a valid code was passed through (?ref=... on the signup page,
+  // carried into the form as a hidden field), stamp who gets credit once this new user's
+  // first booking completes — see maybeCreditReferralReward() in db-referrals.ts.
+  const referrer = refCode ? await findUserByReferralCode(c.env.DB, refCode) : null
+
   const passwordHash = await hashPassword(password)
+  const newReferralCode = await generateUniqueReferralCode(c.env.DB)
   const userId = await createUser(c.env.DB, {
     email,
     passwordHash,
     name,
     phone,
     isEngineer: roleEngineer,
-    isArtist: roleArtist
+    isArtist: roleArtist,
+    referralCode: newReferralCode,
+    referredByUserId: referrer?.id ?? null
   })
+  await logEvent(c.env.DB, { eventType: 'signup', path: '/signup', metadata: { referred: !!referrer } })
 
   // Evidence-trail write: who accepted the Terms of Service (contractual) and
   // acknowledged the Privacy Policy (notice), which versions, at signup.

@@ -196,6 +196,32 @@ export async function createBookingCheckoutSession(
 }
 
 // Dollars -> integer cents, the unit Stripe's API requires everywhere.
+// ---------- Refunds (Trust & Safety / dispute resolution) ----------
+//
+// Bookings are charged via a destination-charge-style PaymentIntent (application_fee_amount +
+// transfer_data.destination — see createBookingCheckoutSession above): the charge lands on the
+// platform account, then Stripe auto-transfers the engineer's cut to their connected account.
+// A plain refund only pulls money back from the *platform's* balance — it does NOT claw back
+// the portion Stripe already transferred to the engineer, and does NOT return the platform's
+// application fee. For a booking refund to actually make the customer whole, both must be
+// reversed explicitly:
+//   - reverse_transfer: true   → pulls the transferred amount back from the engineer's balance
+//   - refund_application_fee: true → returns Studio2U's platform fee along with the refund
+// Both flags scale correctly with a partial `amount` too (Stripe reverses the transfer
+// proportionally), so this same call handles full and partial refunds.
+export async function refundBookingPayment(
+  stripe: Stripe,
+  params: { paymentIntentId: string; amountCents?: number }
+): Promise<{ refundId: string; status: string | null }> {
+  const refund = await stripe.refunds.create({
+    payment_intent: params.paymentIntentId,
+    amount: params.amountCents,
+    reverse_transfer: true,
+    refund_application_fee: true
+  })
+  return { refundId: refund.id, status: refund.status ?? null }
+}
+
 export function toCents(amountDollars: number): number {
   return Math.round(amountDollars * 100)
 }

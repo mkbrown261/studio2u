@@ -26,9 +26,12 @@ import {
   setEngineerSuspended
 } from './lib/db-engineers'
 import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
+import { getAllDisputesForAdmin, resolveDispute, getDisputeById } from './lib/db-disputes'
+import { getReviewRequestQueueForAdmin } from './lib/db-review-requests'
+import { onBookingCompleted } from './lib/booking-lifecycle'
 import { getPlatformFeePercentForEngineer, getSubscriptionPriceIds, setSubscriptionPriceId, splitCommission } from './lib/subscriptions'
 import { getAvailableHoursForDate, isRangeAvailable } from './lib/db-availability'
-import { getStripeClient, createBookingCheckoutSession, createSubscriptionProductAndPrices, toCents } from './lib/stripe'
+import { getStripeClient, createBookingCheckoutSession, createSubscriptionProductAndPrices, refundBookingPayment, toCents } from './lib/stripe'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
@@ -51,6 +54,7 @@ import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
 import { reviewsRoutes } from './routes/reviews'
+import { disputesRoutes } from './routes/disputes'
 import { stripeWebhookRoutes } from './routes/stripe-webhook'
 
 const app = new Hono<AppEnv>()
@@ -100,6 +104,7 @@ app.route('/', authRoutes)
 app.route('/', dashboardRoutes)
 app.route('/', engineersRoutes)
 app.route('/', reviewsRoutes)
+app.route('/', disputesRoutes)
 
 // ---------- Public marketing pages ----------
 
@@ -477,6 +482,12 @@ app.use('/admin/settings/*', async (c, next) => {
   await next()
 })
 
+app.use('/admin/disputes/*', async (c, next) => {
+  const authed = await isAdminAuthenticated(c.env.DB, c.req.raw)
+  if (!authed) return c.redirect('/admin/login')
+  await next()
+})
+
 app.get('/admin', async (c) => {
   const statusFilter = c.req.query('status') || 'all'
   const bookings = await getAllBookings(c.env.DB, statusFilter)
@@ -484,6 +495,8 @@ app.get('/admin', async (c) => {
   const commissionPercent = await getCommissionPercent(c.env.DB)
   const priceIds = await getSubscriptionPriceIds(c.env.DB)
   const subscriptionPricesConfigured = !!(priceIds.pro_monthly && priceIds.pro_annual && priceIds.elite_monthly && priceIds.elite_annual)
+  const disputes = await getAllDisputesForAdmin(c.env.DB)
+  const reviewRequestQueue = await getReviewRequestQueueForAdmin(c.env.DB)
   return c.render(
     <AdminDashboardPage
       bookings={bookings}
@@ -491,6 +504,8 @@ app.get('/admin', async (c) => {
       engineers={engineers}
       commissionPercent={commissionPercent}
       subscriptionPricesConfigured={subscriptionPricesConfigured}
+      disputes={disputes}
+      reviewRequestQueue={reviewRequestQueue}
     />,
     { title: 'Admin Dashboard' }
   )
@@ -537,8 +552,62 @@ app.post('/admin/bookings/:id/status', async (c) => {
   if (validStatuses.includes(status)) {
     await updateBookingStatus(c.env.DB, id, status)
     await logAuditEvent(c.env.DB, { actorType: 'admin', action: 'booking.status_change', targetType: 'booking', targetId: id, metadata: { status } })
+    if (status === 'completed') {
+      await onBookingCompleted(c.env.DB, id)
+    }
   }
   return c.redirect('/admin')
+})
+
+// Trust & Safety: admin resolves an open dispute, optionally issuing a Stripe refund.
+// refund_amount is customer-facing dollars; 'resolved_refunded' issues a full refund
+// (amount omitted so Stripe refunds the entire charge), 'resolved_partial_refund'
+// requires refund_amount, 'resolved_no_refund'/'dismissed' never touch Stripe.
+app.post('/admin/disputes/:id/resolve', async (c) => {
+  const id = parseInt(c.req.param('id'), 10)
+  const body = await c.req.parseBody()
+  const status = body['status'] as string
+  const adminNotes = ((body['admin_notes'] as string) || '').trim() || null
+  const refundAmountRaw = (body['refund_amount'] as string) || ''
+  const validStatuses = ['resolved_refunded', 'resolved_partial_refund', 'resolved_no_refund', 'dismissed']
+
+  if (!validStatuses.includes(status)) return c.redirect('/admin?tab=disputes')
+
+  const dispute = await getDisputeById(c.env.DB, id)
+  if (!dispute) return c.redirect('/admin?tab=disputes')
+
+  let refundAmount: number | null = null
+  let stripeRefundId: string | null = null
+
+  if ((status === 'resolved_refunded' || status === 'resolved_partial_refund') && c.env.STRIPE_SECRET_KEY) {
+    const booking = await getBookingById(c.env.DB, dispute.booking_id)
+    if (booking?.stripe_payment_intent_id) {
+      try {
+        const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+        const amountCents = status === 'resolved_partial_refund' && refundAmountRaw ? toCents(parseFloat(refundAmountRaw)) : undefined
+        const refund = await refundBookingPayment(stripe, {
+          paymentIntentId: booking.stripe_payment_intent_id,
+          amountCents
+        })
+        stripeRefundId = refund.refundId
+        refundAmount = status === 'resolved_partial_refund' ? parseFloat(refundAmountRaw) : booking.price_amount
+      } catch (err) {
+        console.error('Dispute refund failed', err)
+        await logAuditEvent(c.env.DB, { actorType: 'admin', action: 'dispute.refund_failed', targetType: 'dispute', targetId: id, metadata: { error: String(err) } })
+        return c.redirect('/admin?tab=disputes')
+      }
+    }
+  }
+
+  await resolveDispute(c.env.DB, id, { status: status as any, adminNotes, refundAmount, stripeRefundId })
+  await logAuditEvent(c.env.DB, {
+    actorType: 'admin',
+    action: 'dispute.resolve',
+    targetType: 'dispute',
+    targetId: id,
+    metadata: { status, refundAmount, stripeRefundId }
+  })
+  return c.redirect('/admin?tab=disputes')
 })
 
 app.get('/admin/proof/:id', async (c) => {

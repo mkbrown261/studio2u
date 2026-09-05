@@ -7,6 +7,8 @@ export interface User {
   is_engineer: number
   is_artist: number
   is_platform_admin: number
+  referral_code: string | null
+  referred_by_user_id: number | null
   created_at: string
 }
 
@@ -22,11 +24,20 @@ export async function findUserById(db: D1Database, id: number): Promise<User | n
 
 export async function createUser(
   db: D1Database,
-  params: { email: string; passwordHash: string; name: string; phone: string; isEngineer: boolean; isArtist: boolean }
+  params: {
+    email: string
+    passwordHash: string
+    name: string
+    phone: string
+    isEngineer: boolean
+    isArtist: boolean
+    referralCode?: string
+    referredByUserId?: number | null
+  }
 ): Promise<number> {
   const result = await db
     .prepare(
-      `INSERT INTO users (email, password_hash, name, phone, is_engineer, is_artist) VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO users (email, password_hash, name, phone, is_engineer, is_artist, referral_code, referred_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       params.email.trim().toLowerCase(),
@@ -34,7 +45,9 @@ export async function createUser(
       params.name,
       params.phone,
       params.isEngineer ? 1 : 0,
-      params.isArtist ? 1 : 0
+      params.isArtist ? 1 : 0,
+      params.referralCode ?? null,
+      params.referredByUserId ?? null
     )
     .run()
   return result.meta.last_row_id as number

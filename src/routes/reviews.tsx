@@ -2,10 +2,26 @@ import { Hono } from 'hono'
 import type { AppEnv } from '../types'
 import { getBookingById } from '../lib/db'
 import { getReviewByBookingId, createReview } from '../lib/db-engineers'
+import { markReviewRequestReviewed } from '../lib/db-review-requests'
 import { getSessionUser } from '../lib/session'
 import { ReviewFormPage } from '../pages/review-form'
+import { getReviewRequestByToken } from '../lib/db-review-requests'
 
 export const reviewsRoutes = new Hono<AppEnv>()
+
+// Token-based review link (/r/:token) — the link an admin copies out of the "Review
+// Requests" manual-nudge queue (or, once Resend is wired, the link an automated email
+// sends). Resolves the token to its booking and redirects into the existing /review/:id
+// flow with the customer's email pre-filled, so it reuses all the same authorization
+// logic in loadReviewableBooking below instead of duplicating it.
+reviewsRoutes.get('/r/:token', async (c) => {
+  const token = c.req.param('token')
+  const reviewRequest = await getReviewRequestByToken(c.env.DB, token)
+  if (!reviewRequest) return c.notFound()
+  const booking = await getBookingById(c.env.DB, reviewRequest.booking_id)
+  if (!booking) return c.notFound()
+  return c.redirect(`/review/${booking.id}?email=${encodeURIComponent(booking.customer_email)}`)
+})
 
 // Gate: only the customer on a completed, unreviewed booking with a real engineer_profile
 // link can review it. We check by email match (?email=) since not every booking is tied
@@ -84,6 +100,7 @@ reviewsRoutes.post('/review/:id', async (c) => {
     micRating,
     comment
   })
+  await markReviewRequestReviewed(c.env.DB, booking.id)
 
   return c.redirect(`/status?email=${encodeURIComponent(booking.customer_email)}`)
 })

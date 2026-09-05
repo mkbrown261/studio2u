@@ -113,6 +113,17 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
                 </div>
               )}
 
+              {(b.status === 'confirmed' || b.status === 'completed') && (
+                <div class="mt-3">
+                  <a
+                    href={`/disputes/new/${b.id}?email=${encodeURIComponent(b.customer_email)}`}
+                    class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-gold transition"
+                  >
+                    <i class="fa-solid fa-flag text-[10px]"></i> Report a Problem
+                  </a>
+                </div>
+              )}
+
               <div class="text-xs text-muted mt-3">Booking #{b.id} · ${b.price_amount} · {b.genre || 'No genre specified'}</div>
             </div>
           ))}
