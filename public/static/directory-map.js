@@ -34,7 +34,8 @@
   const markers = []
   withLocation.forEach((e) => {
     const marker = L.marker([e.lat, e.lng], { icon: pulsingIcon }).addTo(map)
-    marker.bindPopup(`<a href="/engineers/${e.id}" style="color:#D9A448;font-weight:600;">${e.name}</a><br/>$${e.rate}/hr`)
+    const distanceLine = e.distance != null ? `<br/>${e.distance < 1 ? '<1' : e.distance} mi away` : ''
+    marker.bindPopup(`<a href="/engineers/${e.id}" style="color:#D9A448;font-weight:600;">${e.name}</a><br/>$${e.rate}/hr${distanceLine}`)
     markers.push(marker)
   })
 

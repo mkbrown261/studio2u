@@ -3,6 +3,7 @@ import type { EngineerProfile } from '../lib/db-engineers'
 import type { Dispute } from '../lib/db-disputes'
 import type { ReviewRequestQueueRow } from '../lib/db-review-requests'
 import type { AnalyticsSummary } from '../lib/analytics'
+import type { WaitlistEntry } from '../lib/db-waitlist'
 
 const STATUS_STYLES: Record<string, string> = {
   pending_payment: 'bg-muted/20 text-muted border-muted/30',
@@ -30,7 +31,8 @@ export function AdminDashboardPage({
   subscriptionPricesConfigured,
   disputes = [],
   reviewRequestQueue = [],
-  analyticsSummary
+  analyticsSummary,
+  searchWaitlist = []
 }: {
   bookings: Booking[]
   statusFilter: string
@@ -40,9 +42,12 @@ export function AdminDashboardPage({
   disputes?: Dispute[]
   reviewRequestQueue?: ReviewRequestQueueRow[]
   analyticsSummary?: AnalyticsSummary
+  searchWaitlist?: WaitlistEntry[]
 }) {
   const openDisputes = disputes.filter((d) => d.status === 'open')
   const resolvedDisputes = disputes.filter((d) => d.status !== 'open')
+  const pendingWaitlist = searchWaitlist.filter((w) => w.contacted !== 1)
+  const contactedWaitlist = searchWaitlist.filter((w) => w.contacted === 1)
   const filters = ['all', 'pending_payment', 'pending_approval', 'confirmed', 'completed', 'cancelled', 'rejected']
 
   return (
@@ -246,6 +251,52 @@ export function AdminDashboardPage({
                 <code class="text-xs bg-ink border border-gold/20 rounded-lg px-3 py-2 text-gold break-all">
                   /r/{r.token}
                 </code>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ---------- Search Waitlist: unmet-demand signal from zero-result directory searches ---------- */}
+      <section class="mb-14">
+        <h2 class="font-display text-xl font-bold mb-1">
+          Search Waitlist {pendingWaitlist.length > 0 && <span class="text-sm font-semibold text-gold">({pendingWaitlist.length} new)</span>}
+        </h2>
+        <p class="text-muted text-sm mb-5">
+          Customers who searched the directory and found nobody covering their location/date. Direct signal of where to
+          recruit engineers next.
+        </p>
+        {searchWaitlist.length === 0 ? (
+          <div class="text-center py-10 text-muted bg-surface border border-gold/10 rounded-2xl text-sm">
+            No unmet-demand signals yet — every search has found a match so far.
+          </div>
+        ) : (
+          <div class="space-y-3">
+            {[...pendingWaitlist, ...contactedWaitlist].map((w) => (
+              <div class={`bg-surface border rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap ${w.contacted ? 'border-gold/10 opacity-60' : 'border-gold/30'}`}>
+                <div>
+                  <div class="font-semibold text-cream">{w.email}</div>
+                  <div class="text-xs text-muted mt-1">
+                    {w.location_label || 'No location given'}
+                    {w.session_date ? ` · ${w.session_date}` : ''}
+                    {w.genre ? ` · ${w.genre}` : ''}
+                    {' · '}
+                    {new Date(w.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <form method="POST" action={`/admin/waitlist/${w.id}/contacted`}>
+                  <input type="hidden" name="contacted" value={w.contacted ? '0' : '1'} />
+                  <button
+                    type="submit"
+                    class={`text-xs font-semibold px-4 py-2 rounded-full border transition ${
+                      w.contacted
+                        ? 'border-gold/20 text-muted hover:text-cream'
+                        : 'bg-gold text-ink border-gold hover:bg-gold-light'
+                    }`}
+                  >
+                    {w.contacted ? 'Mark not contacted' : 'Mark contacted'}
+                  </button>
+                </form>
               </div>
             ))}
           </div>

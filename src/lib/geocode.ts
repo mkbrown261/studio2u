@@ -29,6 +29,23 @@ export async function geocodeLocation(locationLabel: string): Promise<GeocodeRes
   }
 }
 
+// Great-circle distance in miles between two lat/lng points (haversine formula).
+// Used to (a) filter out engineers whose travel_radius_miles can't reach the
+// customer's searched location, and (b) sort/display "X mi away" in the directory.
+// Note: engineer lat/lng is already jittered 1-2mi (see jitterCoordinate below), so
+// this is inherently an approximate distance — fine for filtering/sorting, not for
+// anything that needs to be exact.
+export function distanceMiles(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3958.8 // Earth radius in miles
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
 // Jitter a coordinate randomly within a 1-2 mile radius so the public map pin never
 // reveals an engineer's exact location.
 export function jitterCoordinate(lat: number, lng: number): GeocodeResult {

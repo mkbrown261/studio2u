@@ -29,6 +29,7 @@ import {
 import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
 import { getAllDisputesForAdmin, resolveDispute, getDisputeById } from './lib/db-disputes'
 import { getReviewRequestQueueForAdmin } from './lib/db-review-requests'
+import { getWaitlistForAdmin, markWaitlistContacted } from './lib/db-waitlist'
 import { getAccountCreditBalance, computeApplicableCreditCents } from './lib/db-referrals'
 import { onBookingCompleted } from './lib/booking-lifecycle'
 import { logEvent, getAnalyticsSummary } from './lib/analytics'
@@ -607,6 +608,7 @@ app.get('/admin', async (c) => {
   const disputes = await getAllDisputesForAdmin(c.env.DB)
   const reviewRequestQueue = await getReviewRequestQueueForAdmin(c.env.DB)
   const analyticsSummary = await getAnalyticsSummary(c.env.DB)
+  const searchWaitlist = await getWaitlistForAdmin(c.env.DB)
   return c.render(
     <AdminDashboardPage
       bookings={bookings}
@@ -617,9 +619,21 @@ app.get('/admin', async (c) => {
       disputes={disputes}
       reviewRequestQueue={reviewRequestQueue}
       analyticsSummary={analyticsSummary}
+      searchWaitlist={searchWaitlist}
     />,
     { title: 'Admin Dashboard' }
   )
+})
+
+// Toggle contacted/not-contacted on a search-waitlist lead (see migrations/0015).
+app.post('/admin/waitlist/:id/contacted', async (c) => {
+  const id = parseInt(c.req.param('id'), 10)
+  const body = await c.req.parseBody()
+  const contacted = body['contacted'] === '1'
+  if (!Number.isNaN(id)) {
+    await markWaitlistContacted(c.env.DB, id, contacted)
+  }
+  return c.redirect('/admin')
 })
 
 // One-time setup: creates the Stripe Products/Prices for Pro/Elite subscription tiers

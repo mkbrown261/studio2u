@@ -4,16 +4,20 @@ import { getPortfolioEmbed } from '../lib/embed'
 export function EngineerProfilePage({
   profile,
   portfolio,
-  reviews
+  reviews,
+  completedSessions
 }: {
   profile: EngineerProfile
   portfolio: PortfolioItem[]
   reviews: Review[]
+  completedSessions: number
 }) {
   const genres = (profile.genres || '')
     .split(',')
     .map((g) => g.trim())
     .filter(Boolean)
+
+  const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 
   return (
     <div class="max-w-5xl mx-auto px-5 py-16">
@@ -62,7 +66,20 @@ export function EngineerProfilePage({
               Remote Available
             </span>
           )}
-          <div class="text-muted text-sm mb-5">{profile.location_label || 'Location on request'} · {profile.travel_radius_miles}mi radius</div>
+          <div class="text-muted text-sm mb-3">{profile.location_label || 'Location on request'} · {profile.travel_radius_miles}mi radius</div>
+
+          <div class="flex flex-wrap gap-3 text-xs text-muted mb-5">
+            {completedSessions > 0 && (
+              <span class="inline-flex items-center gap-1.5 bg-surface border border-gold/10 rounded-full px-3 py-1.5">
+                <i class="fa-solid fa-circle-check text-gold"></i>
+                {completedSessions} session{completedSessions !== 1 ? 's' : ''} completed
+              </span>
+            )}
+            <span class="inline-flex items-center gap-1.5 bg-surface border border-gold/10 rounded-full px-3 py-1.5">
+              <i class="fa-regular fa-calendar text-gold"></i>
+              Member since {memberSince}
+            </span>
+          </div>
 
           <div
             id="engineer-distance"

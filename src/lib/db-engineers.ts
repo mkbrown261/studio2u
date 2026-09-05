@@ -92,16 +92,88 @@ export async function getPublishedEngineersForSitemap(db: D1Database): Promise<{
   return results || []
 }
 
-export async function getPublishedEngineers(db: D1Database, remoteOnly?: boolean): Promise<EngineerProfile[]> {
-  const remoteClause = remoteOnly ? 'AND offers_remote = 1' : ''
+// Directory search (2026-09-05 "find an engineer more effectively" pass). SQL-level
+// filters only — remote flag and price range map cleanly to WHERE clauses. Location
+// (distance vs. travel_radius_miles) and date-availability filtering need per-engineer
+// async work (geocoding, engineer_availability lookups) so those are applied by the
+// caller (routes/engineers.tsx) on top of this result set, not here.
+export interface PublishedEngineersFilter {
+  remoteOnly?: boolean
+  priceMin?: number | null
+  priceMax?: number | null
+  // Free-text search across genres, bio, mic_spec, and daw_spec — lets a customer
+  // searching e.g. "SM7B" or "hip hop" or "Ableton" find relevant engineers instead
+  // of only matching the exact genre tag.
+  textQuery?: string | null
+}
+
+export async function getPublishedEngineers(db: D1Database, filter?: PublishedEngineersFilter): Promise<EngineerProfile[]> {
+  const clauses: string[] = []
+  const binds: (string | number)[] = []
+  if (filter?.remoteOnly) clauses.push('AND offers_remote = 1')
+  if (filter?.priceMin != null) {
+    clauses.push('AND hourly_rate >= ?')
+    binds.push(filter.priceMin)
+  }
+  if (filter?.priceMax != null) {
+    clauses.push('AND hourly_rate <= ?')
+    binds.push(filter.priceMax)
+  }
+  const extra = clauses.join(' ')
   const { results } = await db
     .prepare(
       `SELECT * FROM engineer_profiles
-       WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1 ${remoteClause}
+       WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1 ${extra}
        ORDER BY ${DIRECTORY_RANK_SQL}, rating_avg DESC, created_at ASC`
     )
+    .bind(...binds)
     .all()
-  return (results as unknown as EngineerProfile[]) || []
+  let list = (results as unknown as EngineerProfile[]) || []
+
+  if (filter?.textQuery) {
+    const needle = filter.textQuery.toLowerCase()
+    list = list.filter((e) => {
+      const haystack = `${e.genres || ''} ${e.bio || ''} ${e.mic_spec || ''} ${e.daw_spec || ''}`.toLowerCase()
+      return haystack.includes(needle)
+    })
+  }
+
+  return list
+}
+
+// Trust signal (2026-09-05): "completed sessions" replaces the originally-proposed
+// "response time" metric — bookings now auto-confirm the instant Stripe payment
+// clears (no manual engineer-approval step left in the flow), so there's no
+// meaningful "how fast did they respond" moment left to measure. A completed-session
+// count is a real, verifiable signal of experience that IS still measurable, and
+// pairs with `created_at` ("member since") on the profile row for a second signal —
+// no new column needed for that half.
+//
+// Batched (GROUP BY) rather than one query per engineer: the directory renders a
+// LIST, so a single query returning a Map avoids an N+1 query per card.
+export async function getCompletedSessionCounts(db: D1Database): Promise<Map<number, number>> {
+  const { results } = await db
+    .prepare(
+      `SELECT engineer_profile_id, COUNT(*) as cnt FROM bookings
+       WHERE status = 'completed' AND engineer_profile_id IS NOT NULL
+       GROUP BY engineer_profile_id`
+    )
+    .all<{ engineer_profile_id: number; cnt: number }>()
+  const map = new Map<number, number>()
+  for (const row of results || []) {
+    map.set(row.engineer_profile_id, row.cnt)
+  }
+  return map
+}
+
+// Single-engineer variant for the individual profile page (routes/engineers.tsx
+// GET /engineers/:id) — no need to pull the whole directory's counts for one card.
+export async function getCompletedSessionCount(db: D1Database, engineerProfileId: number): Promise<number> {
+  const row = await db
+    .prepare(`SELECT COUNT(*) as cnt FROM bookings WHERE status = 'completed' AND engineer_profile_id = ?`)
+    .bind(engineerProfileId)
+    .first<{ cnt: number }>()
+  return row?.cnt || 0
 }
 
 export async function getAllEngineersForAdmin(db: D1Database): Promise<EngineerProfile[]> {
