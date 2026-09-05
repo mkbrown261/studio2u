@@ -23,12 +23,15 @@ import {
   getEngineerProfileByUserId,
   getEngineerDisplayForBooking,
   getAllEngineersForAdmin,
-  setEngineerSuspended
+  setEngineerSuspended,
+  getPublishedEngineersForSitemap
 } from './lib/db-engineers'
 import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
 import { getAllDisputesForAdmin, resolveDispute, getDisputeById } from './lib/db-disputes'
 import { getReviewRequestQueueForAdmin } from './lib/db-review-requests'
 import { onBookingCompleted } from './lib/booking-lifecycle'
+import { logEvent, getAnalyticsSummary } from './lib/analytics'
+import { getPlatformStats } from './lib/db-stats'
 import { getPlatformFeePercentForEngineer, getSubscriptionPriceIds, setSubscriptionPriceId, splitCommission } from './lib/subscriptions'
 import { getAvailableHoursForDate, isRangeAvailable } from './lib/db-availability'
 import { getStripeClient, createBookingCheckoutSession, createSubscriptionProductAndPrices, refundBookingPayment, toCents } from './lib/stripe'
@@ -110,7 +113,41 @@ app.route('/', disputesRoutes)
 
 app.get('/', async (c) => {
   const services = await getServices(c.env.DB)
-  return c.render(<HomePage services={services} />, { title: 'Home' })
+  const stats = await getPlatformStats(c.env.DB)
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: 'Studio2U',
+    description: 'Mobile recording studio service — professional recording engineers who come to you.',
+    url: new URL(c.req.url).origin,
+    ...(stats.total_reviews > 0
+      ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: stats.average_rating, reviewCount: stats.total_reviews } }
+      : {})
+  })
+  return c.render(<HomePage services={services} stats={stats} />, {
+    title: 'Home',
+    description: 'Studio2U brings professional recording engineers directly to you. Book a mobile recording session tonight — no studio required.',
+    jsonLd
+  })
+})
+
+// ---------- SEO: sitemap + robots ----------
+app.get('/sitemap.xml', async (c) => {
+  const origin = new URL(c.req.url).origin
+  const engineers = await getPublishedEngineersForSitemap(c.env.DB)
+  const staticPaths = ['/', '/engineers', '/pricing', '/terms', '/privacy', '/security', '/refund-policy', '/consent']
+  const urls = [
+    ...staticPaths.map((p) => `<url><loc>${origin}${p}</loc></url>`),
+    ...engineers.map((e) => `<url><loc>${origin}/engineers/${e.id}</loc></url>`)
+  ].join('')
+  return c.body(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`, 200, {
+    'Content-Type': 'application/xml'
+  })
+})
+
+app.get('/robots.txt', (c) => {
+  const origin = new URL(c.req.url).origin
+  return c.text(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /dashboard\nSitemap: ${origin}/sitemap.xml\n`)
 })
 
 // Engineer Subscription Tiers (Free / Pro / Elite) — distinct from the customer-facing
@@ -165,6 +202,25 @@ app.get('/refund-policy', async (c) => {
 // ---------- Booking API ----------
 
 // Returns every open hour for this engineer on this date (weekly template +
+// Lightweight self-hosted pageview beacon — fired by a tiny inline script in
+// renderer.tsx on every page load. No cookies, no cross-site tracking: session_id is a
+// random per-pageload string generated client-side purely to dedupe within a single
+// analytics summary query, never persisted or linked back to a real identity.
+app.post('/api/track', async (c) => {
+  try {
+    const body = await c.req.json()
+    await logEvent(c.env.DB, {
+      eventType: 'pageview',
+      path: typeof body.path === 'string' ? body.path.slice(0, 200) : undefined,
+      referrer: typeof body.referrer === 'string' ? body.referrer.slice(0, 300) : undefined,
+      sessionId: typeof body.sessionId === 'string' ? body.sessionId.slice(0, 64) : undefined
+    })
+  } catch {
+    // best-effort — never let a malformed beacon body surface as an error
+  }
+  return c.body(null, 204)
+})
+
 // overrides, minus anything already booked) so the booking UI can only ever
 // show real, currently-open slots.
 app.get('/api/available-slots', async (c) => {
@@ -362,6 +418,8 @@ app.post('/api/bookings', async (c) => {
       platformFeePercent: commissionPercent
     })
 
+    await logEvent(c.env.DB, { eventType: 'booking_started', engineerProfileId: engineer.id, metadata: { bookingId } })
+
     return c.json({ bookingId, checkoutUrl: checkout.url })
   } catch (err) {
     console.error(err)
@@ -497,6 +555,7 @@ app.get('/admin', async (c) => {
   const subscriptionPricesConfigured = !!(priceIds.pro_monthly && priceIds.pro_annual && priceIds.elite_monthly && priceIds.elite_annual)
   const disputes = await getAllDisputesForAdmin(c.env.DB)
   const reviewRequestQueue = await getReviewRequestQueueForAdmin(c.env.DB)
+  const analyticsSummary = await getAnalyticsSummary(c.env.DB)
   return c.render(
     <AdminDashboardPage
       bookings={bookings}
@@ -506,6 +565,7 @@ app.get('/admin', async (c) => {
       subscriptionPricesConfigured={subscriptionPricesConfigured}
       disputes={disputes}
       reviewRequestQueue={reviewRequestQueue}
+      analyticsSummary={analyticsSummary}
     />,
     { title: 'Admin Dashboard' }
   )

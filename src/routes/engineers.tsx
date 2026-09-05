@@ -3,6 +3,7 @@ import type { AppEnv } from '../types'
 import { getPublishedEngineers, getEngineerProfileById, getPortfolioItems, getReviewsForEngineer } from '../lib/db-engineers'
 import { EngineersDirectoryPage } from '../pages/engineers-directory'
 import { EngineerProfilePage } from '../pages/engineer-profile'
+import { logEvent } from '../lib/analytics'
 
 export const engineersRoutes = new Hono<AppEnv>()
 
@@ -29,8 +30,33 @@ engineersRoutes.get('/engineers/:id', async (c) => {
   const portfolio = await getPortfolioItems(c.env.DB, profile.id)
   const reviews = await getReviewsForEngineer(c.env.DB, profile.id)
 
+  await logEvent(c.env.DB, { eventType: 'engineer_view', path: c.req.path, engineerProfileId: profile.id })
+
+  // schema.org Person + AggregateRating structured data — helps engineer profiles show
+  // star ratings directly in search results and gives search engines a clean signal of
+  // who/what this page is about beyond the plain HTML.
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: profile.display_name,
+    jobTitle: 'Recording Engineer',
+    description: profile.bio || undefined,
+    image: profile.photo_url || undefined,
+    ...(profile.rating_count > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: profile.rating_avg,
+            reviewCount: profile.rating_count
+          }
+        }
+      : {})
+  })
+
   return c.render(<EngineerProfilePage profile={profile} portfolio={portfolio} reviews={reviews} />, {
-    title: profile.display_name
+    title: profile.display_name,
+    description: profile.bio ? profile.bio.slice(0, 160) : `Book a recording session with ${profile.display_name} on Studio2U.`,
+    jsonLd
   })
 })
 

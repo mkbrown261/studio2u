@@ -1,6 +1,7 @@
 import type { Service } from '../types'
+import type { PlatformStats } from '../lib/db-stats'
 
-export function HomePage({ services }: { services: Service[] }) {
+export function HomePage({ services, stats }: { services: Service[]; stats?: PlatformStats }) {
   return (
     <div>
       {/* HERO */}
@@ -123,19 +124,33 @@ export function HomePage({ services }: { services: Service[] }) {
               Today, Studio2You is growing into a platform that connects artists with trusted mobile recording engineers, making it easier than ever to book high-quality recording sessions on your schedule, at your location.
             </p>
             <p class="font-display text-lg text-gold italic mb-6">Professional sound. Your space. Your schedule.</p>
-            <div class="flex gap-8 text-sm">
+            <div class="flex flex-wrap gap-x-8 gap-y-4 text-sm">
               <div>
                 <div class="text-2xl font-display font-bold text-gold">12+</div>
                 <div class="text-muted text-xs uppercase tracking-wide mt-1">Years Experience</div>
               </div>
               <div>
-                <div class="text-2xl font-display font-bold text-gold">Growing</div>
+                <div class="text-2xl font-display font-bold text-gold">
+                  {stats && stats.published_engineers > 0 ? stats.published_engineers : 'Growing'}
+                </div>
                 <div class="text-muted text-xs uppercase tracking-wide mt-1">Engineer Network</div>
               </div>
               <div>
-                <div class="text-2xl font-display font-bold text-gold">On-Demand</div>
-                <div class="text-muted text-xs uppercase tracking-wide mt-1">Every Day</div>
+                <div class="text-2xl font-display font-bold text-gold">
+                  {stats && stats.completed_sessions > 0 ? stats.completed_sessions : 'On-Demand'}
+                </div>
+                <div class="text-muted text-xs uppercase tracking-wide mt-1">
+                  {stats && stats.completed_sessions > 0 ? 'Sessions Booked' : 'Every Day'}
+                </div>
               </div>
+              {stats && stats.average_rating != null && stats.total_reviews > 0 && (
+                <div>
+                  <div class="text-2xl font-display font-bold text-gold">{stats.average_rating.toFixed(1)}★</div>
+                  <div class="text-muted text-xs uppercase tracking-wide mt-1">
+                    {stats.total_reviews} Review{stats.total_reviews !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div class="relative">

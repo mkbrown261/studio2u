@@ -2,6 +2,7 @@ import type { Booking } from '../types'
 import type { EngineerProfile } from '../lib/db-engineers'
 import type { Dispute } from '../lib/db-disputes'
 import type { ReviewRequestQueueRow } from '../lib/db-review-requests'
+import type { AnalyticsSummary } from '../lib/analytics'
 
 const STATUS_STYLES: Record<string, string> = {
   pending_payment: 'bg-muted/20 text-muted border-muted/30',
@@ -28,7 +29,8 @@ export function AdminDashboardPage({
   commissionPercent,
   subscriptionPricesConfigured,
   disputes = [],
-  reviewRequestQueue = []
+  reviewRequestQueue = [],
+  analyticsSummary
 }: {
   bookings: Booking[]
   statusFilter: string
@@ -37,6 +39,7 @@ export function AdminDashboardPage({
   subscriptionPricesConfigured?: boolean
   disputes?: Dispute[]
   reviewRequestQueue?: ReviewRequestQueueRow[]
+  analyticsSummary?: AnalyticsSummary
 }) {
   const openDisputes = disputes.filter((d) => d.status === 'open')
   const resolvedDisputes = disputes.filter((d) => d.status !== 'open')
@@ -121,6 +124,44 @@ export function AdminDashboardPage({
           )}
         </div>
       </section>
+
+      {/* ---------- Self-hosted Analytics (last 30 days) ---------- */}
+      {analyticsSummary && (
+        <section class="mb-14">
+          <h2 class="font-display text-xl font-bold mb-4">Analytics (Last 30 Days)</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div class="bg-surface border border-gold/10 rounded-xl px-4 py-4 text-center">
+              <div class="text-2xl font-bold text-cream">{analyticsSummary.total_pageviews}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Pageviews</div>
+            </div>
+            <div class="bg-surface border border-gold/10 rounded-xl px-4 py-4 text-center">
+              <div class="text-2xl font-bold text-gold">{analyticsSummary.total_signups}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Signups</div>
+            </div>
+            <div class="bg-surface border border-gold/10 rounded-xl px-4 py-4 text-center">
+              <div class="text-2xl font-bold text-cream">{analyticsSummary.total_bookings_started}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Bookings Started</div>
+            </div>
+            <div class="bg-surface border border-gold/10 rounded-xl px-4 py-4 text-center">
+              <div class="text-2xl font-bold text-emerald-400">{analyticsSummary.total_bookings_completed}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Bookings Completed</div>
+            </div>
+          </div>
+          {analyticsSummary.top_paths.length > 0 && (
+            <div class="bg-surface border border-gold/10 rounded-xl p-5">
+              <div class="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Top Pages</div>
+              <div class="space-y-1.5">
+                {analyticsSummary.top_paths.map((p) => (
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-cream/80 truncate">{p.path}</span>
+                    <span class="text-gold font-semibold ml-3 shrink-0">{p.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ---------- Trust & Safety: Disputes ---------- */}
       <section class="mb-14">

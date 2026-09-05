@@ -84,6 +84,14 @@ const DIRECTORY_RANK_SQL = `(
   + (((rating_count * rating_avg) + 16.0) / (rating_count + 4.0) - 4.0) * 5.0
 ) DESC`
 
+// Minimal id-only listing for sitemap.xml generation — no need for the full profile row.
+export async function getPublishedEngineersForSitemap(db: D1Database): Promise<{ id: number }[]> {
+  const { results } = await db
+    .prepare(`SELECT id FROM engineer_profiles WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1`)
+    .all<{ id: number }>()
+  return results || []
+}
+
 export async function getPublishedEngineers(db: D1Database, remoteOnly?: boolean): Promise<EngineerProfile[]> {
   const remoteClause = remoteOnly ? 'AND offers_remote = 1' : ''
   const { results } = await db

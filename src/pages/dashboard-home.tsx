@@ -1,7 +1,20 @@
 import type { SessionUser } from '../lib/session'
 import type { EngineerProfile } from '../lib/db-engineers'
+import type { ReferralStats } from '../lib/db-referrals'
 
-export function DashboardHomePage({ user, engineerProfile }: { user: SessionUser; engineerProfile: EngineerProfile | null }) {
+export function DashboardHomePage({
+  user,
+  engineerProfile,
+  referralCode,
+  referralStats,
+  creditBalance
+}: {
+  user: SessionUser
+  engineerProfile: EngineerProfile | null
+  referralCode?: string
+  referralStats?: ReferralStats
+  creditBalance?: number
+}) {
   return (
     <div class="max-w-4xl mx-auto px-5 py-12">
       <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
@@ -90,6 +103,52 @@ export function DashboardHomePage({ user, engineerProfile }: { user: SessionUser
         <div class="mt-8 bg-wine/10 border border-wine/30 rounded-2xl p-6 text-center">
           <p class="text-cream/80 text-sm mb-3">Want to offer recording sessions on Studio2You?</p>
           <a href="/dashboard/become-engineer" class="inline-block text-sm font-semibold bg-gold hover:bg-gold-light text-ink px-5 py-2.5 rounded-full transition">Become an Engineer</a>
+        </div>
+      )}
+
+      {referralCode && (
+        <div id="invite-earn" class="mt-8 bg-surface border border-gold/20 rounded-2xl p-7">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-11 h-11 rounded-xl bg-gold/10 flex items-center justify-center text-gold text-lg">
+              <i class="fa-solid fa-gift"></i>
+            </div>
+            <div>
+              <h2 class="font-display text-xl font-bold">Invite &amp; Earn</h2>
+              <p class="text-muted text-sm">
+                {user.is_engineer === 1
+                  ? 'Share your link — when someone you invite books their first completed session, you get a free month.'
+                  : 'Share your link — when someone you invite books their first completed session, you both win.'}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 bg-ink border border-gold/20 rounded-lg px-4 py-3 mb-4">
+            <code id="referral-link" class="text-sm text-gold flex-1 truncate">
+              studio2u.pages.dev/signup?ref={referralCode}
+            </code>
+            <button
+              type="button"
+              onclick={`navigator.clipboard.writeText('https://studio2u.pages.dev/signup?ref=${referralCode}'); this.innerText='Copied!'; setTimeout(() => this.innerText='Copy', 1500)`}
+              class="text-xs font-semibold bg-gold hover:bg-gold-light text-ink px-3 py-1.5 rounded-full transition shrink-0"
+            >
+              Copy
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-ink rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold text-cream">{referralStats?.total_referred ?? 0}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Invited</div>
+            </div>
+            <div class="bg-ink rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold text-emerald-400">{referralStats?.total_rewards_credited ?? 0}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Rewards Earned</div>
+            </div>
+            <div class="bg-ink rounded-xl px-3 py-3">
+              <div class="text-2xl font-bold text-gold">${(creditBalance ?? 0).toFixed(0)}</div>
+              <div class="text-[11px] text-muted uppercase tracking-wide mt-1">Credit Balance</div>
+            </div>
+          </div>
         </div>
       )}
     </div>

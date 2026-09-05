@@ -1,18 +1,36 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
 import { getSessionUser } from './lib/session'
 
-export const renderer = jsxRenderer(async ({ children, title }, c) => {
+export const renderer = jsxRenderer(async ({ children, title, description, jsonLd }, c) => {
   const sessionUser = await getSessionUser(c.env.DB, c.req.raw)
+  const pageTitle = title ? `${title} · Studio2U` : 'Studio2U — We Bring The Studio To You'
+  const pageDescription =
+    description ||
+    'Studio2U is mobile recording. Book a professional recording engineer to come record your session tonight — no studio required.'
+  const canonicalUrl = new URL(c.req.url).origin + new URL(c.req.url).pathname
   return (
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title ? `${title} · Studio2U` : 'Studio2U — We Bring The Studio To You'}</title>
-        <meta
-          name="description"
-          content="Studio2U is mobile recording. Book a professional recording engineer to come record your session tonight — no studio required."
-        />
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph / Twitter Card — SEO + social share previews */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Studio2U" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={`${new URL(c.req.url).origin}/static/brand/header-badge.png`} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={`${new URL(c.req.url).origin}/static/brand/header-badge.png`} />
+
+        {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }}></script>}
+
         <link rel="icon" type="image/png" sizes="16x16" href="/static/brand/favicon-16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/favicon-32.png" />
         <link rel="icon" type="image/png" sizes="48x48" href="/static/brand/favicon-48.png" />
@@ -149,6 +167,27 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
             © 2026 Studio2U LLC · Wilmington, Delaware. All rights reserved. We bring the studio to you.
           </div>
         </footer>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            (function() {
+              try {
+                var sid = sessionStorage.getItem('s2u_sid');
+                if (!sid) {
+                  sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+                  sessionStorage.setItem('s2u_sid', sid);
+                }
+                fetch('/api/track', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ path: location.pathname, referrer: document.referrer || '', sessionId: sid }),
+                  keepalive: true
+                }).catch(function() {});
+              } catch (e) {}
+            })();
+          `
+          }}
+        ></script>
       </body>
     </html>
   )

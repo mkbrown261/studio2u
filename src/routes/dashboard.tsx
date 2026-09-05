@@ -11,6 +11,8 @@ import {
   updateEngineerStripeStatus
 } from '../lib/db-engineers'
 import { getBookingsByEngineerProfile, updateBookingStatus, getBookingById } from '../lib/db'
+import { onBookingCompleted } from '../lib/booking-lifecycle'
+import { ensureReferralCode, getReferralStatsForUser, getAccountCreditBalance } from '../lib/db-referrals'
 import { setUserRoles } from '../lib/db-users'
 import { geocodeLocation, jitterCoordinate } from '../lib/geocode'
 import {
@@ -63,7 +65,19 @@ dashboardRoutes.get('/dashboard', async (c) => {
   const user = await getSessionUser(c.env.DB, c.req.raw)
   if (!user) return c.redirect('/login')
   const profile = user.is_engineer === 1 ? await getEngineerProfileByUserId(c.env.DB, user.id) : null
-  return c.render(<DashboardHomePage user={user} engineerProfile={profile} />, { title: 'Dashboard' })
+  const referralCode = await ensureReferralCode(c.env.DB, user.id)
+  const referralStats = await getReferralStatsForUser(c.env.DB, user.id)
+  const creditBalance = await getAccountCreditBalance(c.env.DB, user.id)
+  return c.render(
+    <DashboardHomePage
+      user={user}
+      engineerProfile={profile}
+      referralCode={referralCode}
+      referralStats={referralStats}
+      creditBalance={creditBalance}
+    />,
+    { title: 'Dashboard' }
+  )
 })
 
 dashboardRoutes.get('/dashboard/become-engineer', async (c) => {
@@ -261,6 +275,9 @@ dashboardRoutes.post('/dashboard/bookings/:id/status', async (c) => {
   if (validStatuses.includes(status)) {
     await updateBookingStatus(c.env.DB, bookingId, status)
     await logAuditEvent(c.env.DB, { actorType: 'user', actorId: user.id, action: 'booking.status_change', targetType: 'booking', targetId: bookingId, metadata: { status } })
+    if (status === 'completed') {
+      await onBookingCompleted(c.env.DB, bookingId)
+    }
   }
   return c.redirect('/dashboard/bookings')
 })
