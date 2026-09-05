@@ -546,7 +546,9 @@ dashboardRoutes.post('/dashboard/subscription/checkout', async (c) => {
       priceId,
       successUrl: `${origin}/dashboard/subscription?upgraded=1`,
       cancelUrl: `${origin}/pricing`,
-      engineerProfileId: profile.id
+      engineerProfileId: profile.id,
+      tier,
+      period
     })
     return c.redirect(checkout.url)
   } catch (err) {

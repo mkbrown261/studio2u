@@ -290,17 +290,28 @@ export async function createSubscriptionCheckoutSession(
     successUrl: string
     cancelUrl: string
     engineerProfileId: number
+    tier: 'pro' | 'elite'
+    period: 'monthly' | 'annual'
   }
 ): Promise<{ url: string }> {
+  // tier/period are stamped into subscription_data.metadata (which Stripe carries onto
+  // the resulting Subscription object, not just this Checkout Session) so the webhook
+  // can read them straight off customer.subscription.* events without having to
+  // reverse-map a Stripe price ID back to a tier.
+  const metadata = {
+    engineer_profile_id: String(params.engineerProfileId),
+    tier: params.tier,
+    period: params.period
+  }
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: params.customerId,
     line_items: [{ price: params.priceId, quantity: 1 }],
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
-    metadata: { engineer_profile_id: String(params.engineerProfileId) },
+    metadata,
     subscription_data: {
-      metadata: { engineer_profile_id: String(params.engineerProfileId) }
+      metadata
     }
   })
   if (!session.url) throw new Error('Stripe did not return a Checkout URL.')
