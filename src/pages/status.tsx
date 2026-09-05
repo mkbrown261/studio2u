@@ -1,4 +1,5 @@
 import type { Booking } from '../types'
+import type { ProjectFile } from '../lib/db-projects'
 
 const STATUS_STYLES: Record<string, string> = {
   pending_payment: 'bg-muted/20 text-muted border-muted/30',
@@ -18,7 +19,24 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: 'Rejected'
 }
 
-export function StatusPage({ bookings, email, searched }: { bookings: Booking[]; email?: string; searched?: boolean }) {
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${bytes} B`
+}
+
+export function StatusPage({
+  bookings,
+  email,
+  searched,
+  projectFilesByBooking
+}: {
+  bookings: Booking[]
+  email?: string
+  searched?: boolean
+  projectFilesByBooking?: Record<number, { projectName: string; files: ProjectFile[] }[]>
+}) {
   return (
     <div class="max-w-3xl mx-auto px-5 py-16">
       <div class="text-center mb-10">
@@ -110,6 +128,32 @@ export function StatusPage({ bookings, email, searched }: { bookings: Booking[];
                   >
                     <i class="fa-solid fa-rotate-right text-xs"></i> Book This Engineer Again
                   </a>
+                </div>
+              )}
+
+              {projectFilesByBooking && projectFilesByBooking[b.id] && (
+                <div class="bg-ink/50 border border-gold/20 rounded-xl px-4 py-4 mt-3">
+                  <p class="text-sm text-cream font-medium mb-3">
+                    <i class="fa-solid fa-folder-open text-gold mr-1.5"></i> Files from your engineer
+                  </p>
+                  <div class="space-y-3">
+                    {projectFilesByBooking[b.id].map((entry) => (
+                      <div>
+                        <div class="text-xs text-muted uppercase tracking-wide mb-1.5">{entry.projectName}</div>
+                        <div class="space-y-1.5">
+                          {entry.files.map((f) => (
+                            <a
+                              href={`/status/projects/${b.id}/files/${f.id}?email=${encodeURIComponent(b.customer_email)}`}
+                              class="flex items-center justify-between gap-3 bg-surface hover:bg-surface/70 border border-gold/10 rounded-lg px-3 py-2.5 text-sm transition"
+                            >
+                              <span class="truncate text-cream">{f.relative_path || f.file_name}</span>
+                              <span class="text-xs text-gold shrink-0"><i class="fa-solid fa-download mr-1"></i>{formatBytes(f.size_bytes)}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

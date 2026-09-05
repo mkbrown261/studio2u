@@ -39,6 +39,17 @@ export async function getProjectById(db: D1Database, id: number): Promise<Projec
   return (row as unknown as Project) || null
 }
 
+// Projects attached directly to a specific booking — used on the customer-facing
+// /status lookup, where we already have the booking row in hand (from the email
+// search) and just need to know if the engineer has shared any files against it.
+export async function getProjectsForBooking(db: D1Database, bookingId: number): Promise<Project[]> {
+  const { results } = await db
+    .prepare('SELECT * FROM projects WHERE booking_id = ? ORDER BY updated_at DESC')
+    .bind(bookingId)
+    .all()
+  return (results as unknown as Project[]) || []
+}
+
 // Projects visible to an artist/customer: anything explicitly linked to their
 // customer_id, OR anything linked to one of their bookings (covers the case where an
 // engineer created the Project from a booking before the customer had an account, or

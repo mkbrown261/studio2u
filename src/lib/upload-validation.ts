@@ -25,3 +25,30 @@ export function validateImageUpload(file: File): ImageValidationResult {
   const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
   return { valid: true, extension }
 }
+
+// Project session-file uploads (deliverable handoff): unlike profile/equipment photos,
+// these are audio/video/DAW-session files in a wide, unpredictable variety of formats
+// (WAV, MP3, AIFF, FLAC, STEM zip archives, .als/.flp/.ptx project files, etc.) — no
+// useful MIME allowlist exists, so this deliberately does NOT restrict content type.
+// The only real guardrail available at the edge is a hard size cap per file, both to
+// protect Worker CPU time on the arrayBuffer() read and to keep a single runaway
+// upload from silently blowing through an engineer's whole storage tier in one request.
+// Per-tier total storage (5/150/750GB) is enforced separately in the upload route via
+// getTierConfig() + the engineer's running storage_used_bytes — this cap is just a
+// per-file sanity limit, not the tier limit itself.
+const MAX_PROJECT_FILE_BYTES = 2 * 1024 * 1024 * 1024 // 2 GB per file
+
+export interface ProjectFileValidationResult {
+  valid: boolean
+  error?: string
+}
+
+export function validateProjectFileUpload(file: File): ProjectFileValidationResult {
+  if (!file || file.size <= 0) {
+    return { valid: false, error: 'That file appears to be empty.' }
+  }
+  if (file.size > MAX_PROJECT_FILE_BYTES) {
+    return { valid: false, error: 'Each file must be smaller than 2GB.' }
+  }
+  return { valid: true }
+}

@@ -121,7 +121,14 @@ export function DashboardBookingsPage({ bookings }: { bookings: Booking[] }) {
                 </form>
               </div>
 
-              <div class="text-xs text-muted mt-3">Booking #{b.id} · Created {new Date(b.created_at).toLocaleString()}</div>
+              <div class="flex items-center justify-between mt-3">
+                <div class="text-xs text-muted">Booking #{b.id} · Created {new Date(b.created_at).toLocaleString()}</div>
+                {(b.status === 'confirmed' || b.status === 'completed') && (
+                  <a href="/dashboard/projects" class="text-xs text-gold hover:underline">
+                    <i class="fa-solid fa-folder-open mr-1"></i>Share files
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>

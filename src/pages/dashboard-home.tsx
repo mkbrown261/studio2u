@@ -65,6 +65,7 @@ export function DashboardHomePage({
                 <div class="flex gap-3 flex-wrap">
                   <a href="/dashboard/profile" class="text-sm font-semibold bg-gold hover:bg-gold-light text-ink px-4 py-2.5 rounded-full transition">Edit Profile</a>
                   <a href="/dashboard/portfolio" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">Manage Portfolio</a>
+                  <a href="/dashboard/projects" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">Projects</a>
                   <a href="/dashboard/availability" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">Manage Availability</a>
                   <a href="/dashboard/payments" class="text-sm font-semibold border border-gold/30 hover:bg-gold/10 text-cream px-4 py-2.5 rounded-full transition">
                     Payments

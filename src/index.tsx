@@ -31,6 +31,7 @@ import { getAllDisputesForAdmin, resolveDispute, getDisputeById } from './lib/db
 import { getReviewRequestQueueForAdmin } from './lib/db-review-requests'
 import { getWaitlistForAdmin, markWaitlistContacted } from './lib/db-waitlist'
 import { getAccountCreditBalance, computeApplicableCreditCents } from './lib/db-referrals'
+import { getProjectsForBooking, getProjectFiles } from './lib/db-projects'
 import { onBookingCompleted } from './lib/booking-lifecycle'
 import { logEvent, getAnalyticsSummary } from './lib/analytics'
 import { getPlatformStats } from './lib/db-stats'
@@ -506,10 +507,65 @@ app.get('/api/bookings/:id/status', async (c) => {
 app.get('/status', async (c) => {
   const email = c.req.query('email')
   if (!email) {
-    return c.render(<StatusPage bookings={[]} />, { title: 'My Bookings' })
+    return c.render(<StatusPage bookings={[]} projectFilesByBooking={{}} />, { title: 'My Bookings' })
   }
   const bookings = await getBookingsByEmail(c.env.DB, email)
-  return c.render(<StatusPage bookings={bookings} email={email} searched={true} />, { title: 'My Bookings' })
+
+  // Deliverable file handoff (Projects v1): surface any files an engineer has shared
+  // against each booking, right on the artist's own status lookup — no separate
+  // login/portal needed since this page is already gated by the booking email.
+  const projectFilesByBooking: Record<number, { projectName: string; files: Awaited<ReturnType<typeof getProjectFiles>> }[]> = {}
+  for (const b of bookings) {
+    const projects = await getProjectsForBooking(c.env.DB, b.id)
+    if (projects.length === 0) continue
+    const entries = []
+    for (const p of projects) {
+      const files = await getProjectFiles(c.env.DB, p.id)
+      if (files.length > 0) entries.push({ projectName: p.name, files })
+    }
+    if (entries.length > 0) projectFilesByBooking[b.id] = entries
+  }
+
+  return c.render(
+    <StatusPage bookings={bookings} email={email} searched={true} projectFilesByBooking={projectFilesByBooking} />,
+    { title: 'My Bookings' }
+  )
+})
+
+// Customer-facing download of a Project file, reached from /status. Guarded by the
+// same email match the customer already used to look up their bookings in the first
+// place (passed as a query param) rather than requiring a full login — consistent
+// with how /review and /disputes/new already gate customer actions on this app.
+app.get('/status/projects/:bookingId/files/:fileId', async (c) => {
+  const bookingId = parseInt(c.req.param('bookingId'), 10)
+  const fileId = parseInt(c.req.param('fileId'), 10)
+  const email = (c.req.query('email') || '').trim().toLowerCase()
+  if (!email) return c.notFound()
+
+  const booking = await getBookingById(c.env.DB, bookingId)
+  if (!booking || booking.customer_email.trim().toLowerCase() !== email) return c.notFound()
+
+  const projects = await getProjectsForBooking(c.env.DB, bookingId)
+  let matchedFile = null
+  for (const p of projects) {
+    const files = await getProjectFiles(c.env.DB, p.id)
+    const found = files.find((f) => f.id === fileId)
+    if (found) {
+      matchedFile = found
+      break
+    }
+  }
+  if (!matchedFile) return c.notFound()
+
+  const object = await c.env.R2.get(matchedFile.r2_key)
+  if (!object) return c.notFound()
+
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': matchedFile.content_type || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${matchedFile.file_name.replace(/"/g, '')}"`
+    }
+  })
 })
 
 // ---------- Admin ----------

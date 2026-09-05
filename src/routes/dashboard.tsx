@@ -8,7 +8,8 @@ import {
   addPortfolioItem,
   deletePortfolioItem,
   setEngineerStripeAccountId,
-  updateEngineerStripeStatus
+  updateEngineerStripeStatus,
+  addToEngineerStorageUsed
 } from '../lib/db-engineers'
 import { getBookingsByEngineerProfile, updateBookingStatus, getBookingById } from '../lib/db'
 import { onBookingCompleted } from '../lib/booking-lifecycle'
@@ -32,8 +33,19 @@ import {
   createSubscriptionCheckoutSession,
   createBillingPortalSession
 } from '../lib/stripe'
-import { validateImageUpload } from '../lib/upload-validation'
+import { validateImageUpload, validateProjectFileUpload } from '../lib/upload-validation'
 import { logAuditEvent } from '../lib/audit-log'
+import {
+  getProjectsForEngineer,
+  getProjectById,
+  createProject,
+  deleteProject,
+  getProjectFiles,
+  addProjectFile,
+  getProjectFileById,
+  deleteProjectFile
+} from '../lib/db-projects'
+import { getTierConfig } from '../lib/subscriptions'
 import { DashboardHomePage } from '../pages/dashboard-home'
 import { DashboardProfilePage } from '../pages/dashboard-profile'
 import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
@@ -41,6 +53,7 @@ import { DashboardBookingsPage } from '../pages/dashboard-bookings'
 import { DashboardAvailabilityPage } from '../pages/dashboard-availability'
 import { DashboardPaymentsPage } from '../pages/dashboard-payments'
 import { DashboardSubscriptionPage } from '../pages/dashboard-subscription'
+import { DashboardProjectsPage } from '../pages/dashboard-projects'
 import { BecomeEngineerPage } from '../pages/dashboard-become-engineer'
 import { getSubscriptionPriceIds, priceIdFieldFor } from '../lib/subscriptions'
 import { setEngineerStripeCustomerId, applyScheduledDowngradeIfDue } from '../lib/db-engineers'
@@ -243,6 +256,246 @@ dashboardRoutes.post('/dashboard/portfolio/:id/delete', async (c) => {
   const itemId = parseInt(c.req.param('id'), 10)
   await deletePortfolioItem(c.env.DB, itemId, profile.id)
   return c.redirect('/dashboard/portfolio')
+})
+
+// ---------- Projects (deliverable file handoff) ----------
+//
+// v1 scope (see migrations/0012_projects.sql): an engineer creates a Project — optionally
+// linked to one of their bookings — and drags files onto it, which upload straight to R2.
+// The artist sees the same files under their booking on /status. No OS-level folder sync,
+// no share-link system beyond the booking/customer link that already exists.
+
+dashboardRoutes.get('/dashboard/projects', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const projects = await getProjectsForEngineer(c.env.DB, profile.id)
+  const bookings = await getBookingsByEngineerProfile(c.env.DB, profile.id)
+  const tierConfig = await getTierConfig(c.env.DB, (profile.subscription_tier as any) || 'free')
+
+  return c.render(
+    <DashboardProjectsPage projects={projects} bookings={bookings} profile={profile} tierConfig={tierConfig} />,
+    { title: 'Your Projects' }
+  )
+})
+
+dashboardRoutes.post('/dashboard/projects', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const body = await c.req.parseBody()
+  const name = ((body['name'] as string) || '').trim()
+  const notes = ((body['notes'] as string) || '').trim()
+  const bookingIdRaw = (body['booking_id'] as string) || ''
+  const bookingId = bookingIdRaw ? parseInt(bookingIdRaw, 10) : null
+
+  if (!name) {
+    return c.redirect('/dashboard/projects')
+  }
+
+  // If a booking was picked, make sure it actually belongs to this engineer before
+  // trusting the customer_id link (defense against a tampered form field).
+  let customerId: number | null = null
+  if (bookingId && !Number.isNaN(bookingId)) {
+    const booking = await getBookingById(c.env.DB, bookingId)
+    if (booking && booking.engineer_profile_id === profile.id) {
+      const customerRow = await c.env.DB.prepare('SELECT id FROM customers WHERE email = ?')
+        .bind(booking.customer_email)
+        .first<{ id: number }>()
+      customerId = customerRow?.id ?? null
+    }
+  }
+
+  const projectId = await createProject(c.env.DB, {
+    engineerProfileId: profile.id,
+    bookingId: bookingId && !Number.isNaN(bookingId) ? bookingId : null,
+    customerId,
+    name,
+    notes
+  })
+
+  return c.redirect(`/dashboard/projects/${projectId}`)
+})
+
+dashboardRoutes.get('/dashboard/projects/:id', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const projectId = parseInt(c.req.param('id'), 10)
+  const project = await getProjectById(c.env.DB, projectId)
+  if (!project || project.engineer_profile_id !== profile.id) return c.notFound()
+
+  const projects = await getProjectsForEngineer(c.env.DB, profile.id)
+  const bookings = await getBookingsByEngineerProfile(c.env.DB, profile.id)
+  const files = await getProjectFiles(c.env.DB, projectId)
+  const tierConfig = await getTierConfig(c.env.DB, (profile.subscription_tier as any) || 'free')
+
+  return c.render(
+    <DashboardProjectsPage
+      projects={projects}
+      bookings={bookings}
+      profile={profile}
+      tierConfig={tierConfig}
+      activeProject={project}
+      files={files}
+    />,
+    { title: project.name }
+  )
+})
+
+dashboardRoutes.post('/dashboard/projects/:id/upload', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const projectId = parseInt(c.req.param('id'), 10)
+  const project = await getProjectById(c.env.DB, projectId)
+  if (!project || project.engineer_profile_id !== profile.id) return c.notFound()
+
+  const tierConfig = await getTierConfig(c.env.DB, (profile.subscription_tier as any) || 'free')
+  const limitBytes = tierConfig.storageLimitGb * 1024 * 1024 * 1024
+
+  const formData = await c.req.formData()
+  const files = formData.getAll('files') as File[]
+  const relativePaths = formData.getAll('relative_paths') as string[]
+
+  let error: string | undefined
+  let usedBytes = profile.storage_used_bytes
+  let uploadedCount = 0
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    if (!file || file.size <= 0) continue
+
+    const check = validateProjectFileUpload(file)
+    if (!check.valid) {
+      error = check.error
+      break
+    }
+    if (usedBytes + file.size > limitBytes) {
+      error = `Storage limit reached (${tierConfig.storageLimitGb}GB on the ${tierConfig.label} plan). Upgrade your plan or free up space to keep uploading.`
+      break
+    }
+
+    const relativePath = relativePaths[i] && relativePaths[i] !== file.name ? relativePaths[i] : null
+    const uuid = crypto.randomUUID()
+    const key = `projects/${projectId}/${uuid}-${file.name}`
+
+    await c.env.R2.put(key, await file.arrayBuffer(), {
+      httpMetadata: { contentType: file.type || 'application/octet-stream' }
+    })
+    await addProjectFile(c.env.DB, {
+      projectId,
+      r2Key: key,
+      fileName: file.name,
+      relativePath,
+      contentType: file.type || null,
+      sizeBytes: file.size,
+      uploadedByUserId: user.id
+    })
+    await addToEngineerStorageUsed(c.env.DB, profile.id, file.size)
+    usedBytes += file.size
+    uploadedCount++
+  }
+
+  if (error && uploadedCount === 0) {
+    const projects = await getProjectsForEngineer(c.env.DB, profile.id)
+    const bookings = await getBookingsByEngineerProfile(c.env.DB, profile.id)
+    const projectFiles = await getProjectFiles(c.env.DB, projectId)
+    return c.render(
+      <DashboardProjectsPage
+        projects={projects}
+        bookings={bookings}
+        profile={profile}
+        tierConfig={tierConfig}
+        activeProject={project}
+        files={projectFiles}
+        error={error}
+      />,
+      { title: project.name }
+    )
+  }
+
+  return c.redirect(`/dashboard/projects/${projectId}${error ? '?error=' + encodeURIComponent(error) : ''}`)
+})
+
+dashboardRoutes.get('/dashboard/projects/:id/files/:fileId', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const projectId = parseInt(c.req.param('id'), 10)
+  const project = await getProjectById(c.env.DB, projectId)
+  if (!project || project.engineer_profile_id !== profile.id) return c.notFound()
+
+  const fileId = parseInt(c.req.param('fileId'), 10)
+  const file = await getProjectFileById(c.env.DB, fileId)
+  if (!file || file.project_id !== projectId) return c.notFound()
+
+  const object = await c.env.R2.get(file.r2_key)
+  if (!object) return c.notFound()
+
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': file.content_type || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${file.file_name.replace(/"/g, '')}"`
+    }
+  })
+})
+
+dashboardRoutes.post('/dashboard/projects/:id/files/:fileId/delete', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const projectId = parseInt(c.req.param('id'), 10)
+  const project = await getProjectById(c.env.DB, projectId)
+  if (!project || project.engineer_profile_id !== profile.id) return c.notFound()
+
+  const fileId = parseInt(c.req.param('fileId'), 10)
+  const file = await getProjectFileById(c.env.DB, fileId)
+  if (file && file.project_id === projectId) {
+    await c.env.R2.delete(file.r2_key)
+    await deleteProjectFile(c.env.DB, fileId)
+    await addToEngineerStorageUsed(c.env.DB, profile.id, -file.size_bytes)
+  }
+
+  return c.redirect(`/dashboard/projects/${projectId}`)
+})
+
+dashboardRoutes.post('/dashboard/projects/:id/delete', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const projectId = parseInt(c.req.param('id'), 10)
+  const project = await getProjectById(c.env.DB, projectId)
+  if (!project || project.engineer_profile_id !== profile.id) return c.notFound()
+
+  // Reclaim storage: delete every file's R2 object + tally the freed bytes before
+  // wiping the D1 rows (deleteProject cascades project_files itself).
+  const files = await getProjectFiles(c.env.DB, projectId)
+  let freedBytes = 0
+  for (const f of files) {
+    await c.env.R2.delete(f.r2_key)
+    freedBytes += f.size_bytes
+  }
+  if (freedBytes > 0) {
+    await addToEngineerStorageUsed(c.env.DB, profile.id, -freedBytes)
+  }
+
+  await deleteProject(c.env.DB, projectId, profile.id)
+  return c.redirect('/dashboard/projects')
 })
 
 // ---------- Engineer's own booking queue ----------
