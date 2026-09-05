@@ -46,6 +46,13 @@ import {
   deleteProjectFile
 } from '../lib/db-projects'
 import { getTierConfig } from '../lib/subscriptions'
+import {
+  getPackageOffersForEngineer,
+  createPackageOffer,
+  setPackageOfferActive,
+  deletePackageOffer,
+  getPackagePurchasesForEngineer
+} from '../lib/db-packages'
 import { DashboardHomePage } from '../pages/dashboard-home'
 import { DashboardProfilePage } from '../pages/dashboard-profile'
 import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
@@ -54,6 +61,7 @@ import { DashboardAvailabilityPage } from '../pages/dashboard-availability'
 import { DashboardPaymentsPage } from '../pages/dashboard-payments'
 import { DashboardSubscriptionPage } from '../pages/dashboard-subscription'
 import { DashboardProjectsPage } from '../pages/dashboard-projects'
+import { DashboardPackagesPage } from '../pages/dashboard-packages'
 import { BecomeEngineerPage } from '../pages/dashboard-become-engineer'
 import { getSubscriptionPriceIds, priceIdFieldFor } from '../lib/subscriptions'
 import { setEngineerStripeCustomerId, applyScheduledDowngradeIfDue } from '../lib/db-engineers'
@@ -496,6 +504,72 @@ dashboardRoutes.post('/dashboard/projects/:id/delete', async (c) => {
 
   await deleteProject(c.env.DB, projectId, profile.id)
   return c.redirect('/dashboard/projects')
+})
+
+// ---------- Packages (prepaid hours bundles) ----------
+// See migrations/0016_packages.sql for the full design rationale.
+
+dashboardRoutes.get('/dashboard/packages', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const offers = await getPackageOffersForEngineer(c.env.DB, profile.id)
+  const purchases = await getPackagePurchasesForEngineer(c.env.DB, profile.id)
+
+  return c.render(<DashboardPackagesPage offers={offers} purchases={purchases} />, { title: 'Your Packages' })
+})
+
+dashboardRoutes.post('/dashboard/packages', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const body = await c.req.parseBody()
+  const title = ((body['title'] as string) || '').trim()
+  const totalHours = parseFloat((body['total_hours'] as string) || '')
+  const priceDollars = parseFloat((body['price_dollars'] as string) || '')
+
+  if (!Number.isFinite(totalHours) || totalHours <= 0 || !Number.isFinite(priceDollars) || priceDollars <= 0) {
+    return c.redirect('/dashboard/packages')
+  }
+
+  await createPackageOffer(c.env.DB, {
+    engineerProfileId: profile.id,
+    title,
+    totalHours,
+    priceCents: Math.round(priceDollars * 100)
+  })
+
+  return c.redirect('/dashboard/packages')
+})
+
+dashboardRoutes.post('/dashboard/packages/:id/toggle', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const offerId = parseInt(c.req.param('id'), 10)
+  const body = await c.req.parseBody()
+  const active = body['active'] === '1'
+  await setPackageOfferActive(c.env.DB, offerId, profile.id, active)
+
+  return c.redirect('/dashboard/packages')
+})
+
+dashboardRoutes.post('/dashboard/packages/:id/delete', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const offerId = parseInt(c.req.param('id'), 10)
+  await deletePackageOffer(c.env.DB, offerId, profile.id)
+
+  return c.redirect('/dashboard/packages')
 })
 
 // ---------- Engineer's own booking queue ----------

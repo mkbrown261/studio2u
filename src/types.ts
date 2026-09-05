@@ -71,6 +71,7 @@ export interface Booking {
   platform_fee_amount: number | null
   engineer_payout_amount: number | null
   credit_applied_cents: number
+  package_purchase_id: number | null
   status: BookingStatus
   admin_notes: string | null
   created_at: string

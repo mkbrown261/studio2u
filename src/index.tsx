@@ -32,15 +32,24 @@ import { getReviewRequestQueueForAdmin } from './lib/db-review-requests'
 import { getWaitlistForAdmin, markWaitlistContacted } from './lib/db-waitlist'
 import { getAccountCreditBalance, computeApplicableCreditCents } from './lib/db-referrals'
 import { getProjectsForBooking, getProjectFiles } from './lib/db-projects'
+import {
+  getPackageOfferById,
+  createPackagePurchase,
+  attachPackageCheckoutSession,
+  getPackagePurchaseById,
+  getActivePackagePurchasesForCustomer
+} from './lib/db-packages'
 import { onBookingCompleted } from './lib/booking-lifecycle'
 import { logEvent, getAnalyticsSummary } from './lib/analytics'
 import { getPlatformStats } from './lib/db-stats'
 import { getPlatformFeePercentForEngineer, getSubscriptionPriceIds, setSubscriptionPriceId, splitCommission } from './lib/subscriptions'
 import { getAvailableHoursForDate, isRangeAvailable } from './lib/db-availability'
-import { getStripeClient, createBookingCheckoutSession, createSubscriptionProductAndPrices, refundBookingPayment, toCents } from './lib/stripe'
+import { getStripeClient, createBookingCheckoutSession, createPackageCheckoutSession, createSubscriptionProductAndPrices, refundBookingPayment, toCents } from './lib/stripe'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
+import { PackagePurchasePage } from './pages/package-purchase'
+import { PackageConfirmationPage } from './pages/package-confirmation'
 import { StatusPage } from './pages/status'
 import { AdminLoginPage } from './pages/admin-login'
 import { AdminDashboardPage } from './pages/admin-dashboard'
@@ -177,6 +186,111 @@ app.get('/book', async (c) => {
   return c.redirect('/engineers')
 })
 
+// ---------- Packages (prepaid hours bundles) ----------
+// See migrations/0016_packages.sql for the full design rationale. Purchase mechanics
+// deliberately mirror the booking flow above: full price collected via Stripe Checkout,
+// instant Connect transfer to the engineer (createPackageCheckoutSession in lib/stripe.ts)
+// — no new payout logic.
+
+app.get('/packages/:offerId', async (c) => {
+  const offerId = parseInt(c.req.param('offerId'), 10)
+  const offer = await getPackageOfferById(c.env.DB, offerId)
+  if (!offer || offer.active !== 1) return c.notFound()
+  const engineer = await getEngineerProfileById(c.env.DB, offer.engineer_profile_id)
+  if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1 || engineer.stripe_charges_enabled !== 1) {
+    return c.notFound()
+  }
+  return c.render(<PackagePurchasePage engineer={engineer} offer={offer} />, { title: `Buy ${offer.title || 'Package'}` })
+})
+
+app.post('/packages/:offerId', async (c) => {
+  const offerId = parseInt(c.req.param('offerId'), 10)
+  const offer = await getPackageOfferById(c.env.DB, offerId)
+  if (!offer || offer.active !== 1) return c.notFound()
+  const engineer = await getEngineerProfileById(c.env.DB, offer.engineer_profile_id)
+  if (!engineer || engineer.is_published !== 1 || engineer.is_suspended === 1 || engineer.stripe_charges_enabled !== 1) {
+    return c.notFound()
+  }
+  if (!c.env.STRIPE_SECRET_KEY) {
+    return c.render(<PackagePurchasePage engineer={engineer} offer={offer} error="Payments are not configured on this deployment yet." />, { title: 'Buy Package' })
+  }
+
+  const body = await c.req.parseBody()
+  const customerName = ((body['customer_name'] as string) || '').trim()
+  const customerEmail = ((body['customer_email'] as string) || '').trim()
+  const customerPhone = ((body['customer_phone'] as string) || '').trim()
+
+  if (!customerName || !customerEmail || !customerPhone) {
+    return c.render(<PackagePurchasePage engineer={engineer} offer={offer} error="Please fill out all fields." />, { title: 'Buy Package' })
+  }
+
+  const sessionUser = await getSessionUser(c.env.DB, c.req.raw)
+  const customerUserId = sessionUser ? sessionUser.id : null
+  const existingCustomer = await findCustomerByEmail(c.env.DB, customerEmail)
+  const customerId = await upsertCustomer(c.env.DB, { email: customerEmail, name: customerName, phone: customerPhone })
+
+  // Paid in full at purchase — same fee-split logic as a regular booking, computed from
+  // the engineer's CURRENT tier (see splitCommission/getPlatformFeePercentForEngineer),
+  // then locked onto this purchase row via attachPackageCheckoutSession below.
+  const commissionPercent = await getPlatformFeePercentForEngineer(c.env.DB, engineer)
+  const { platformFee, engineerPayout } = splitCommission(offer.price_cents / 100, commissionPercent)
+
+  const purchaseId = await createPackagePurchase(c.env.DB, {
+    packageOfferId: offer.id,
+    engineerProfileId: engineer.id,
+    customerId: existingCustomer ? existingCustomer.id : customerId,
+    customerUserId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    hoursTotal: offer.total_hours,
+    priceCents: offer.price_cents
+  })
+
+  const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+  const origin = new URL(c.req.url).origin
+
+  const checkout = await createPackageCheckoutSession(stripe, {
+    packagePurchaseId: purchaseId,
+    engineerStripeAccountId: engineer.stripe_account_id,
+    grossAmountCents: offer.price_cents,
+    platformFeeCents: toCents(platformFee),
+    customerEmail,
+    description: `${offer.title || `${offer.total_hours}h Package`} — ${offer.total_hours} hours with ${engineer.display_name}`,
+    successUrl: `${origin}/packages/confirmation/${purchaseId}?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${origin}/packages/${offer.id}`
+  })
+
+  await attachPackageCheckoutSession(c.env.DB, purchaseId, {
+    checkoutSessionId: checkout.sessionId,
+    platformFeeAmount: toCents(platformFee) / 100,
+    engineerPayoutAmount: engineerPayout,
+    platformFeePercent: commissionPercent
+  })
+
+  await logEvent(c.env.DB, { eventType: 'package_purchase_started', engineerProfileId: engineer.id, metadata: { purchaseId } })
+
+  return c.redirect(checkout.url)
+})
+
+app.get('/packages/confirmation/:id', async (c) => {
+  const id = parseInt(c.req.param('id'), 10)
+  const purchase = await getPackagePurchaseById(c.env.DB, id)
+  if (!purchase) return c.notFound()
+  const engineer = await getEngineerProfileById(c.env.DB, purchase.engineer_profile_id)
+  return c.render(
+    <PackageConfirmationPage purchase={purchase} engineerName={engineer?.display_name || 'your engineer'} />,
+    { title: 'Package Confirmed' }
+  )
+})
+
+app.get('/api/package-purchases/:id/status', async (c) => {
+  const id = parseInt(c.req.param('id'), 10)
+  const purchase = await getPackagePurchaseById(c.env.DB, id)
+  if (!purchase) return c.json({ status: null }, 404)
+  return c.json({ status: purchase.status })
+})
+
 // ---------- Legal documents ----------
 // Real, linkable pages for the legal docs stored in /legal/*.md (source of
 // truth). Both the signup ToS checkbox and the booking-flow recording-consent
@@ -275,7 +389,15 @@ app.get('/api/price-check', async (c) => {
     })
   }
 
-  return c.json({ ...price, creditBalanceCents, maxCreditApplicableCents })
+  // Packages: surface any active purchase this email has with THIS engineer so the
+  // booking UI can offer "redeem from your package" instead of paying again.
+  let activePackagePurchases: { id: number; hoursRemaining: number; hoursTotal: number }[] = []
+  if (email) {
+    const purchases = await getActivePackagePurchasesForCustomer(c.env.DB, engineer.id, email)
+    activePackagePurchases = purchases.map((p) => ({ id: p.id, hoursRemaining: p.hours_remaining, hoursTotal: p.hours_total }))
+  }
+
+  return c.json({ ...price, creditBalanceCents, maxCreditApplicableCents, activePackagePurchases })
 })
 
 app.post('/api/bookings', async (c) => {
@@ -295,7 +417,8 @@ app.post('/api/bookings', async (c) => {
       customerEmail,
       customerPhone,
       recordingConsentAccepted,
-      applyCreditCents
+      applyCreditCents,
+      usePackagePurchaseId
     } = body
 
     if (
@@ -366,6 +489,25 @@ app.post('/api/bookings', async (c) => {
       firstTimeDiscountHours: engineer.first_time_discount_hours
     })
 
+    // Packages: redeem hours from an already-paid-for package instead of charging again.
+    // Never trust the client's usePackagePurchaseId blindly — re-verify it's an active
+    // purchase, belongs to THIS engineer, and matches the customer's email before
+    // honoring it. Known v1 limitation (documented in migrations/0016_packages.sql):
+    // hours are checked here but not reserved, so two simultaneous redemption requests
+    // against the same purchase could theoretically overdraw it before either completes.
+    let packagePurchase = null as Awaited<ReturnType<typeof getActivePackagePurchasesForCustomer>>[number] | null
+    if (usePackagePurchaseId) {
+      const candidates = await getActivePackagePurchasesForCustomer(c.env.DB, engineer.id, customerEmail)
+      const match = candidates.find((pp) => pp.id === parseInt(usePackagePurchaseId, 10))
+      if (!match) {
+        return c.json({ error: 'That package is no longer available for redemption.' }, 409)
+      }
+      if (match.hours_remaining < parseFloat(durationHours)) {
+        return c.json({ error: `Your package only has ${match.hours_remaining} hour(s) remaining.` }, 409)
+      }
+      packagePurchase = match
+    }
+
     // Fee percent is resolved from the ENGINEER's current subscription tier (Free
     // 10% / Pro 5% / Elite 2% — see lib/subscriptions.ts) rather than the old flat
     // platform-wide commission_percent setting. Computed here (before createBooking)
@@ -378,8 +520,9 @@ app.post('/api/bookings', async (c) => {
     // by user_id. Cap is recomputed here from scratch (balance, 50% cap, Stripe min
     // charge, and never more than the platform's own fee) — see computeApplicableCreditCents
     // for why the discount always comes out of Studio2U's margin, never the engineer's cut.
+    // Doesn't apply at all to a package redemption, which is already fully paid for.
     let creditAppliedCents = 0
-    if (customerUserId && applyCreditCents) {
+    if (!packagePurchase && customerUserId && applyCreditCents) {
       const requestedCents = Math.max(0, Math.floor(Number(applyCreditCents) || 0))
       const balance = await getAccountCreditBalance(c.env.DB, customerUserId)
       const maxApplicable = computeApplicableCreditCents({
@@ -411,10 +554,16 @@ app.post('/api/bookings', async (c) => {
       customerName,
       customerEmail,
       customerPhone,
-      isFirstTimeRate: price.isFirstTimeRate,
-      priceAmount: price.amount,
-      priceBreakdown: price.breakdown,
-      creditAppliedCents
+      // Package-redeemed bookings show $0 due — the customer already paid in full when
+      // they bought the package; this booking row is just "spend N hours of it".
+      isFirstTimeRate: packagePurchase ? false : price.isFirstTimeRate,
+      priceAmount: packagePurchase ? 0 : price.amount,
+      priceBreakdown: packagePurchase ? `Redeemed from package — ${durationHours}h of ${packagePurchase.hours_remaining}h remaining` : price.breakdown,
+      creditAppliedCents,
+      packagePurchaseId: packagePurchase ? packagePurchase.id : null,
+      // Skips Stripe entirely — already paid at package-purchase time, so there's no
+      // Checkout Session/webhook to wait on. Goes straight to 'confirmed'.
+      initialStatus: packagePurchase ? 'confirmed' : 'pending_payment'
     })
 
     if (!existingCustomer) {
@@ -431,6 +580,13 @@ app.post('/api/bookings', async (c) => {
       ipAddress: getClientIp(c.req.raw),
       userAgent: c.req.header('User-Agent') || null
     })
+
+    // Package redemption is already fully paid for — skip Stripe Checkout entirely and
+    // send the customer straight to the (already-confirmed) booking's confirmation page.
+    if (packagePurchase) {
+      await logEvent(c.env.DB, { eventType: 'booking_started', engineerProfileId: engineer.id, metadata: { bookingId, packagePurchaseId: packagePurchase.id } })
+      return c.json({ bookingId, checkoutUrl: `${new URL(c.req.url).origin}/book/confirmation/${bookingId}` })
+    }
 
     // Create the Stripe Checkout Session right away — the customer is sent straight
     // into Stripe's hosted payment page next; there's no more "book now, pay later

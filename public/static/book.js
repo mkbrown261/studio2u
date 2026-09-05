@@ -17,7 +17,8 @@
     customerEmail: '',
     customerPhone: '',
     recordingConsentAccepted: false,
-    applyCreditCents: 0
+    applyCreditCents: 0,
+    usePackagePurchaseId: ''
   }
 
   function el(html) {
@@ -272,6 +273,14 @@
           </span>
         </label>
       </div>
+      <div id="package-box" class="hidden bg-ink/50 border border-gold/20 rounded-xl p-4 mb-6">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="use-package-checkbox" class="accent-gold mt-0.5 w-4 h-4 flex-shrink-0" />
+          <span class="text-sm text-cream">
+            Use my package — <span id="package-available-text" class="text-gold font-semibold"></span> instead of paying again
+          </span>
+        </label>
+      </div>
       <label id="consent-label" class="flex items-start gap-3 bg-ink/50 border border-gold/20 rounded-xl p-4 mb-6 cursor-pointer hover:border-gold/40 transition">
         <input type="checkbox" id="recording-consent-checkbox" class="accent-gold mt-0.5 w-4 h-4 flex-shrink-0" ${state.recordingConsentAccepted ? 'checked' : ''} />
         <span class="text-sm text-muted leading-relaxed">
@@ -296,6 +305,14 @@
     function updateCreditDisplay() {
       var afterCreditEl = document.getElementById('price-after-credit')
       var checkbox = document.getElementById('use-credit-checkbox')
+      var packageCheckbox = document.getElementById('use-package-checkbox')
+      // Package redemption and account credit are mutually exclusive — a package
+      // booking is already fully paid for, there's nothing left to discount.
+      if (packageCheckbox && packageCheckbox.checked) {
+        state.applyCreditCents = 0
+        afterCreditEl.classList.add('hidden')
+        return
+      }
       if (checkbox && checkbox.checked && maxCreditApplicableCents > 0) {
         state.applyCreditCents = maxCreditApplicableCents
         var finalAmount = Math.max(0, priceAmountDollars - maxCreditApplicableCents / 100)
@@ -304,6 +321,23 @@
       } else {
         state.applyCreditCents = 0
         afterCreditEl.classList.add('hidden')
+      }
+    }
+
+    function updatePackageDisplay() {
+      var checkbox = document.getElementById('use-package-checkbox')
+      var creditCheckbox = document.getElementById('use-credit-checkbox')
+      var priceAmountEl = document.getElementById('price-amount')
+      var afterCreditEl = document.getElementById('price-after-credit')
+      if (checkbox && checkbox.checked) {
+        state.usePackagePurchaseId = checkbox.getAttribute('data-purchase-id')
+        if (creditCheckbox) creditCheckbox.checked = false
+        state.applyCreditCents = 0
+        afterCreditEl.classList.add('hidden')
+        priceAmountEl.textContent = '$0 (using package)'
+      } else {
+        state.usePackagePurchaseId = ''
+        priceAmountEl.textContent = '$' + priceAmountDollars
       }
     }
 
@@ -319,6 +353,17 @@
           document.getElementById('credit-available-text').textContent = '$' + (maxCreditApplicableCents / 100).toFixed(2)
           document.getElementById('credit-box').classList.remove('hidden')
           document.getElementById('use-credit-checkbox').addEventListener('change', updateCreditDisplay)
+        }
+
+        var activePackages = data.activePackagePurchases || []
+        var usable = activePackages.filter(function (p) { return p.hoursRemaining >= state.durationHours })
+        if (usable.length > 0) {
+          var pkg = usable[0]
+          document.getElementById('package-available-text').textContent = pkg.hoursRemaining + ' hour(s) left'
+          var pkgCheckbox = document.getElementById('use-package-checkbox')
+          pkgCheckbox.setAttribute('data-purchase-id', pkg.id)
+          document.getElementById('package-box').classList.remove('hidden')
+          pkgCheckbox.addEventListener('change', updatePackageDisplay)
         }
       })
       .catch(() => {

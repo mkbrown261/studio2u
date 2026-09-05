@@ -11,6 +11,7 @@ import {
 import { getAvailableHoursForDate } from '../lib/db-availability'
 import { geocodeLocation, distanceMiles } from '../lib/geocode'
 import { addToSearchWaitlist } from '../lib/db-waitlist'
+import { getActivePackageOffersForEngineer } from '../lib/db-packages'
 import { EngineersDirectoryPage } from '../pages/engineers-directory'
 import { EngineerProfilePage } from '../pages/engineer-profile'
 import { logEvent } from '../lib/analytics'
@@ -203,6 +204,7 @@ engineersRoutes.get('/engineers/:id', async (c) => {
   const portfolio = await getPortfolioItems(c.env.DB, profile.id)
   const reviews = await getReviewsForEngineer(c.env.DB, profile.id)
   const completedSessions = await getCompletedSessionCount(c.env.DB, profile.id)
+  const packageOffers = await getActivePackageOffersForEngineer(c.env.DB, profile.id)
 
   await logEvent(c.env.DB, { eventType: 'engineer_view', path: c.req.path, engineerProfileId: profile.id })
 
@@ -228,7 +230,7 @@ engineersRoutes.get('/engineers/:id', async (c) => {
   })
 
   return c.render(
-    <EngineerProfilePage profile={profile} portfolio={portfolio} reviews={reviews} completedSessions={completedSessions} />,
+    <EngineerProfilePage profile={profile} portfolio={portfolio} reviews={reviews} completedSessions={completedSessions} packageOffers={packageOffers} />,
     {
       title: profile.display_name,
       description: profile.bio ? profile.bio.slice(0, 160) : `Book a recording session with ${profile.display_name} on Studio2U.`,

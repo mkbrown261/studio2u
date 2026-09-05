@@ -1,16 +1,19 @@
 import type { EngineerProfile, PortfolioItem, Review } from '../lib/db-engineers'
+import type { PackageOffer } from '../lib/db-packages'
 import { getPortfolioEmbed } from '../lib/embed'
 
 export function EngineerProfilePage({
   profile,
   portfolio,
   reviews,
-  completedSessions
+  completedSessions,
+  packageOffers
 }: {
   profile: EngineerProfile
   portfolio: PortfolioItem[]
   reviews: Review[]
   completedSessions: number
+  packageOffers?: PackageOffer[]
 }) {
   const genres = (profile.genres || '')
     .split(',')
@@ -179,6 +182,35 @@ export function EngineerProfilePage({
           ) : null}
         </div>
       </div>
+
+      {/* PACKAGES */}
+      {packageOffers && packageOffers.length > 0 && (
+        <section class="mb-14">
+          <h2 class="font-display text-2xl font-bold mb-2">Session Packages</h2>
+          <p class="text-muted text-sm mb-6">Buy a bundle of hours upfront at a discounted rate — use them across as many future sessions as you like.</p>
+          <div class="grid sm:grid-cols-2 gap-4">
+            {packageOffers.map((o) => {
+              const perHour = o.price_cents / 100 / o.total_hours
+              const savingsPct = Math.round((1 - perHour / profile.hourly_rate) * 100)
+              return (
+                <div class="bg-surface border border-gold/10 rounded-xl p-5 flex flex-col">
+                  <div class="font-semibold text-cream mb-1">{o.title || `${o.total_hours}h Package`}</div>
+                  <div class="text-2xl font-display font-bold text-gold mb-1">${(o.price_cents / 100).toFixed(0)}</div>
+                  <div class="text-xs text-muted mb-4">
+                    {o.total_hours} hours (${perHour.toFixed(0)}/hr{savingsPct > 0 ? ` · save ${savingsPct}%` : ''})
+                  </div>
+                  <a
+                    href={`/packages/${o.id}`}
+                    class="mt-auto text-center bg-gold hover:bg-gold-light text-ink font-semibold py-2.5 rounded-full transition text-sm"
+                  >
+                    Buy This Package
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       {/* PORTFOLIO */}
       <section class="mb-14">

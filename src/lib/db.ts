@@ -71,6 +71,12 @@ export interface CreateBookingParams {
   priceAmount: number
   priceBreakdown: string
   creditAppliedCents?: number
+  packagePurchaseId?: number | null
+  // Package-redeemed bookings are already fully paid for (at package-purchase time), so
+  // they skip Stripe checkout entirely and go straight to 'confirmed' — never
+  // 'pending_payment', which would otherwise strand them waiting on a webhook that will
+  // never fire since no new Checkout Session is created for a redemption.
+  initialStatus?: 'pending_payment' | 'confirmed'
 }
 
 export async function createBooking(db: D1Database, p: CreateBookingParams) {
@@ -82,8 +88,8 @@ export async function createBooking(db: D1Database, p: CreateBookingParams) {
         location_type, location_address, special_notes, song_count, genre,
         customer_name, customer_email, customer_phone,
         is_first_time_rate, price_amount, price_breakdown,
-        credit_applied_cents, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        credit_applied_cents, package_purchase_id, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       p.customerId,
@@ -107,7 +113,8 @@ export async function createBooking(db: D1Database, p: CreateBookingParams) {
       p.priceAmount,
       p.priceBreakdown,
       p.creditAppliedCents ?? 0,
-      'pending_payment'
+      p.packagePurchaseId ?? null,
+      p.initialStatus ?? 'pending_payment'
     )
     .run()
   return result.meta.last_row_id as number

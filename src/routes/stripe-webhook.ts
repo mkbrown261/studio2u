@@ -26,6 +26,7 @@ import {
   scheduleSubscriptionDowngrade
 } from '../lib/db-engineers'
 import { debitAccountCreditForBooking } from '../lib/db-referrals'
+import { getPackagePurchaseByCheckoutSessionId, markPackagePurchasePaid } from '../lib/db-packages'
 
 export const stripeWebhookRoutes = new Hono<AppEnv>()
 
@@ -90,6 +91,28 @@ stripeWebhookRoutes.post('/api/stripe/webhook', async (c) => {
         }
 
         if (session.payment_status !== 'paid') break
+
+        // Packages share this same mode='payment' Checkout flow (see
+        // createPackageCheckoutSession in lib/stripe.ts) but are a completely separate
+        // record from a booking — check for a package purchase first via its own
+        // metadata tag before falling through to the normal booking lookup.
+        if (session.metadata?.package_purchase_id) {
+          const purchaseId = parseInt(session.metadata.package_purchase_id, 10)
+          const purchase = await getPackagePurchaseByCheckoutSessionId(c.env.DB, session.id)
+          if (!purchase) {
+            console.error(`Stripe webhook: no package purchase found for checkout session ${session.id}`)
+            break
+          }
+          // Idempotent — mirrors markBookingPaid's pending_payment guard below.
+          if (purchase.status === 'pending_payment') {
+            await markPackagePurchasePaid(
+              c.env.DB,
+              purchaseId,
+              typeof session.payment_intent === 'string' ? session.payment_intent : ''
+            )
+          }
+          break
+        }
 
         const booking = await getBookingByCheckoutSessionId(c.env.DB, session.id)
         if (!booking) {

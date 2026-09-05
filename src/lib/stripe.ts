@@ -195,6 +195,63 @@ export async function createBookingCheckoutSession(
   return { sessionId: session.id, url: session.url }
 }
 
+// Packages: identical destination-charge mechanics to createBookingCheckoutSession above
+// (full instant Connect transfer to the engineer at purchase, platform fee kept via
+// application_fee_amount) — a package purchase is "a booking-shaped charge whose product
+// is hours instead of one specific session." Distinguished from a normal booking charge in
+// the webhook via metadata.package_purchase_id (booking charges only ever set booking_id).
+export async function createPackageCheckoutSession(
+  stripe: Stripe,
+  params: {
+    packagePurchaseId: number
+    engineerStripeAccountId: string
+    grossAmountCents: number
+    platformFeeCents: number
+    customerEmail: string
+    description: string
+    successUrl: string
+    cancelUrl: string
+  }
+): Promise<{ sessionId: string; url: string }> {
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    customer_email: params.customerEmail,
+    line_items: [
+      {
+        price_data: {
+          currency: 'usd',
+          unit_amount: params.grossAmountCents,
+          product_data: {
+            name: 'Studio2U Session Package',
+            description: params.description
+          }
+        },
+        quantity: 1
+      }
+    ],
+    payment_intent_data: {
+      application_fee_amount: params.platformFeeCents,
+      transfer_data: {
+        destination: params.engineerStripeAccountId
+      },
+      metadata: {
+        package_purchase_id: String(params.packagePurchaseId)
+      }
+    },
+    metadata: {
+      package_purchase_id: String(params.packagePurchaseId)
+    },
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl
+  })
+
+  if (!session.url) {
+    throw new Error('Stripe did not return a Checkout URL.')
+  }
+
+  return { sessionId: session.id, url: session.url }
+}
+
 // Dollars -> integer cents, the unit Stripe's API requires everywhere.
 // ---------- Refunds (Trust & Safety / dispute resolution) ----------
 //
