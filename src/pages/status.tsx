@@ -30,12 +30,14 @@ export function StatusPage({
   bookings,
   email,
   searched,
-  projectFilesByBooking
+  projectFilesByBooking,
+  unreadMessageCounts
 }: {
   bookings: Booking[]
   email?: string
   searched?: boolean
   projectFilesByBooking?: Record<number, { projectName: string; files: ProjectFile[] }[]>
+  unreadMessageCounts?: Record<number, number>
 }) {
   return (
     <div class="max-w-3xl mx-auto px-5 py-16">
@@ -158,7 +160,18 @@ export function StatusPage({
               )}
 
               {(b.status === 'confirmed' || b.status === 'completed') && (
-                <div class="mt-3">
+                <div class="mt-3 flex items-center gap-4">
+                  <a
+                    href={`/status/messages/${b.id}?email=${encodeURIComponent(b.customer_email)}`}
+                    class="inline-flex items-center gap-1.5 text-xs text-gold hover:underline"
+                  >
+                    <i class="fa-solid fa-message text-[10px]"></i> Message Engineer
+                    {unreadMessageCounts && unreadMessageCounts[b.id] > 0 && (
+                      <span class="inline-flex items-center justify-center bg-wine text-cream text-[10px] font-bold rounded-full w-4 h-4">
+                        {unreadMessageCounts[b.id]}
+                      </span>
+                    )}
+                  </a>
                   <a
                     href={`/disputes/new/${b.id}?email=${encodeURIComponent(b.customer_email)}`}
                     class="inline-flex items-center gap-1.5 text-xs text-muted hover:text-gold transition"

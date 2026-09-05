@@ -53,6 +53,13 @@ import {
   deletePackageOffer,
   getPackagePurchasesForEngineer
 } from '../lib/db-packages'
+import {
+  getMessagesForBooking,
+  sendMessage,
+  markMessagesReadByEngineer,
+  getUnreadCountsForEngineer
+} from '../lib/db-messages'
+import { MessagesThreadPage } from '../pages/messages-thread'
 import { DashboardHomePage } from '../pages/dashboard-home'
 import { DashboardProfilePage } from '../pages/dashboard-profile'
 import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
@@ -581,7 +588,8 @@ dashboardRoutes.get('/dashboard/bookings', async (c) => {
   if (!profile) return c.redirect('/dashboard/profile')
 
   const bookings = await getBookingsByEngineerProfile(c.env.DB, profile.id)
-  return c.render(<DashboardBookingsPage bookings={bookings} />, { title: 'Your Bookings' })
+  const unreadCounts = await getUnreadCountsForEngineer(c.env.DB, profile.id)
+  return c.render(<DashboardBookingsPage bookings={bookings} unreadCounts={unreadCounts} />, { title: 'Your Bookings' })
 })
 
 dashboardRoutes.post('/dashboard/bookings/:id/status', async (c) => {
@@ -607,6 +615,58 @@ dashboardRoutes.post('/dashboard/bookings/:id/status', async (c) => {
     }
   }
   return c.redirect('/dashboard/bookings')
+})
+
+// ---------- Messaging (engineer side) ----------
+// Gated to confirmed/completed bookings, same as the customer /status/messages route —
+// no messaging on a booking that hasn't been paid/approved yet.
+
+dashboardRoutes.get('/dashboard/bookings/:id/messages', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const bookingId = parseInt(c.req.param('id'), 10)
+  const booking = await getBookingById(c.env.DB, bookingId)
+  if (!booking || booking.engineer_profile_id !== profile.id) return c.notFound()
+  if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+    return c.redirect('/dashboard/bookings')
+  }
+
+  await markMessagesReadByEngineer(c.env.DB, bookingId)
+  const messages = await getMessagesForBooking(c.env.DB, bookingId)
+  return c.render(
+    <MessagesThreadPage
+      booking={booking}
+      messages={messages}
+      viewer="engineer"
+      backHref="/dashboard/bookings"
+      postAction={`/dashboard/bookings/${bookingId}/messages`}
+    />,
+    { title: 'Messages' }
+  )
+})
+
+dashboardRoutes.post('/dashboard/bookings/:id/messages', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  const bookingId = parseInt(c.req.param('id'), 10)
+  const booking = await getBookingById(c.env.DB, bookingId)
+  if (!booking || booking.engineer_profile_id !== profile.id) return c.notFound()
+  if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+    return c.redirect('/dashboard/bookings')
+  }
+
+  const body = await c.req.parseBody()
+  const text = ((body['body'] as string) || '').trim().slice(0, 4000)
+  if (text) {
+    await sendMessage(c.env.DB, { bookingId, senderType: 'engineer', senderName: profile.display_name, body: text })
+  }
+  return c.redirect(`/dashboard/bookings/${bookingId}/messages`)
 })
 
 // ---------- Availability calendar ----------

@@ -18,7 +18,13 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: 'Rejected'
 }
 
-export function DashboardBookingsPage({ bookings }: { bookings: Booking[] }) {
+export function DashboardBookingsPage({
+  bookings,
+  unreadCounts
+}: {
+  bookings: Booking[]
+  unreadCounts?: Record<number, number>
+}) {
   return (
     <div class="max-w-4xl mx-auto px-5 py-12">
       <div class="mb-8">
@@ -123,11 +129,23 @@ export function DashboardBookingsPage({ bookings }: { bookings: Booking[] }) {
 
               <div class="flex items-center justify-between mt-3">
                 <div class="text-xs text-muted">Booking #{b.id} · Created {new Date(b.created_at).toLocaleString()}</div>
-                {(b.status === 'confirmed' || b.status === 'completed') && (
-                  <a href="/dashboard/projects" class="text-xs text-gold hover:underline">
-                    <i class="fa-solid fa-folder-open mr-1"></i>Share files
-                  </a>
-                )}
+                <div class="flex items-center gap-4">
+                  {(b.status === 'confirmed' || b.status === 'completed') && (
+                    <>
+                      <a href={`/dashboard/bookings/${b.id}/messages`} class="text-xs text-gold hover:underline relative">
+                        <i class="fa-solid fa-message mr-1"></i>Messages
+                        {unreadCounts && unreadCounts[b.id] > 0 && (
+                          <span class="ml-1 inline-flex items-center justify-center bg-wine text-cream text-[10px] font-bold rounded-full w-4 h-4">
+                            {unreadCounts[b.id]}
+                          </span>
+                        )}
+                      </a>
+                      <a href="/dashboard/projects" class="text-xs text-gold hover:underline">
+                        <i class="fa-solid fa-folder-open mr-1"></i>Share files
+                      </a>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ))}

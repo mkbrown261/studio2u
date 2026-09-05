@@ -40,6 +40,13 @@ import {
   getActivePackagePurchasesForCustomer
 } from './lib/db-packages'
 import { onBookingCompleted } from './lib/booking-lifecycle'
+import {
+  getMessagesForBooking,
+  sendMessage,
+  markMessagesReadByCustomer,
+  getUnreadCountsForCustomerEmail
+} from './lib/db-messages'
+import { MessagesThreadPage } from './pages/messages-thread'
 import { logEvent, getAnalyticsSummary } from './lib/analytics'
 import { getPlatformStats } from './lib/db-stats'
 import { getPlatformFeePercentForEngineer, getSubscriptionPriceIds, setSubscriptionPriceId, splitCommission } from './lib/subscriptions'
@@ -682,8 +689,17 @@ app.get('/status', async (c) => {
     if (entries.length > 0) projectFilesByBooking[b.id] = entries
   }
 
+  // Messaging v1: same email-gate reuse as Projects above — no separate login needed.
+  const unreadMessageCounts = await getUnreadCountsForCustomerEmail(c.env.DB, email)
+
   return c.render(
-    <StatusPage bookings={bookings} email={email} searched={true} projectFilesByBooking={projectFilesByBooking} />,
+    <StatusPage
+      bookings={bookings}
+      email={email}
+      searched={true}
+      projectFilesByBooking={projectFilesByBooking}
+      unreadMessageCounts={unreadMessageCounts}
+    />,
     { title: 'My Bookings' }
   )
 })
@@ -722,6 +738,53 @@ app.get('/status/projects/:bookingId/files/:fileId', async (c) => {
       'Content-Disposition': `attachment; filename="${matchedFile.file_name.replace(/"/g, '')}"`
     }
   })
+})
+
+// Customer-facing message thread for a booking — gated by the same email match used
+// by /status and the Projects file download above, and restricted to confirmed/
+// completed bookings just like the engineer-side route in routes/dashboard.tsx.
+app.get('/status/messages/:bookingId', async (c) => {
+  const bookingId = parseInt(c.req.param('bookingId'), 10)
+  const email = (c.req.query('email') || '').trim().toLowerCase()
+  if (!email) return c.notFound()
+
+  const booking = await getBookingById(c.env.DB, bookingId)
+  if (!booking || booking.customer_email.trim().toLowerCase() !== email) return c.notFound()
+  if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+    return c.redirect(`/status?email=${encodeURIComponent(email)}`)
+  }
+
+  await markMessagesReadByCustomer(c.env.DB, bookingId)
+  const messages = await getMessagesForBooking(c.env.DB, bookingId)
+  return c.render(
+    <MessagesThreadPage
+      booking={booking}
+      messages={messages}
+      viewer="customer"
+      backHref={`/status?email=${encodeURIComponent(email)}`}
+      postAction={`/status/messages/${bookingId}?email=${encodeURIComponent(email)}`}
+    />,
+    { title: 'Messages' }
+  )
+})
+
+app.post('/status/messages/:bookingId', async (c) => {
+  const bookingId = parseInt(c.req.param('bookingId'), 10)
+  const email = (c.req.query('email') || '').trim().toLowerCase()
+  if (!email) return c.notFound()
+
+  const booking = await getBookingById(c.env.DB, bookingId)
+  if (!booking || booking.customer_email.trim().toLowerCase() !== email) return c.notFound()
+  if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+    return c.redirect(`/status?email=${encodeURIComponent(email)}`)
+  }
+
+  const formData = await c.req.formData()
+  const text = ((formData.get('body') as string) || '').trim().slice(0, 4000)
+  if (text) {
+    await sendMessage(c.env.DB, { bookingId, senderType: 'customer', senderName: booking.customer_name, body: text })
+  }
+  return c.redirect(`/status/messages/${bookingId}?email=${encodeURIComponent(email)}`)
 })
 
 // ---------- Admin ----------
