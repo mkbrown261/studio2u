@@ -70,6 +70,7 @@ export interface CreateBookingParams {
   isFirstTimeRate: boolean
   priceAmount: number
   priceBreakdown: string
+  creditAppliedCents?: number
 }
 
 export async function createBooking(db: D1Database, p: CreateBookingParams) {
@@ -81,8 +82,8 @@ export async function createBooking(db: D1Database, p: CreateBookingParams) {
         location_type, location_address, special_notes, song_count, genre,
         customer_name, customer_email, customer_phone,
         is_first_time_rate, price_amount, price_breakdown,
-        status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        credit_applied_cents, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       p.customerId,
@@ -105,6 +106,7 @@ export async function createBooking(db: D1Database, p: CreateBookingParams) {
       p.isFirstTimeRate ? 1 : 0,
       p.priceAmount,
       p.priceBreakdown,
+      p.creditAppliedCents ?? 0,
       'pending_payment'
     )
     .run()

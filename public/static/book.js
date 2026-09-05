@@ -16,7 +16,8 @@
     customerName: '',
     customerEmail: '',
     customerPhone: '',
-    recordingConsentAccepted: false
+    recordingConsentAccepted: false,
+    applyCreditCents: 0
   }
 
   function el(html) {
@@ -257,10 +258,19 @@
         <div class="flex justify-between"><span class="text-muted">Email</span><span>${state.customerEmail}</span></div>
         <div class="flex justify-between"><span class="text-muted">Phone</span><span>${state.customerPhone}</span></div>
       </div>
-      <div id="price-box" class="bg-gold/10 border border-gold/30 rounded-xl p-5 mb-6 text-center">
+      <div id="price-box" class="bg-gold/10 border border-gold/30 rounded-xl p-5 mb-4 text-center">
         <div class="text-muted text-xs uppercase tracking-wide mb-1">Estimated Price</div>
         <div id="price-amount" class="text-3xl font-display font-bold text-gold">Calculating...</div>
         <div id="price-breakdown" class="text-xs text-muted mt-1"></div>
+        <div id="price-after-credit" class="text-sm text-emerald-400 mt-2 hidden"></div>
+      </div>
+      <div id="credit-box" class="hidden bg-ink/50 border border-gold/20 rounded-xl p-4 mb-6">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" id="use-credit-checkbox" class="accent-gold mt-0.5 w-4 h-4 flex-shrink-0" />
+          <span class="text-sm text-cream">
+            Use my account credit — <span id="credit-available-text" class="text-gold font-semibold"></span> available
+          </span>
+        </label>
       </div>
       <label id="consent-label" class="flex items-start gap-3 bg-ink/50 border border-gold/20 rounded-xl p-4 mb-6 cursor-pointer hover:border-gold/40 transition">
         <input type="checkbox" id="recording-consent-checkbox" class="accent-gold mt-0.5 w-4 h-4 flex-shrink-0" ${state.recordingConsentAccepted ? 'checked' : ''} />
@@ -280,11 +290,36 @@
       </div>
     `
 
+    var priceAmountDollars = 0
+    var maxCreditApplicableCents = 0
+
+    function updateCreditDisplay() {
+      var afterCreditEl = document.getElementById('price-after-credit')
+      var checkbox = document.getElementById('use-credit-checkbox')
+      if (checkbox && checkbox.checked && maxCreditApplicableCents > 0) {
+        state.applyCreditCents = maxCreditApplicableCents
+        var finalAmount = Math.max(0, priceAmountDollars - maxCreditApplicableCents / 100)
+        afterCreditEl.textContent = '-$' + (maxCreditApplicableCents / 100).toFixed(2) + ' credit applied → $' + finalAmount.toFixed(2) + ' due'
+        afterCreditEl.classList.remove('hidden')
+      } else {
+        state.applyCreditCents = 0
+        afterCreditEl.classList.add('hidden')
+      }
+    }
+
     fetch(`/api/price-check?engineerId=${encodeURIComponent(state.engineerId)}&email=${encodeURIComponent(state.customerEmail)}&duration=${state.durationHours}`)
       .then((r) => r.json())
       .then((data) => {
         document.getElementById('price-amount').textContent = `$${data.amount}`
         document.getElementById('price-breakdown').textContent = data.breakdown
+        priceAmountDollars = data.amount
+
+        maxCreditApplicableCents = data.maxCreditApplicableCents || 0
+        if (maxCreditApplicableCents > 0) {
+          document.getElementById('credit-available-text').textContent = '$' + (maxCreditApplicableCents / 100).toFixed(2)
+          document.getElementById('credit-box').classList.remove('hidden')
+          document.getElementById('use-credit-checkbox').addEventListener('change', updateCreditDisplay)
+        }
       })
       .catch(() => {
         document.getElementById('price-amount').textContent = 'Error'

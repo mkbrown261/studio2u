@@ -29,6 +29,7 @@ import {
 import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
 import { getAllDisputesForAdmin, resolveDispute, getDisputeById } from './lib/db-disputes'
 import { getReviewRequestQueueForAdmin } from './lib/db-review-requests'
+import { getAccountCreditBalance, computeApplicableCreditCents } from './lib/db-referrals'
 import { onBookingCompleted } from './lib/booking-lifecycle'
 import { logEvent, getAnalyticsSummary } from './lib/analytics'
 import { getPlatformStats } from './lib/db-stats'
@@ -253,7 +254,26 @@ app.get('/api/price-check', async (c) => {
     firstTimeDiscountAmount: engineer.first_time_discount_amount,
     firstTimeDiscountHours: engineer.first_time_discount_hours
   })
-  return c.json(price)
+
+  // Credit preview — only logged-in customers have a spendable balance. Uses the exact
+  // same cap math /api/bookings enforces server-side, so what's shown here before
+  // confirming is never higher than what's actually applied.
+  let creditBalanceCents = 0
+  let maxCreditApplicableCents = 0
+  const sessionUser = await getSessionUser(c.env.DB, c.req.raw)
+  if (sessionUser) {
+    const balance = await getAccountCreditBalance(c.env.DB, sessionUser.id)
+    creditBalanceCents = toCents(Math.max(0, balance))
+    const commissionPercent = await getPlatformFeePercentForEngineer(c.env.DB, engineer)
+    const { platformFee } = splitCommission(price.amount, commissionPercent)
+    maxCreditApplicableCents = computeApplicableCreditCents({
+      balanceCents: creditBalanceCents,
+      grossAmountCents: toCents(price.amount),
+      platformFeeCents: toCents(platformFee)
+    })
+  }
+
+  return c.json({ ...price, creditBalanceCents, maxCreditApplicableCents })
 })
 
 app.post('/api/bookings', async (c) => {
@@ -272,7 +292,8 @@ app.post('/api/bookings', async (c) => {
       customerName,
       customerEmail,
       customerPhone,
-      recordingConsentAccepted
+      recordingConsentAccepted,
+      applyCreditCents
     } = body
 
     if (
@@ -343,6 +364,30 @@ app.post('/api/bookings', async (c) => {
       firstTimeDiscountHours: engineer.first_time_discount_hours
     })
 
+    // Fee percent is resolved from the ENGINEER's current subscription tier (Free
+    // 10% / Pro 5% / Elite 2% — see lib/subscriptions.ts) rather than the old flat
+    // platform-wide commission_percent setting. Computed here (before createBooking)
+    // rather than later, because the credit-redemption cap below depends on it.
+    const commissionPercent = await getPlatformFeePercentForEngineer(c.env.DB, engineer)
+    const { platformFee, engineerPayout } = splitCommission(price.amount, commissionPercent)
+
+    // Credit redemption — never trust the client's applyCreditCents number. Guest
+    // checkout (no session) can't apply credit at all since account_credits is keyed
+    // by user_id. Cap is recomputed here from scratch (balance, 50% cap, Stripe min
+    // charge, and never more than the platform's own fee) — see computeApplicableCreditCents
+    // for why the discount always comes out of Studio2U's margin, never the engineer's cut.
+    let creditAppliedCents = 0
+    if (customerUserId && applyCreditCents) {
+      const requestedCents = Math.max(0, Math.floor(Number(applyCreditCents) || 0))
+      const balance = await getAccountCreditBalance(c.env.DB, customerUserId)
+      const maxApplicable = computeApplicableCreditCents({
+        balanceCents: toCents(Math.max(0, balance)),
+        grossAmountCents: toCents(price.amount),
+        platformFeeCents: toCents(platformFee)
+      })
+      creditAppliedCents = Math.min(requestedCents, maxApplicable)
+    }
+
     const bookingId = await createBooking(c.env.DB, {
       customerId,
       engineerId: 1, // legacy FK kept for backward compat; real routing uses engineerProfileId
@@ -366,7 +411,8 @@ app.post('/api/bookings', async (c) => {
       customerPhone,
       isFirstTimeRate: price.isFirstTimeRate,
       priceAmount: price.amount,
-      priceBreakdown: price.breakdown
+      priceBreakdown: price.breakdown,
+      creditAppliedCents
     })
 
     if (!existingCustomer) {
@@ -386,39 +432,44 @@ app.post('/api/bookings', async (c) => {
 
     // Create the Stripe Checkout Session right away — the customer is sent straight
     // into Stripe's hosted payment page next; there's no more "book now, pay later
-    // via Cash App" gap. Commission math reuses the same splitCommission() helper
-    // built in M1, now finally wired into a real payment.
+    // via Cash App" gap. Commission math (commissionPercent/platformFee/engineerPayout)
+    // was already computed above, ahead of the credit-redemption cap calculation, and
+    // is locked onto this booking row now (platform_fee_percent, via attachCheckoutSession
+    // below) — never recalculated later even if the engineer upgrades/downgrades afterward.
     //
-    // Fee percent is resolved from the ENGINEER's current subscription tier (Free
-    // 10% / Pro 5% / Elite 2% — see lib/subscriptions.ts) rather than the old flat
-    // platform-wide commission_percent setting. It's locked onto this booking row
-    // right now (platform_fee_percent, via attachCheckoutSession below) and never
-    // recalculated later even if the engineer upgrades/downgrades afterward.
-    const commissionPercent = await getPlatformFeePercentForEngineer(c.env.DB, engineer)
-    const { platformFee, engineerPayout } = splitCommission(price.amount, commissionPercent)
-
+    // Applying credit reduces the CUSTOMER's charge (grossAmountCents) only — it comes
+    // entirely out of Studio2U's own platformFeeCents, never the engineer's payout, so
+    // engineerPayout (already locked in above from the full, pre-credit price) is
+    // unaffected by whatever credit gets applied here.
     const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
     const origin = new URL(c.req.url).origin
+
+    const grossAmountCents = toCents(price.amount) - creditAppliedCents
+    const platformFeeCents = toCents(platformFee) - creditAppliedCents
 
     const checkout = await createBookingCheckoutSession(stripe, {
       bookingId,
       engineerStripeAccountId: engineer.stripe_account_id,
-      grossAmountCents: toCents(price.amount),
-      platformFeeCents: toCents(platformFee),
+      grossAmountCents,
+      platformFeeCents,
       customerEmail,
       description: `Recording session with ${engineer.display_name} — ${sessionDate} @ ${sessionTime} (${durationHours}h)`,
       successUrl: `${origin}/book/confirmation/${bookingId}?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/book/${engineer.id}`
     })
 
+    // platformFeeAmount stored here reflects what Studio2U actually collects after
+    // absorbing the credit discount (platformFeeCents, not the full pre-credit
+    // platformFee) — engineerPayoutAmount stays the full, un-discounted payout since the
+    // engineer's cut is never affected by a customer's applied credit.
     await attachCheckoutSession(c.env.DB, bookingId, {
       checkoutSessionId: checkout.sessionId,
-      platformFeeAmount: platformFee,
+      platformFeeAmount: platformFeeCents / 100,
       engineerPayoutAmount: engineerPayout,
       platformFeePercent: commissionPercent
     })
 
-    await logEvent(c.env.DB, { eventType: 'booking_started', engineerProfileId: engineer.id, metadata: { bookingId } })
+    await logEvent(c.env.DB, { eventType: 'booking_started', engineerProfileId: engineer.id, metadata: { bookingId, creditAppliedCents } })
 
     return c.json({ bookingId, checkoutUrl: checkout.url })
   } catch (err) {

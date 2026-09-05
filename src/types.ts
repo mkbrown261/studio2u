@@ -70,6 +70,7 @@ export interface Booking {
   stripe_checkout_session_id: string | null
   platform_fee_amount: number | null
   engineer_payout_amount: number | null
+  credit_applied_cents: number
   status: BookingStatus
   admin_notes: string | null
   created_at: string

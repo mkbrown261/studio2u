@@ -25,6 +25,7 @@ import {
   setEngineerSubscription,
   scheduleSubscriptionDowngrade
 } from '../lib/db-engineers'
+import { debitAccountCreditForBooking } from '../lib/db-referrals'
 
 export const stripeWebhookRoutes = new Hono<AppEnv>()
 
@@ -100,6 +101,20 @@ stripeWebhookRoutes.post('/api/stripe/webhook', async (c) => {
           await markBookingPaid(c.env.DB, booking.id, {
             paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : ''
           })
+
+          // Debit the customer's account_credits ledger now that payment is confirmed —
+          // never at booking-creation time, so an abandoned/cancelled checkout never
+          // actually spends the credit (mirrors why markBookingPaid() itself only fires
+          // here). credit_applied_cents was locked onto the booking row at creation time
+          // (see /api/bookings in index.tsx) and customer_user_id must be present since
+          // guest checkout can't apply credit in the first place.
+          if (booking.credit_applied_cents > 0 && booking.customer_user_id) {
+            await debitAccountCreditForBooking(c.env.DB, {
+              userId: booking.customer_user_id,
+              bookingId: booking.id,
+              amountCents: booking.credit_applied_cents
+            })
+          }
         }
         break
       }

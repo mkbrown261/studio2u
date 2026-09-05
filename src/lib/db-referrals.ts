@@ -143,3 +143,53 @@ export async function maybeCreditReferralReward(db: D1Database, bookingId: numbe
     .bind(referrerId, rewardValue, bookingId)
     .run()
 }
+
+// ---------- Credit redemption at checkout ----------
+//
+// Design: applying credit reduces what the CUSTOMER pays via Stripe Checkout, but never
+// touches the engineer's payout — the discount comes entirely out of Studio2U's own
+// platform fee, same way the referral reward itself was a Studio2U marketing cost to
+// begin with. That means the amount of credit usable on any one booking is capped at
+// whatever the platform's fee would have been (so application_fee_amount sent to Stripe
+// never goes negative), on top of two more guardrails:
+//   - MAX_CREDIT_REDEMPTION_PERCENT: never more than 50% of the booking price, so a large
+//     balance can't fully comp a session outright.
+//   - STRIPE_MIN_CHARGE_CENTS: Stripe requires a minimum charge (~$0.50 USD); never
+//     discount past that floor.
+// Both /api/price-check (preview) and /api/bookings (the real, server-enforced value —
+// never trust whatever the client echoes back) call this same function so the number the
+// customer sees before confirming is exactly what gets applied.
+export const MAX_CREDIT_REDEMPTION_PERCENT = 0.5
+export const STRIPE_MIN_CHARGE_CENTS = 50
+
+export function computeApplicableCreditCents(params: {
+  balanceCents: number
+  grossAmountCents: number
+  platformFeeCents: number
+}): number {
+  const maxByPercent = Math.floor(params.grossAmountCents * MAX_CREDIT_REDEMPTION_PERCENT)
+  const maxByMinCharge = Math.max(0, params.grossAmountCents - STRIPE_MIN_CHARGE_CENTS)
+  return Math.max(0, Math.min(params.balanceCents, params.platformFeeCents, maxByPercent, maxByMinCharge))
+}
+
+// Debits the customer's account_credits ledger for a booking whose Stripe payment has
+// just been CONFIRMED (called from the checkout.session.completed webhook handler,
+// mirroring markBookingPaid()'s "webhook confirms truth" pattern — never called at
+// booking-creation time). This keeps redemption consistent with how credit was earned:
+// a real ledger row, never just an implied deduction.
+//
+// Idempotency: guarded by the caller checking booking.status === 'pending_payment'
+// before calling markBookingPaid() (see stripe-webhook.ts) — this function is only
+// ever invoked once per booking, in the same idempotent branch, so no separate
+// duplicate-check is needed here.
+export async function debitAccountCreditForBooking(
+  db: D1Database,
+  params: { userId: number; bookingId: number; amountCents: number }
+): Promise<void> {
+  if (params.amountCents <= 0) return
+  const amountDollars = Math.round(params.amountCents) / 100
+  await db
+    .prepare(`INSERT INTO account_credits (user_id, amount, reason, related_booking_id) VALUES (?, ?, 'booking_redemption', ?)`)
+    .bind(params.userId, -amountDollars, params.bookingId)
+    .run()
+}

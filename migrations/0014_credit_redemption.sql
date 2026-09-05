@@ -1,0 +1,13 @@
+-- Studio2U: make account_credits actually spendable at checkout (2026-09-05).
+--
+-- Previously account_credits was ledger-only — referral rewards accrued but there was
+-- no way to apply them against a real booking. This adds the column needed to record
+-- how much credit was applied to a given booking (locked in at booking-creation time,
+-- same way platform_fee_percent is locked in), so the amount is auditable on the
+-- booking row itself and not just inferable from the ledger.
+--
+-- The actual ledger DEBIT (negative account_credits row, reason='booking_redemption')
+-- is written by the Stripe webhook once payment is CONFIRMED (checkout.session.completed),
+-- not at booking-creation time — mirrors the existing markBookingPaid() pattern so an
+-- abandoned/cancelled checkout never actually spends the customer's credit.
+ALTER TABLE bookings ADD COLUMN credit_applied_cents INTEGER NOT NULL DEFAULT 0;
