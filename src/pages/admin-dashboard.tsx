@@ -23,12 +23,14 @@ export function AdminDashboardPage({
   bookings,
   statusFilter,
   engineers,
-  commissionPercent
+  commissionPercent,
+  subscriptionPricesConfigured
 }: {
   bookings: Booking[]
   statusFilter: string
   engineers: EngineerProfile[]
   commissionPercent: number
+  subscriptionPricesConfigured?: boolean
 }) {
   const filters = ['all', 'pending_payment', 'pending_approval', 'confirmed', 'completed', 'cancelled', 'rejected']
 
@@ -82,6 +84,33 @@ export function AdminDashboardPage({
               {(100 - (100 * commissionPercent) / 100).toFixed(2)}
             </span>
           </form>
+        </div>
+      </section>
+
+      {/* ---------- Engineer Subscription Tiers setup ---------- */}
+      <section class="mb-14">
+        <h2 class="font-display text-xl font-bold mb-4">Engineer Subscription Tiers</h2>
+        <div class="bg-surface border border-gold/10 rounded-xl p-5">
+          {subscriptionPricesConfigured ? (
+            <p class="text-sm text-emerald-400">
+              <i class="fa-solid fa-circle-check mr-1.5"></i>
+              Stripe subscription Products/Prices are configured. Pro ($19/mo · $190/yr) and Elite ($35/mo · $350/yr)
+              are live and bookable from <a href="/pricing" class="underline hover:text-gold" target="_blank">/pricing</a>.
+            </p>
+          ) : (
+            <>
+              <p class="text-muted text-sm mb-4">
+                One-time setup: creates the Stripe Products/Prices for the Pro ($19/mo, $190/yr) and Elite
+                ($35/mo, $350/yr) engineer subscription tiers, using the STRIPE_SECRET_KEY already configured on this
+                deployment. Safe to run only once — running it again would create duplicate Stripe Prices.
+              </p>
+              <form method="POST" action="/admin/subscriptions/setup">
+                <button type="submit" class="text-sm font-semibold bg-gold text-ink rounded-full px-6 py-2.5 hover:bg-gold-light transition">
+                  <i class="fa-brands fa-stripe-s mr-1.5"></i>Create Subscription Products in Stripe
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </section>
 

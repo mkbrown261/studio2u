@@ -75,6 +75,7 @@ export const renderer = jsxRenderer(async ({ children, title }, c) => {
             <div class="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
               <a href="/engineers" class="hover:text-gold transition">Engineers</a>
               <a href="/#pricing" class="hover:text-gold transition">Pricing</a>
+              <a href="/pricing" class="hover:text-gold transition">Engineer Plans</a>
               <a href="/#about" class="hover:text-gold transition">About</a>
               <a href="/#faq" class="hover:text-gold transition">FAQ</a>
               <a href="/status" class="hover:text-gold transition">My Bookings</a>

@@ -176,7 +176,7 @@ export async function getAllBookings(db: D1Database, statusFilter?: string): Pro
 export async function attachCheckoutSession(
   db: D1Database,
   bookingId: number,
-  params: { checkoutSessionId: string; platformFeeAmount: number; engineerPayoutAmount: number }
+  params: { checkoutSessionId: string; platformFeeAmount: number; engineerPayoutAmount: number; platformFeePercent: number }
 ) {
   await db
     .prepare(
@@ -184,10 +184,11 @@ export async function attachCheckoutSession(
         stripe_checkout_session_id = ?,
         platform_fee_amount = ?,
         engineer_payout_amount = ?,
+        platform_fee_percent = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`
     )
-    .bind(params.checkoutSessionId, params.platformFeeAmount, params.engineerPayoutAmount, bookingId)
+    .bind(params.checkoutSessionId, params.platformFeeAmount, params.engineerPayoutAmount, params.platformFeePercent, bookingId)
     .run()
 }
 

@@ -28,6 +28,15 @@ export interface EngineerProfile {
   stripe_account_id: string | null
   stripe_onboarding_complete: number
   stripe_charges_enabled: number
+  subscription_tier: string
+  subscription_billing_period: string | null
+  subscription_status: string | null
+  subscription_period_end: string | null
+  subscription_cancel_at_period_end: number
+  pending_tier: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  storage_used_bytes: number
   created_at: string
   updated_at: string
 }
@@ -45,13 +54,20 @@ export async function getEngineerProfileById(db: D1Database, id: number): Promis
 // Phase 3 M5: mandatory Stripe onboarding — an engineer never appears in the public
 // directory (and can't be booked) until Stripe confirms charges_enabled on their
 // connected account. No exceptions, no Cash App fallback.
+// Directory sort order: Elite engineers first, then Pro, then Free — this is the
+// "directory priority placement" subscription perk (see subscriptions.ts TIERS).
+// Implemented as a CASE expression rather than a stored numeric column so it can never
+// drift out of sync with the tier names themselves; ties within a tier fall back to the
+// pre-existing rating/created_at ordering, completely unchanged.
+const TIER_PRIORITY_ORDER_SQL = `CASE subscription_tier WHEN 'elite' THEN 2 WHEN 'pro' THEN 1 ELSE 0 END DESC`
+
 export async function getPublishedEngineers(db: D1Database, remoteOnly?: boolean): Promise<EngineerProfile[]> {
   const remoteClause = remoteOnly ? 'AND offers_remote = 1' : ''
   const { results } = await db
     .prepare(
       `SELECT * FROM engineer_profiles
        WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1 ${remoteClause}
-       ORDER BY rating_avg DESC, created_at ASC`
+       ORDER BY ${TIER_PRIORITY_ORDER_SQL}, rating_avg DESC, created_at ASC`
     )
     .all()
   return (results as unknown as EngineerProfile[]) || []
@@ -338,4 +354,106 @@ export async function createReview(
 
   await db.prepare('UPDATE bookings SET reviewed = 1 WHERE id = ?').bind(params.bookingId).run()
   await recalculateEngineerRating(db, params.engineerProfileId)
+}
+
+// ---------- Subscription Tiers (Free / Pro / Elite) ----------
+
+export async function getEngineerByStripeCustomerId(db: D1Database, stripeCustomerId: string): Promise<EngineerProfile | null> {
+  const row = await db.prepare('SELECT * FROM engineer_profiles WHERE stripe_customer_id = ?').bind(stripeCustomerId).first()
+  return (row as unknown as EngineerProfile) || null
+}
+
+export async function getEngineerByStripeSubscriptionId(db: D1Database, stripeSubscriptionId: string): Promise<EngineerProfile | null> {
+  const row = await db.prepare('SELECT * FROM engineer_profiles WHERE stripe_subscription_id = ?').bind(stripeSubscriptionId).first()
+  return (row as unknown as EngineerProfile) || null
+}
+
+export async function setEngineerStripeCustomerId(db: D1Database, engineerProfileId: number, stripeCustomerId: string) {
+  await db
+    .prepare('UPDATE engineer_profiles SET stripe_customer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .bind(stripeCustomerId, engineerProfileId)
+    .run()
+}
+
+// Called from the Stripe webhook (customer.subscription.created/updated) once a
+// subscription is confirmed active — flips the engineer onto the new tier immediately.
+// Downgrades/cancellations do NOT call this directly; see
+// scheduleSubscriptionDowngrade / applyScheduledDowngradeIfDue below for the
+// "keep benefits until period end" flow.
+export async function setEngineerSubscription(
+  db: D1Database,
+  engineerProfileId: number,
+  params: {
+    tier: 'free' | 'pro' | 'elite'
+    billingPeriod: 'monthly' | 'annual' | null
+    status: string | null
+    subscriptionId: string | null
+    periodEnd: string | null
+  }
+) {
+  await db
+    .prepare(
+      `UPDATE engineer_profiles SET
+        subscription_tier = ?, subscription_billing_period = ?, subscription_status = ?,
+        stripe_subscription_id = ?, subscription_period_end = ?,
+        subscription_cancel_at_period_end = 0, pending_tier = NULL,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`
+    )
+    .bind(params.tier, params.billingPeriod, params.status, params.subscriptionId, params.periodEnd, engineerProfileId)
+    .run()
+}
+
+// Cancellation/downgrade: Stripe's Billing Portal defaults to cancel-at-period-end, so
+// the webhook calls this instead of immediately dropping the tier — benefits (fee rate,
+// storage, badge, placement) are intentionally preserved until subscription_period_end.
+export async function scheduleSubscriptionDowngrade(
+  db: D1Database,
+  engineerProfileId: number,
+  params: { pendingTier: 'free' | 'pro' | 'elite'; periodEnd: string | null }
+) {
+  await db
+    .prepare(
+      `UPDATE engineer_profiles SET
+        subscription_cancel_at_period_end = 1, pending_tier = ?, subscription_period_end = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`
+    )
+    .bind(params.pendingTier, params.periodEnd, engineerProfileId)
+    .run()
+}
+
+// Actually applies a previously-scheduled downgrade once the period has genuinely
+// ended. Called both from the webhook (customer.subscription.deleted, i.e. Stripe
+// itself ending the subscription) and lazily on dashboard page loads as a safety net
+// in case a webhook was ever missed — mirrors the existing "lazy re-check" pattern
+// already used for Stripe Connect status refresh in routes/dashboard.tsx.
+export async function applyScheduledDowngradeIfDue(db: D1Database, profile: EngineerProfile): Promise<EngineerProfile> {
+  if (!profile.subscription_cancel_at_period_end || !profile.pending_tier || !profile.subscription_period_end) {
+    return profile
+  }
+  if (new Date(profile.subscription_period_end).getTime() > Date.now()) {
+    return profile
+  }
+  const tier = profile.pending_tier as 'free' | 'pro' | 'elite'
+  await db
+    .prepare(
+      `UPDATE engineer_profiles SET
+        subscription_tier = ?, subscription_billing_period = NULL, subscription_status = NULL,
+        stripe_subscription_id = NULL, subscription_cancel_at_period_end = 0, pending_tier = NULL,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?`
+    )
+    .bind(tier, profile.id)
+    .run()
+  return { ...profile, subscription_tier: tier, subscription_cancel_at_period_end: 0, pending_tier: null }
+}
+
+export async function addToEngineerStorageUsed(db: D1Database, engineerProfileId: number, deltaBytes: number) {
+  await db
+    .prepare(
+      `UPDATE engineer_profiles SET storage_used_bytes = MAX(0, storage_used_bytes + ?), updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    )
+    .bind(deltaBytes, engineerProfileId)
+    .run()
 }

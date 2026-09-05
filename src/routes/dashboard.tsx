@@ -21,7 +21,15 @@ import {
   deleteOverrideDate,
   getUpcomingOverrides
 } from '../lib/db-availability'
-import { getStripeClient, createConnectAccount, createAccountOnboardingLink, getAccountStatus } from '../lib/stripe'
+import {
+  getStripeClient,
+  createConnectAccount,
+  createAccountOnboardingLink,
+  getAccountStatus,
+  getOrCreateSubscriptionCustomer,
+  createSubscriptionCheckoutSession,
+  createBillingPortalSession
+} from '../lib/stripe'
 import { validateImageUpload } from '../lib/upload-validation'
 import { logAuditEvent } from '../lib/audit-log'
 import { DashboardHomePage } from '../pages/dashboard-home'
@@ -30,7 +38,10 @@ import { DashboardPortfolioPage } from '../pages/dashboard-portfolio'
 import { DashboardBookingsPage } from '../pages/dashboard-bookings'
 import { DashboardAvailabilityPage } from '../pages/dashboard-availability'
 import { DashboardPaymentsPage } from '../pages/dashboard-payments'
+import { DashboardSubscriptionPage } from '../pages/dashboard-subscription'
 import { BecomeEngineerPage } from '../pages/dashboard-become-engineer'
+import { getSubscriptionPriceIds, priceIdFieldFor } from '../lib/subscriptions'
+import { setEngineerStripeCustomerId, applyScheduledDowngradeIfDue } from '../lib/db-engineers'
 
 export const dashboardRoutes = new Hono<AppEnv>()
 
@@ -470,5 +481,98 @@ dashboardRoutes.post('/dashboard/payments/connect', async (c) => {
       <DashboardPaymentsPage profile={profile} error="Could not start Stripe onboarding. Please try again." />,
       { title: 'Payments' }
     )
+  }
+})
+
+// ---------- Subscription Tiers (Free / Pro / Elite) ----------
+//
+// Separate Stripe Customer/Checkout flow from Connect above: this bills the ENGINEER
+// (on the platform's own Stripe account) for their Pro/Elite plan, rather than the
+// engineer receiving money. See lib/subscriptions.ts for the full tier model.
+
+dashboardRoutes.get('/dashboard/subscription', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  let profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+
+  // Lazy safety net (same pattern as Stripe Connect status refresh above): if a
+  // cancel-at-period-end webhook was ever missed, catch it here on page load rather
+  // than leaving the engineer stuck on stale tier benefits forever.
+  profile = await applyScheduledDowngradeIfDue(c.env.DB, profile)
+
+  return c.render(<DashboardSubscriptionPage profile={profile} />, { title: 'Subscription' })
+})
+
+dashboardRoutes.post('/dashboard/subscription/checkout', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile) return c.redirect('/dashboard/profile')
+  if (!c.env.STRIPE_SECRET_KEY) {
+    return c.render(<DashboardSubscriptionPage profile={profile} error="Stripe is not configured on this deployment yet." />, {
+      title: 'Subscription'
+    })
+  }
+
+  const body = await c.req.parseBody()
+  const tier = body['tier'] === 'elite' ? 'elite' : body['tier'] === 'pro' ? 'pro' : null
+  const period = body['period'] === 'annual' ? 'annual' : 'monthly'
+  if (!tier) return c.redirect('/pricing')
+
+  const priceIds = await getSubscriptionPriceIds(c.env.DB)
+  const priceId = priceIds[priceIdFieldFor(tier, period)]
+  if (!priceId) {
+    return c.render(
+      <DashboardSubscriptionPage profile={profile} error="Subscription plans aren't set up on this deployment yet." />,
+      { title: 'Subscription' }
+    )
+  }
+
+  try {
+    const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+    const customerId = await getOrCreateSubscriptionCustomer(stripe, {
+      existingCustomerId: profile.stripe_customer_id,
+      email: user.email,
+      name: profile.display_name
+    })
+    if (!profile.stripe_customer_id) {
+      await setEngineerStripeCustomerId(c.env.DB, profile.id, customerId)
+    }
+
+    const origin = new URL(c.req.url).origin
+    const checkout = await createSubscriptionCheckoutSession(stripe, {
+      customerId,
+      priceId,
+      successUrl: `${origin}/dashboard/subscription?upgraded=1`,
+      cancelUrl: `${origin}/pricing`,
+      engineerProfileId: profile.id
+    })
+    return c.redirect(checkout.url)
+  } catch (err) {
+    console.error('Subscription checkout error', err)
+    return c.render(<DashboardSubscriptionPage profile={profile} error="Could not start checkout. Please try again." />, {
+      title: 'Subscription'
+    })
+  }
+})
+
+dashboardRoutes.post('/dashboard/subscription/portal', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  if (!user) return c.redirect('/login')
+  const profile = await getEngineerProfileByUserId(c.env.DB, user.id)
+  if (!profile || !profile.stripe_customer_id || !c.env.STRIPE_SECRET_KEY) return c.redirect('/dashboard/subscription')
+
+  try {
+    const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+    const origin = new URL(c.req.url).origin
+    const portal = await createBillingPortalSession(stripe, {
+      customerId: profile.stripe_customer_id,
+      returnUrl: `${origin}/dashboard/subscription`
+    })
+    return c.redirect(portal.url)
+  } catch (err) {
+    console.error('Billing portal session error', err)
+    return c.redirect('/dashboard/subscription')
   }
 })

@@ -18,10 +18,17 @@ import {
   hasCustomerBookedEngineerBefore
 } from './lib/db'
 import { calculatePrice } from './lib/pricing'
-import { getEngineerProfileById, getEngineerDisplayForBooking, getAllEngineersForAdmin, setEngineerSuspended } from './lib/db-engineers'
-import { getCommissionPercent, setCommissionPercent, splitCommission } from './lib/db-settings'
+import {
+  getEngineerProfileById,
+  getEngineerProfileByUserId,
+  getEngineerDisplayForBooking,
+  getAllEngineersForAdmin,
+  setEngineerSuspended
+} from './lib/db-engineers'
+import { getCommissionPercent, setCommissionPercent } from './lib/db-settings'
+import { getPlatformFeePercentForEngineer, getSubscriptionPriceIds, setSubscriptionPriceId, splitCommission } from './lib/subscriptions'
 import { getAvailableHoursForDate, isRangeAvailable } from './lib/db-availability'
-import { getStripeClient, createBookingCheckoutSession, toCents } from './lib/stripe'
+import { getStripeClient, createBookingCheckoutSession, createSubscriptionProductAndPrices, toCents } from './lib/stripe'
 import { HomePage } from './pages/home'
 import { BookPage } from './pages/book'
 import { ConfirmationPage } from './pages/confirmation'
@@ -39,6 +46,7 @@ import { ConsentPage } from './pages/consent'
 import { PrivacyPage } from './pages/privacy'
 import { SecurityPolicyPage } from './pages/security-policy'
 import { RefundPolicyPage } from './pages/refund-policy'
+import { PricingPage } from './pages/pricing'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -98,6 +106,14 @@ app.route('/', reviewsRoutes)
 app.get('/', async (c) => {
   const services = await getServices(c.env.DB)
   return c.render(<HomePage services={services} />, { title: 'Home' })
+})
+
+// Engineer Subscription Tiers (Free / Pro / Elite) — distinct from the customer-facing
+// "Pricing" section on the homepage (#pricing, about per-session booking rates).
+app.get('/pricing', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  const profile = user && user.is_engineer === 1 ? await getEngineerProfileByUserId(c.env.DB, user.id) : null
+  return c.render(<PricingPage user={user} profile={profile} />, { title: 'Engineer Plans' })
 })
 
 // Customer picks an engineer first (from the directory), then books that specific
@@ -311,7 +327,13 @@ app.post('/api/bookings', async (c) => {
     // into Stripe's hosted payment page next; there's no more "book now, pay later
     // via Cash App" gap. Commission math reuses the same splitCommission() helper
     // built in M1, now finally wired into a real payment.
-    const commissionPercent = await getCommissionPercent(c.env.DB)
+    //
+    // Fee percent is resolved from the ENGINEER's current subscription tier (Free
+    // 10% / Pro 5% / Elite 2% — see lib/subscriptions.ts) rather than the old flat
+    // platform-wide commission_percent setting. It's locked onto this booking row
+    // right now (platform_fee_percent, via attachCheckoutSession below) and never
+    // recalculated later even if the engineer upgrades/downgrades afterward.
+    const commissionPercent = await getPlatformFeePercentForEngineer(c.env.DB, engineer)
     const { platformFee, engineerPayout } = splitCommission(price.amount, commissionPercent)
 
     const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
@@ -331,7 +353,8 @@ app.post('/api/bookings', async (c) => {
     await attachCheckoutSession(c.env.DB, bookingId, {
       checkoutSessionId: checkout.sessionId,
       platformFeeAmount: platformFee,
-      engineerPayoutAmount: engineerPayout
+      engineerPayoutAmount: engineerPayout,
+      platformFeePercent: commissionPercent
     })
 
     return c.json({ bookingId, checkoutUrl: checkout.url })
@@ -459,10 +482,39 @@ app.get('/admin', async (c) => {
   const bookings = await getAllBookings(c.env.DB, statusFilter)
   const engineers = await getAllEngineersForAdmin(c.env.DB)
   const commissionPercent = await getCommissionPercent(c.env.DB)
+  const priceIds = await getSubscriptionPriceIds(c.env.DB)
+  const subscriptionPricesConfigured = !!(priceIds.pro_monthly && priceIds.pro_annual && priceIds.elite_monthly && priceIds.elite_annual)
   return c.render(
-    <AdminDashboardPage bookings={bookings} statusFilter={statusFilter} engineers={engineers} commissionPercent={commissionPercent} />,
+    <AdminDashboardPage
+      bookings={bookings}
+      statusFilter={statusFilter}
+      engineers={engineers}
+      commissionPercent={commissionPercent}
+      subscriptionPricesConfigured={subscriptionPricesConfigured}
+    />,
     { title: 'Admin Dashboard' }
   )
+})
+
+// One-time setup: creates the Stripe Products/Prices for Pro/Elite subscription tiers
+// using the server-side STRIPE_SECRET_KEY secret (never a key pasted in chat/files —
+// see subscriptions.ts header comment). Idempotent-by-convention only: it does NOT
+// check whether prices already exist before creating new ones, so the admin UI hides
+// this button entirely once platform_settings already has all 4 price IDs stored.
+app.post('/admin/subscriptions/setup', async (c) => {
+  if (!c.env.STRIPE_SECRET_KEY) return c.redirect('/admin')
+  try {
+    const stripe = getStripeClient(c.env.STRIPE_SECRET_KEY)
+    const prices = await createSubscriptionProductAndPrices(stripe)
+    await setSubscriptionPriceId(c.env.DB, 'pro_monthly', prices.pro_monthly)
+    await setSubscriptionPriceId(c.env.DB, 'pro_annual', prices.pro_annual)
+    await setSubscriptionPriceId(c.env.DB, 'elite_monthly', prices.elite_monthly)
+    await setSubscriptionPriceId(c.env.DB, 'elite_annual', prices.elite_annual)
+    await logAuditEvent(c.env.DB, { actorType: 'admin', action: 'subscriptions.setup', metadata: { productId: prices.productId } })
+  } catch (err) {
+    console.error('Subscription product/price setup failed', err)
+  }
+  return c.redirect('/admin')
 })
 
 // Platform-wide commission percentage — admin-editable, read live by the booking/payout

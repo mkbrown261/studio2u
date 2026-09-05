@@ -199,3 +199,125 @@ export async function createBookingCheckoutSession(
 export function toCents(amountDollars: number): number {
   return Math.round(amountDollars * 100)
 }
+
+// ---------- Engineer Subscription Tiers (Pro / Elite) ----------
+//
+// Distinct from Connect above: this is Studio2U charging the ENGINEER a recurring
+// subscription fee (billed on the platform's own Stripe account, not a connected
+// account) in exchange for a lower marketplace commission + storage + badge + support
+// perks. Uses Stripe's standard Products/Prices/Subscriptions API (v1) — that's fully
+// supported for the platform's own account; only the v1 *Connect Accounts* endpoint is
+// blocked (see createConnectAccount above), not v1 Billing in general.
+
+// One-time setup: creates the 4 recurring Prices (Pro monthly/annual, Elite
+// monthly/annual) under a single "Studio2U Engineer Subscription" Product. Idempotent
+// in the sense that it's only ever run once via the admin setup route; the resulting
+// price IDs are then persisted to platform_settings (see subscriptions.ts) and reused
+// forever — this function is never called again after that.
+export async function createSubscriptionProductAndPrices(stripe: Stripe): Promise<{
+  productId: string
+  pro_monthly: string
+  pro_annual: string
+  elite_monthly: string
+  elite_annual: string
+}> {
+  const product = await stripe.products.create({
+    name: 'Studio2U Engineer Subscription',
+    description: 'Lower platform fees, more Project storage, a verified badge, and priority support for Studio2U engineers.'
+  })
+
+  const [proMonthly, proAnnual, eliteMonthly, eliteAnnual] = await Promise.all([
+    stripe.prices.create({
+      product: product.id,
+      currency: 'usd',
+      unit_amount: toCents(19),
+      recurring: { interval: 'month' },
+      nickname: 'Pro Monthly'
+    }),
+    stripe.prices.create({
+      product: product.id,
+      currency: 'usd',
+      unit_amount: toCents(190),
+      recurring: { interval: 'year' },
+      nickname: 'Pro Annual'
+    }),
+    stripe.prices.create({
+      product: product.id,
+      currency: 'usd',
+      unit_amount: toCents(35),
+      recurring: { interval: 'month' },
+      nickname: 'Elite Monthly'
+    }),
+    stripe.prices.create({
+      product: product.id,
+      currency: 'usd',
+      unit_amount: toCents(350),
+      recurring: { interval: 'year' },
+      nickname: 'Elite Annual'
+    })
+  ])
+
+  return {
+    productId: product.id,
+    pro_monthly: proMonthly.id,
+    pro_annual: proAnnual.id,
+    elite_monthly: eliteMonthly.id,
+    elite_annual: eliteAnnual.id
+  }
+}
+
+// Finds-or-creates the Stripe Customer object that represents this engineer for
+// SUBSCRIPTION billing. Deliberately separate from their Connect account (stripe_account_id)
+// — a Connect account is where they RECEIVE payouts; this Customer is who WE bill.
+export async function getOrCreateSubscriptionCustomer(
+  stripe: Stripe,
+  params: { existingCustomerId?: string | null; email: string; name: string }
+): Promise<string> {
+  if (params.existingCustomerId) return params.existingCustomerId
+  const customer = await stripe.customers.create({ email: params.email, name: params.name })
+  return customer.id
+}
+
+// Sends the engineer into Stripe Checkout in `subscription` mode to start (or change) a
+// Pro/Elite plan. Stripe handles card collection; the webhook (checkout.session.completed
+// with mode=subscription, plus customer.subscription.updated/deleted) is what actually
+// flips engineer_profiles.subscription_tier once payment succeeds.
+export async function createSubscriptionCheckoutSession(
+  stripe: Stripe,
+  params: {
+    customerId: string
+    priceId: string
+    successUrl: string
+    cancelUrl: string
+    engineerProfileId: number
+  }
+): Promise<{ url: string }> {
+  const session = await stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer: params.customerId,
+    line_items: [{ price: params.priceId, quantity: 1 }],
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    metadata: { engineer_profile_id: String(params.engineerProfileId) },
+    subscription_data: {
+      metadata: { engineer_profile_id: String(params.engineerProfileId) }
+    }
+  })
+  if (!session.url) throw new Error('Stripe did not return a Checkout URL.')
+  return { url: session.url }
+}
+
+// Stripe's hosted "Billing Portal" — lets the engineer change plan, update card, view
+// invoices, or cancel, without Studio2U building any of that UI itself. Cancel-at-period-end
+// is the default portal behavior for subscription cancellation, which matches the
+// "keep benefits until period end" rule already decided (see subscriptions.ts).
+export async function createBillingPortalSession(
+  stripe: Stripe,
+  params: { customerId: string; returnUrl: string }
+): Promise<{ url: string }> {
+  const session = await stripe.billingPortal.sessions.create({
+    customer: params.customerId,
+    return_url: params.returnUrl
+  })
+  return { url: session.url }
+}
