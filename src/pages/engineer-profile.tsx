@@ -39,7 +39,23 @@ export function EngineerProfilePage({
               <span class="text-muted">({profile.rating_count} review{profile.rating_count !== 1 ? 's' : ''})</span>
             </div>
           )}
-          <h1 class="font-display text-2xl font-bold mb-1">{profile.display_name}</h1>
+          <h1 class="font-display text-2xl font-bold mb-1 flex items-center gap-2">
+            {profile.display_name}
+            {(profile.subscription_tier === 'pro' || profile.subscription_tier === 'elite') && (
+              <img
+                src="/static/brand/icon-verified-32.png"
+                alt={profile.subscription_tier === 'elite' ? 'Elite Verified' : 'Pro Verified'}
+                title={profile.subscription_tier === 'elite' ? 'Elite Verified' : 'Pro Verified'}
+                class="w-5 h-5 object-contain shrink-0"
+              />
+            )}
+          </h1>
+          {(profile.subscription_tier === 'pro' || profile.subscription_tier === 'elite') && (
+            <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gold bg-gold/10 border border-gold/30 rounded-full px-3 py-1 mb-3">
+              <img src="/static/brand/icon-verified-32.png" alt="" class="w-3.5 h-3.5 object-contain" />
+              {profile.subscription_tier === 'elite' ? 'Elite Verified' : 'Pro Verified'}
+            </span>
+          )}
           {profile.offers_remote === 1 && (
             <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-teal bg-teal/10 border border-teal/30 rounded-full px-3 py-1 mb-3">
               <img src="/static/brand/icon-remote-64.png" alt="" class="w-3.5 h-3.5 object-contain" />

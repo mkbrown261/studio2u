@@ -68,7 +68,17 @@ export function EngineersDirectoryPage({
                   )}
                 </div>
                 <div>
-                  <h3 class="font-display text-lg font-bold group-hover:text-gold transition">{e.display_name}</h3>
+                  <h3 class="font-display text-lg font-bold group-hover:text-gold transition flex items-center gap-1.5">
+                    {e.display_name}
+                    {(e.subscription_tier === 'pro' || e.subscription_tier === 'elite') && (
+                      <img
+                        src="/static/brand/icon-verified-32.png"
+                        alt={e.subscription_tier === 'elite' ? 'Elite Verified' : 'Pro Verified'}
+                        title={e.subscription_tier === 'elite' ? 'Elite Verified' : 'Pro Verified'}
+                        class="w-4 h-4 object-contain shrink-0"
+                      />
+                    )}
+                  </h3>
                   <div class="flex items-center gap-2 mt-1">
                     {e.is_new === 1 ? (
                       <span class="text-[10px] font-bold uppercase tracking-wider text-gold bg-gold/10 rounded-full px-2.5 py-0.5">New</span>
