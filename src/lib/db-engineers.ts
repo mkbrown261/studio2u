@@ -54,12 +54,35 @@ export async function getEngineerProfileById(db: D1Database, id: number): Promis
 // Phase 3 M5: mandatory Stripe onboarding — an engineer never appears in the public
 // directory (and can't be booked) until Stripe confirms charges_enabled on their
 // connected account. No exceptions, no Cash App fallback.
-// Directory sort order: Elite engineers first, then Pro, then Free — this is the
-// "directory priority placement" subscription perk (see subscriptions.ts TIERS).
-// Implemented as a CASE expression rather than a stored numeric column so it can never
-// drift out of sync with the tier names themselves; ties within a tier fall back to the
-// pre-existing rating/created_at ordering, completely unchanged.
-const TIER_PRIORITY_ORDER_SQL = `CASE subscription_tier WHEN 'elite' THEN 2 WHEN 'pro' THEN 1 ELSE 0 END DESC`
+//
+// Directory ranking (updated 2026-09-05): tier gives a real but MODEST boost — it's
+// a paid perk, not an absolute wall. Review quality/volume can outweigh it, so a Free
+// engineer with a genuinely great track record is never buried below a mediocre paid
+// one. This is a deliberate business decision: subscriptions still matter (structural
+// head start), but the marketplace stays merit-based — trust/quality wins long-term,
+// which is what keeps customers coming back and keeps top engineers on the platform
+// even before they upgrade.
+//
+// Composite score = tier_weight + review_weight
+//   tier_weight: elite=4.0, pro=2.0, free=0.0
+//   review_weight: Bayesian-adjusted rating (C=4 "confidence" reviews, prior mean 4.0),
+//     re-centered on 0 and scaled by 5 so it swings roughly -5..+5:
+//       bayesian = (rating_count*rating_avg + 4*4.0) / (rating_count + 4)
+//       review_weight = (bayesian - 4.0) * 5
+//   A brand-new profile (0 reviews) has bayesian=4.0 -> review_weight=0 (fully neutral,
+//   doesn't help or hurt vs. the old scheme). As real 5-star reviews accumulate, bayesian
+//   climbs toward 5.0 and review_weight approaches +5 — enough to outrank a Pro engineer
+//   with weak/no reviews (tier_weight 2.0) and get close to an Elite with weak reviews
+//   (tier_weight 4.0). A few one-star reviews pull bayesian toward/below 4.0 and can sink
+//   a paid engineer below unproven competitors — ranking reflects real service quality,
+//   not just who's paying.
+// Implemented as an inline SQL expression (not a stored column) so it can never drift out
+// of sync with rating_avg/rating_count/subscription_tier; ties fall back to rating_avg,
+// then oldest-profile-first, unchanged from before.
+const DIRECTORY_RANK_SQL = `(
+  (CASE subscription_tier WHEN 'elite' THEN 4.0 WHEN 'pro' THEN 2.0 ELSE 0.0 END)
+  + (((rating_count * rating_avg) + 16.0) / (rating_count + 4.0) - 4.0) * 5.0
+) DESC`
 
 export async function getPublishedEngineers(db: D1Database, remoteOnly?: boolean): Promise<EngineerProfile[]> {
   const remoteClause = remoteOnly ? 'AND offers_remote = 1' : ''
@@ -67,7 +90,7 @@ export async function getPublishedEngineers(db: D1Database, remoteOnly?: boolean
     .prepare(
       `SELECT * FROM engineer_profiles
        WHERE is_published = 1 AND is_suspended = 0 AND stripe_charges_enabled = 1 ${remoteClause}
-       ORDER BY ${TIER_PRIORITY_ORDER_SQL}, rating_avg DESC, created_at ASC`
+       ORDER BY ${DIRECTORY_RANK_SQL}, rating_avg DESC, created_at ASC`
     )
     .all()
   return (results as unknown as EngineerProfile[]) || []
