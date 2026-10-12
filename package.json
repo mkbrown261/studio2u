@@ -11,7 +11,7 @@
     "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
     "db:migrate:local": "wrangler d1 migrations apply studio2u-production --local",
     "db:migrate:prod": "wrangler d1 migrations apply studio2u-production --remote",
-    "test:label-world": "node tests/label-world-blueprint.mjs && node tests/label-world-contracts.mjs && python3 tests/label-world-schema.py && python3 tests/label-world-v2-schema.py && node tests/label-world-api.mjs"
+    "test:label-world": "node tests/label-world-blueprint.mjs && node tests/label-world-contracts.mjs && python3 tests/label-world-schema.py && python3 tests/label-world-v2-schema.py && node tests/label-world-api.mjs && node tests/label-world-providers.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

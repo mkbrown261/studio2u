@@ -31,3 +31,6 @@ Read START_HERE and CHANGELOG first, then every canonical document/example and a
 
 ## Next acceptance gate
 Implement tenant-safe originals/storage and actual audio/artwork inspection, then produce a real versioned release ZIP + manifest + deterministic Reviewer report. Add a scheduled registration review worker with persisted checkpoints and tested reminder delivery. External provider activation comes only after authorized capability and receipt tests.
+
+## Reasoning-provider increment — 2026-10-12
+User-authorized following the read-only audit. Implemented personal encrypted BYOK connections and label-specific model choices for OpenAI, Claude, Kimi, Qwen and OpenRouter, with explicit synchronous test generation. Four live catalog adapters; Qwen takes exact Model Studio ID because its model-list API was not established by official docs. Local mock-provider tests cover all five request/response contracts, encryption/context isolation, auth/CSRF, personal credentials, preferences, sanitized errors/timeouts, throttle and disconnect. See REASONING_PROVIDERS.md for source files/docs and limits. No live LLM call verified yet, no provider API keys supplied; no executable agent skill upgraded. Production deployment status recorded separately after infrastructure checks.

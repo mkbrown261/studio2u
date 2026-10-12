@@ -31,3 +31,6 @@ Never put service passwords into agent system prompts. Prefer OAuth, scoped toke
 - **Computer use/browser assistance:** user-authorized guided session only where provider permissions allow; see `BROWSER_ACCESS_SECURITY.md`.
 - **Higgsfield:** planned production gateway provider with reference-photo/wardrobe-based videos if relevant authenticated API capabilities are actually available; independently validate account scopes, models, terms and cost before enabling.
 - **Suno:** planned musical creativity provider; verify official permitted integration/commercial output conditions and preserve AI provenance. Unavailable != simulated.
+
+## Reasoning adapters update — 2026-10-12
+OpenAI/Claude/Kimi/Qwen/OpenRouter now have implemented HTTP adapters, encrypted personal BYOK storage, model choice UI and mocked local request/response tests. Live generation entitlement remains UNVERIFIED until a user connects an LLM API key and successfully tests it. This supersedes the blanket baseline only for these adapter/storage/UI components, not employee execution. See REASONING_PROVIDERS.md. Authorized GitHub and Cloudflare tokens were independently verified for repo/project access; no token values are stored in repository files.

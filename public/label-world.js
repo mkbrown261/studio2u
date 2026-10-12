@@ -100,6 +100,7 @@ async function loadLabels(preferred) {
   labels.value = labelId
   document.getElementById('lw-release-submit').disabled = !labelId||labelRole==='viewer'
   await loadReleases()
+  await loadProviderStatus()
 }
 function cancelEdit(){editingRelease=null;document.getElementById('lw-release-form').reset();document.getElementById('lw-release-submit').textContent='Create release';document.getElementById('lw-cancel-edit').hidden=true}
 document.getElementById('lw-cancel-edit').addEventListener('click',cancelEdit)
@@ -116,3 +117,56 @@ for (const [formId, action] of [
   })
 }
 loadLabels().catch(report)
+
+const providerSelect=document.getElementById('lw-provider'),modelsSelect=document.getElementById('lw-models')
+let providerEpoch=0
+function providerDisplay(){
+  providerEpoch++;modelsSelect.replaceChildren()
+  document.getElementById('lw-qwen-config').hidden=providerSelect.value!=='qwen'
+  document.getElementById('lw-qwen-model-label').hidden=providerSelect.value!=='qwen'
+  document.getElementById('lw-refresh-models').disabled=providerSelect.value==='qwen'
+  document.getElementById('lw-provider-connect').elements.apiKey.value=''
+  document.getElementById('lw-reasoning-output').textContent=''
+}
+providerSelect.addEventListener('change',()=>{providerDisplay();loadProviderStatus().catch(report)})
+async function loadProviderStatus(){
+  const epoch=providerEpoch,result=await api('/providers');if(epoch!==providerEpoch)return
+  const selected=result.providers.find(p=>p.id===providerSelect.value)
+  document.getElementById('lw-provider-status').textContent=!result.storageConfigured?'Provider key storage needs server setup.':selected?.connection?'API key saved. Refresh models and send a test to verify access.':'No API key connected for this provider.'
+  const form=document.getElementById('lw-provider-connect')
+  if(selected?.connection){const config=JSON.parse(selected.connection.endpoint_config);form.elements.region.value=config.region||'us';form.elements.workspace.value=config.workspace||''}
+  if(labelId){const scope=labelId,settings=await api('/labels/'+encodeURIComponent(scope)+'/reasoning/settings');if(scope!==labelId||epoch!==providerEpoch)return
+    if(settings.preference)document.getElementById('lw-provider-status').textContent+=` Saved choice for this label: ${settings.preference.provider} / ${settings.preference.model}.`
+  }
+}
+async function providerAction(form,action){
+  const button=form.querySelector('button');button.disabled=true
+  try{await action()}catch(error){report(error)}finally{button.disabled=false}
+}
+document.getElementById('lw-provider-connect').addEventListener('submit',event=>{
+  event.preventDefault();const form=event.currentTarget,data=new FormData(form),provider=providerSelect.value
+  // Clear the password field before the network call, including failure paths.
+  form.elements.apiKey.value=''
+  providerAction(form,async()=>{await api('/providers/'+provider+'/connect',{apiKey:data.get('apiKey'),config:{region:data.get('region'),workspace:data.get('workspace')}});modelsSelect.replaceChildren();await loadProviderStatus()})
+})
+document.getElementById('lw-provider-disconnect').addEventListener('click',async()=>{
+  try{await api('/providers/'+providerSelect.value+'/disconnect',{});providerDisplay();await loadProviderStatus()}catch(error){report(error)}
+})
+document.getElementById('lw-refresh-models').addEventListener('click',async event=>{
+  const button=event.currentTarget,epoch=providerEpoch,provider=providerSelect.value;button.disabled=true
+  try{
+    const result=await api('/providers/'+provider+'/models',{});if(epoch!==providerEpoch)return
+    modelsSelect.replaceChildren();for(const model of result.models){const option=element('option',model.name+' · '+model.id);option.value=model.id;modelsSelect.append(option)}
+    document.getElementById('lw-provider-status').textContent=result.models.length?'Current provider catalog loaded. Choose a model and save.':'No supported text models returned for this account.'
+  }catch(error){report(error)}finally{button.disabled=providerSelect.value==='qwen'}
+})
+document.getElementById('lw-model-form').addEventListener('submit',event=>{
+  event.preventDefault();const form=event.currentTarget,scope=labelId,provider=providerSelect.value,model=provider==='qwen'?form.elements.qwenModel.value.trim():modelsSelect.value
+  providerAction(form,async()=>{if(!scope)throw new Error('Select a label first');await api('/labels/'+encodeURIComponent(scope)+'/reasoning/settings',{provider,model});await loadProviderStatus()})
+})
+document.getElementById('lw-reasoning-test').addEventListener('submit',event=>{
+  event.preventDefault();const form=event.currentTarget,scope=labelId,epoch=providerEpoch,prompt=new FormData(form).get('prompt')
+  providerAction(form,async()=>{if(!scope)throw new Error('Select a label first');const result=await api('/labels/'+encodeURIComponent(scope)+'/reasoning/test',{prompt});if(scope!==labelId||epoch!==providerEpoch)return;document.getElementById('lw-reasoning-output').textContent=`${result.provider} / ${result.model}\n\n${result.text}`;document.getElementById('lw-provider-status').textContent='Generation succeeded. Employee workflows remain in development.'})
+})
+labels.addEventListener('change',()=>{document.getElementById('lw-reasoning-output').textContent='';loadProviderStatus().catch(report)})
+loadProviderStatus().catch(report)

@@ -4,6 +4,8 @@ export type Bindings = {
   ADMIN_PASSWORD?: string
   STRIPE_SECRET_KEY?: string
   STRIPE_WEBHOOK_SECRET?: string
+  // 32 random bytes, base64 encoded; set as a Cloudflare secret, never commit.
+  LLM_KEY_ENCRYPTION_SECRET?: string
 }
 
 export type AppEnv = {
