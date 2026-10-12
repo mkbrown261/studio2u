@@ -1,0 +1,44 @@
+id: "studio2u.rights_clearance_triage"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "rights_admin"
+goal: "Identify obvious rights clearance and licensing blockers"
+trigger: "asset or release rights gate"
+inputs:
+  - "recordingId"
+  - "artistAttestation"
+  - "sampleList"
+  - "beatLicenseFiles"
+tools:
+  - "rights.document_lookup"
+  - "rights.rule_check"
+  - "approval.request"
+steps:
+  - "Ask whether user controls master distribution rights."
+  - "Check beat rights, samples, interpolations and covers independently."
+  - "Collect and index licenses, collaborator agreements and use limits."
+  - "Raise clear BLOCKED or NEEDS_HUMAN_REVIEW findings with required next evidence."
+outputs:
+  - "rightsReadinessReport"
+  - "clearanceChecklist"
+validations:
+  - "Do not infer rights from file possession or beat download."
+  - "Escalate legal interpretation."
+approval_gates:
+  - "rights attestation"
+  - "outside distribution"
+failure_and_escalation:
+  - "missing license -> block affected release step"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "resolvedRightsGaps"
+  - "legalEscalations"
+test_scenarios:
+  - "claimed owned beat with conflicting contract"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

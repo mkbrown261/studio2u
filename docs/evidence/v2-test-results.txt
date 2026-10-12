@@ -1,0 +1,23 @@
+
+> test:label-world
+> node tests/label-world-blueprint.mjs && node tests/label-world-contracts.mjs && python3 tests/label-world-schema.py && python3 tests/label-world-v2-schema.py && node tests/label-world-api.mjs
+
+PASS: all 59 requirements + 6 nonfunctional requirements, 10 workflows, all 23 YAML skill contracts, v1 preservation and explicit unavailable runtime statuses
+PASS: terminal states, approval resumption and release validation
+PASS: migration, membership scope, duplicate membership, task status, cross-label asset/task/approval references
+PASS: additive migration preserves old drafts, backfills four independent follow-ups, cross-tenant foreign keys, uniqueness and no fabricated official confirmation
+PASS: registration queue survives database close/reopen with no streams or browser dependency
+(node:50262) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS: authenticated two-tenant API isolation, RBAC, both modes, durable independent queues, rights blockers, unverified receipts, optimistic edits, immutable audit, branding, profiles, CSRF and atomic rollback
+
+> build
+> vite build
+
+vite v8.1.4 building ssr environment for production...
+[2Ktransforming...✓ 320 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/_worker.js  585.93 kB │ gzip: 124.44 kB
+
+✓ built in 244ms

@@ -1,0 +1,42 @@
+id: "studio2u.ar_viral_record_analysis"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "ar_researcher"
+goal: "Analyze why comparable songs spread without claiming causal certainty"
+trigger: "campaign research brief"
+inputs:
+  - "genre"
+  - "region"
+  - "targetAudience"
+  - "researchTimeWindow"
+tools:
+  - "research.allowed_sources"
+  - "analytics.compare_cohorts"
+steps:
+  - "Collect relevant breakout and non-breakout comparator releases."
+  - "Record chronology, available metrics, short-form formats, audience and exposure."
+  - "Separate paid placement, influencer effects and preexisting fanbase from observed organic growth."
+  - "Summarize plausible hooks/formats with explicit confidence and confounders."
+outputs:
+  - "caseStudySet"
+  - "trendHypotheses"
+  - "evidenceTable"
+validations:
+  - "No copyrighted complete lyrics/audio copied into reference library."
+  - "Report confidence and missing data."
+approval_gates:
+failure_and_escalation:
+  - "insufficient comparators -> mark weak evidence"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "sourceCoverage"
+  - "hypothesesTested"
+test_scenarios:
+  - "single viral anecdote cannot count as causal proof"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

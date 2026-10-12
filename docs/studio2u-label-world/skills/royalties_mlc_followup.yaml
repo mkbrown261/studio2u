@@ -1,0 +1,43 @@
+id: "studio2u.royalties_mlc_followup"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "royalty_admin"
+goal: "Track US eligible digital mechanical registration/matching readiness"
+trigger: "record distributed or composition exists"
+inputs:
+  - "compositionId"
+  - "writers"
+  - "publishers"
+  - "affiliations"
+tools:
+  - "royalties.mlc_rules"
+  - "forms.prepare"
+  - "tasks.schedule"
+steps:
+  - "Assess relevant MLC pathway and existing administration."
+  - "Collect writer, publisher and work identifiers as needed."
+  - "Check possible existing registration/matching evidence."
+  - "Prepare official action checklist with user confirmation."
+  - "Track official receipt or pending response; issue reminders where justified."
+outputs:
+  - "mlcReadiness"
+  - "matchingTask"
+  - "evidenceLog"
+validations:
+  - "No universal claim of unpaid royalties."
+approval_gates:
+  - "external registration/claim"
+failure_and_escalation:
+  - "eligibility unknown -> human review"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "registeredWorkCoverage"
+test_scenarios:
+  - "existing publisher administrator controls rights"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

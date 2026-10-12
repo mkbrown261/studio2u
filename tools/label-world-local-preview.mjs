@@ -1,0 +1,13 @@
+import {createServer} from 'node:http'
+import {readFileSync,mkdirSync} from 'node:fs'
+import {fixture} from '../tests/label-world-api-fixture.mjs'
+const {app,env,sqlite}=fixture()
+sqlite.prepare('INSERT INTO lw_labels(id,name) VALUES (?,?)').run('preview-label','Local Test Label')
+sqlite.prepare('INSERT INTO lw_memberships VALUES (?,?,?)').run('preview-label',1,'owner')
+createServer(async(req,res)=>{
+ if(req.url==='/label-world.js'){res.setHeader('Content-Type','text/javascript');res.end(readFileSync('public/label-world.js'));return}
+ if(req.url==='/preview-login'){res.setHeader('Set-Cookie','studio2u_session=test-session-1; HttpOnly; SameSite=Lax; Path=/');res.writeHead(302,{Location:'/label-world'});res.end();return}
+ let body='';for await(const chunk of req)body+=chunk
+ const result=await app.request('http://127.0.0.1:8791'+req.url,{method:req.method,headers:req.headers,...(body?{body}:{})},env)
+ res.writeHead(result.status,Object.fromEntries(result.headers));res.end(Buffer.from(await result.arrayBuffer()))
+}).listen(8791,'127.0.0.1',()=>console.log('Local fixture only: http://127.0.0.1:8791/preview-login'))

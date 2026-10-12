@@ -1,3 +1,4 @@
+import { labelWorldRoutes } from './routes/label-world'
 import { Hono } from 'hono'
 import { csrf } from 'hono/csrf'
 import { secureHeaders } from 'hono/secure-headers'
@@ -120,6 +121,7 @@ app.use(
   })
 )
 
+app.route('/', labelWorldRoutes)
 app.use(renderer)
 
 app.route('/', authRoutes)

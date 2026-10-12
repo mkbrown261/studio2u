@@ -1,0 +1,47 @@
+id: "studio2u.reviewer_release_qc"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "reviewer"
+goal: "Audit completeness and integrity of package and release rights checklist"
+trigger: "package ready for review"
+inputs:
+  - "releaseId"
+  - "manifest"
+  - "originalHashes"
+  - "readinessData"
+tools:
+  - "audio.inspect"
+  - "metadata.validate"
+  - "rights.readiness"
+  - "release.verify_manifest"
+steps:
+  - "Validate every asset and checksum."
+  - "Check required distributor fields against versioned rules."
+  - "Check credits, artwork, ownership and clearance statuses."
+  - "Independently compare declared output against actual files."
+  - "Output evidence-backed PASS/FAIL/WARNING/NEEDS_HUMAN_REVIEW/NOT_TESTED checks."
+outputs:
+  - "releaseQcReport"
+  - "blockingIssues"
+  - "evidenceRefs"
+validations:
+  - "No check silently PASS when unavailable."
+approval_gates:
+  - "user override of risk"
+  - "external delivery"
+failure_and_escalation:
+  - "rule database unavailable -> mark NOT_TESTED"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "escapedDefects"
+  - "reviewCoverage"
+test_scenarios:
+  - "missing artwork"
+  - "unconfirmed beat license"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

@@ -1,0 +1,20 @@
+import { DatabaseSync } from 'node:sqlite'
+import { readFileSync, existsSync } from 'node:fs'
+import { registerHooks } from 'node:module'
+import { fileURLToPath } from 'node:url'
+registerHooks({ resolve(specifier,context,nextResolve){try{return nextResolve(specifier,context)}catch(error){if(specifier.startsWith('.')){const url=new URL(specifier+'.ts',context.parentURL);if(existsSync(fileURLToPath(url)))return nextResolve(url.href,context)}throw error}} })
+const { Hono }=await import('hono'),{ csrf }=await import('hono/csrf'),{ labelWorldRoutes }=await import('../src/routes/label-world.ts')
+export function fixture(){
+ const sqlite=new DatabaseSync(':memory:');sqlite.exec(`PRAGMA foreign_keys=ON;CREATE TABLE users(id INTEGER PRIMARY KEY,email TEXT,name TEXT,phone TEXT,is_engineer INTEGER,is_artist INTEGER,is_platform_admin INTEGER);CREATE TABLE sessions(token TEXT,user_id INTEGER,expires_at TEXT);`)
+ for(let i=1;i<=4;i++){sqlite.prepare('INSERT INTO users VALUES (?,?,?,NULL,0,1,0)').run(i,`test${i}@example.invalid`,`Test ${i}`);sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)').run(`test-session-${i}`,i,'2099-01-01 00:00:00')}
+ sqlite.exec(readFileSync('migrations/0018_label_world.sql','utf8'));sqlite.exec(readFileSync('migrations/0019_label_world_release_operations.sql','utf8'))
+ class Statement{
+  constructor(sql,args=[]){this.sql=sql;this.args=args}bind(...args){return new Statement(this.sql,args)}
+  async first(){return sqlite.prepare(this.sql).get(...this.args)||null}
+  async all(){return {results:sqlite.prepare(this.sql).all(...this.args),success:true}}
+  async run(){const result=sqlite.prepare(this.sql).run(...this.args);return {success:true,results:[],meta:{changes:Number(result.changes)}}}
+ }
+ const db={prepare(sql){return new Statement(sql)},async batch(statements){sqlite.exec('BEGIN');try{const results=[];for(const statement of statements)results.push(await statement.run());sqlite.exec('COMMIT');return results}catch(error){sqlite.exec('ROLLBACK');throw error}}}
+ const app=new Hono();app.use(csrf());app.route('/',labelWorldRoutes);app.onError(error=>error.getResponse ? error.getResponse() : new Response(JSON.stringify({error:'Request failed'}),{status:500,headers:{'content-type':'application/json'}}))
+ return {sqlite,db,app,env:{DB:db}}
+}
