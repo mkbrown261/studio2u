@@ -4,7 +4,7 @@ import {findUserByEmail} from '../lib/db-users'
 import {verifyPassword} from '../lib/password'
 import {isRateLimited,recordAttempt,rateLimitKey} from '../lib/rate-limit'
 export function labelReturn(value:unknown):string{
- return typeof value==='string'&&!/[\r\n]/.test(value)&&/^\/label-world(?:\/agents\/(?:researcher|reviewer|executive|builder)|\/dashboard|\/inbox)?$/.test(value)?value:'/label-world'
+ return typeof value==='string'&&!/[\r\n]/.test(value)&&(/^\/label-world\/oauth\/authorize\?request=[a-f0-9]{64}$/.test(value)||/^\/label-world(?:\/agents\/(?:researcher|reviewer|executive|builder)|\/dashboard|\/inbox)?$/.test(value))?value:'/label-world'
 }
 function loginPage(c:any,target:string,error=''){
  c.header('Cache-Control','no-store')

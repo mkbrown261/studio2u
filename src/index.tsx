@@ -1,3 +1,4 @@
+import {mcpRoutes} from './label-world/mcp/auth'
 import {isScenePage,sceneContentSecurityPolicy} from './label-world/scene-security'
 import { labelWorldRoutes } from './routes/label-world'
 import { Hono } from 'hono'
@@ -104,6 +105,8 @@ app.use(async(c,next)=>{
   await next()
   if(isScenePage(c.req.path))c.res.headers.set('Content-Security-Policy',sceneContentSecurityPolicy)
 })
+// MCP bearer/PKCE routes enforce their own authorization and consent CSRF.
+app.route('/',mcpRoutes)
 app.use(csrf())
 app.use(
   secureHeaders({

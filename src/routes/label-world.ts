@@ -1,3 +1,4 @@
+import {installMcpManagement} from '../label-world/mcp/auth'
 import {currentReview} from '../label-world/reviewer/current'
 import { Hono } from 'hono'
 import {sceneContentSecurityPolicy} from '../label-world/scene-security'
@@ -22,6 +23,7 @@ labelWorldRoutes.use('/api/label-world/*', async (c, next) => {
   c.set('lwUser', user)
   await next()
 })
+installMcpManagement(labelWorldRoutes)
 labelWorldRoutes.get('/api/label-world/labels', async c => {
   const user = c.get('lwUser')
   const result = await c.env.DB.prepare('SELECT l.id,l.name,m.role FROM lw_labels l JOIN lw_memberships m ON m.label_id=l.id WHERE m.user_id=?').bind(user.id).all()
