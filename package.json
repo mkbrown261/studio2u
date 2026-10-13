@@ -13,7 +13,8 @@
     "db:migrate:prod": "wrangler d1 migrations apply studio2u-production --remote",
     "test:label-world": "node tests/label-world-blueprint.mjs && node tests/label-world-contracts.mjs && python3 tests/label-world-schema.py && python3 tests/label-world-v2-schema.py && node tests/label-world-api.mjs && node tests/label-world-providers.mjs && node tests/label-world-workspace.mjs && node tests/label-world-entry.mjs && node tests/label-world-navigation.mjs && node tests/label-world-interactions.mjs && python3 tests/label-world-assets.py && node tests/label-world-booking-regression.mjs",
     "build:label-world": "vite build --config vite.label-world.config.ts",
-    "test:label-world:worker": "npm run build && node tests/label-world-worker-security.mjs"
+    "test:label-world:worker": "npm run build && node tests/label-world-worker-security.mjs",
+    "test:label-world:reviewer": "node tests/label-world-reviewer.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

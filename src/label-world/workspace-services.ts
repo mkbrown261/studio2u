@@ -11,7 +11,7 @@ export function installWorkspaceRoutes(app:Hono<Env>){
  const privateRequest=async(c:any,next:any)=>{c.header('Cache-Control','no-store');if(c.req.method!=='GET'&&c.req.header('Origin')!==new URL(c.req.url).origin&&c.req.header('Sec-Fetch-Site')!=='same-origin')return c.json({error:'Same-origin request required'},403);await next()}
  for(const suffix of ['/inbox/*','/research/*','/tasks','/releases/:releaseId/workspace'])app.use(base+suffix,privateRequest)
  const safe=(fn:any)=>async(c:any)=>{try{return await fn(c)}catch{return c.json({error:'Workspace request failed or invalid input'},400)}}
- const history=async(c:any)=> (await c.env.DB.prepare('SELECT id,agent_id,release_id,role,content,status,reply_to,created_at FROM lw_employee_messages WHERE label_id=? AND agent_id=? ORDER BY created_at DESC,rowid DESC LIMIT 100').bind(c.req.param('labelId'),c.req.param('agentId')).all()).results.reverse()
+ const history=async(c:any)=> (await c.env.DB.prepare('SELECT id,agent_id,release_id,role,content,status,reply_to,created_at,review_id FROM lw_employee_messages WHERE label_id=? AND user_id=? AND agent_id=? ORDER BY created_at DESC,rowid DESC LIMIT 100').bind(c.req.param('labelId'),c.get('lwUser').id,c.req.param('agentId')).all()).results.reverse()
  app.get(base+'/inbox/:agentId/messages',safe(async(c:any)=>{if(!agents.includes(c.req.param('agentId')))return c.json({error:'Employee not found'},404);return c.json({messages:await history(c),executionCapability:'REASONING_ONLY'})}))
  app.post(base+'/inbox/:agentId/messages',safe(async(c:any)=>{
   const label=c.req.param('labelId'),agent=c.req.param('agentId'),user=c.get('lwUser').id

@@ -5,6 +5,7 @@ import type { AppEnv } from '../types'
 import type { SessionUser } from '../lib/session'
 import { getSessionUser } from '../lib/session'
 import { installLabelLogin } from '../label-world/login'
+import {installReviewerRoutes} from '../label-world/reviewer/routes'
 import { installWorkspaceRoutes } from '../label-world/workspace-services'
 import { installProviderRoutes } from '../label-world/providers/routes'
 import { releaseInput } from '../label-world/contracts'
@@ -150,6 +151,7 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/events', async c => {
 
 installProviderRoutes(labelWorldRoutes)
 installWorkspaceRoutes(labelWorldRoutes)
+installReviewerRoutes(labelWorldRoutes)
 installLabelLogin(labelWorldRoutes)
 
 labelWorldRoutes.get('/label-world/dashboard', async c => {

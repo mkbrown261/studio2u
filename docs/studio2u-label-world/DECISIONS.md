@@ -60,3 +60,7 @@ Every changed decision requires date, rationale, tradeoffs, affected requirement
 - Keep Canvas mounted beneath real React dashboard overlays. Close restores pose and focus; pointer lock can resume only from another user gesture. Accessible direct routes require no scene.
 - Existing Carla idle and Eric scroll are the only exported clips. No missing character/gesture invented. No fake work animation or agent execution claim.
 - Ship truthful persistent text/research/creative drafts; record the remaining Inbox/agent/release engine tasks as unfinished. Preserve all original service and encryption secrets.
+
+
+## Eric milestone increment — 2026-10-12
+Deterministic Eric review works without an LLM. Technical PASS describes executed file/metadata checks only; rights attestations remain human review and no chat/review grants release approval. Existing assets/tasks/messages reused; additive migration 0022 only. Isolated production QA account explicitly approved by user after automatic approval review requested specific authorization.

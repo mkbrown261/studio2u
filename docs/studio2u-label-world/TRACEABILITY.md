@@ -165,3 +165,7 @@ All canonical documents are retained. RELEASE_DATA_SPEC/DATA_MODEL map to R103/R
 | R339 | TASK-R339 | business-services | v2.1 business utility | HQ-16 | PARTIAL_LOCAL_TESTED |
 
 Workflows W11–W14 retained as DESIGNED_ONLY; four proposed skills remain separate from the unchanged 23 canonical contracts. Local verification does not imply production verification. See BUILD_STATUS.md and V2_2_IMPLEMENTATION.md.
+
+
+## Eric milestone increment — 2026-10-12
+R006/R102/R105/R114: PARTIAL — private stored WAV/PNG intake, checksums, deterministic technical findings, versioned JSON reports, employee Inbox/corrections/unread and version consistency tested locally. Full release packaging, distributor/legal validation and broader skills remain pending. See ERIC_REVIEW_MILESTONE.md.
