@@ -3,7 +3,7 @@ import {fixture} from './label-world-api-fixture.mjs'
 const {labelReturn}=await import('../src/label-world/login.ts')
 const {app,env,sqlite}=fixture()
 for(const p of ['/label-world','/label-world/agents/researcher','/label-world/agents/reviewer','/label-world/agents/executive','/label-world/agents/builder']){
- const r=await app.request('http://localhost'+p,{headers:p==='/label-world'?{}:{Cookie:'studio2u_session=test-session-1'}},env);assert.equal(r.status,200);const text=await r.text();assert.ok(text.includes('/label-world/app/main.js'));assert.ok(!text.includes('test1@example.invalid'))
+ const r=await app.request('http://localhost'+p,{headers:p==='/label-world'?{}:{Cookie:'studio2u_session=test-session-1'}},env);assert.equal(r.status,200);assert.match(r.headers.get('content-security-policy'),/connect-src 'self' blob:/);assert.match(r.headers.get('content-security-policy'),/img-src 'self' data: blob:/);const text=await r.text();assert.ok(text.includes('/label-world/app/main.js'));assert.ok(!text.includes('test1@example.invalid'))
 }
 for(const id of ['researcher','reviewer','executive','builder']){const r=await app.request('http://localhost/label-world/agents/'+id,{},env);assert.equal(r.status,302);assert.equal(r.headers.get('location'),'/label-world/login?returnTo='+encodeURIComponent('/label-world/agents/'+id))}
 const unknown=await app.request('http://localhost/label-world/agents/fake',{},env);assert.equal(unknown.status,404)
@@ -19,3 +19,7 @@ let login=await app.request('http://localhost/label-world/login',{method:'POST',
 assert.equal(login.status,302);assert.equal(login.headers.get('location'),'/label-world/agents/reviewer');assert.match(login.headers.get('set-cookie'),/studio2u_session=.*HttpOnly; Secure; SameSite=Lax/)
 login=await app.request('http://localhost/label-world/login',{method:'POST',headers:{Origin:'http://localhost','Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({email:'test1@example.invalid',password:'wrong',returnTo:'/label-world/agents/reviewer'})},env);assert.ok((await login.text()).includes('Incorrect email or password'));assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM rate_limit_attempts').get().n,1)
 console.log('PASS: real password verification, shared secure session cookie, selected-workspace redirect and failed-login rate limiting using synthetic account')
+
+const {isScenePage}=await import('../src/label-world/scene-security.ts')
+for(const path of ['/','/login','/dashboard','/status/messages/1','/api/label-world/labels','/label-worldevil'])assert.equal(isScenePage(path),false)
+console.log('PASS: embedded-texture security policy applies only to the Label World scene pages, not legacy routes')

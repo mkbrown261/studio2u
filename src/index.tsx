@@ -1,3 +1,4 @@
+import {isScenePage,sceneContentSecurityPolicy} from './label-world/scene-security'
 import { labelWorldRoutes } from './routes/label-world'
 import { Hono } from 'hono'
 import { csrf } from 'hono/csrf'
@@ -97,6 +98,12 @@ app.route('/', stripeWebhookRoutes)
 // - secureHeaders: sets CSP, X-Frame-Options, HSTS, etc. CSP is scoped to the actual
 //   third-party origins this app loads (Tailwind CDN, jsDelivr, Google Fonts, unpkg
 //   for Leaflet, SoundCloud/YouTube portfolio embeds) rather than left wide open.
+// Wrap the existing security middleware so its post-response headers cannot
+// overwrite the scene-only policy needed for embedded glTF image blobs.
+app.use(async(c,next)=>{
+  await next()
+  if(isScenePage(c.req.path))c.res.headers.set('Content-Security-Policy',sceneContentSecurityPolicy)
+})
 app.use(csrf())
 app.use(
   secureHeaders({

@@ -14,7 +14,7 @@ computing gzip size...
 public/label-world/app/main.js                            289.40 kB │ gzip:  88.33 kB
 public/label-world/app/chunks/Headquarters-D7wSMwZq.js  1,015.81 kB │ gzip: 273.66 kB
 
-✓ built in 749ms
+✓ built in 406ms
 [plugin builtin:vite-reporter]
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
@@ -22,9 +22,9 @@ public/label-world/app/chunks/Headquarters-D7wSMwZq.js  1,015.81 kB │ gzip: 27
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
 vite v8.1.4 building ssr environment for production...
 
-transforming...✓ 325 modules transformed.
+transforming...✓ 326 modules transformed.
 rendering chunks...
 computing gzip size...
-dist/_worker.js  611.99 kB │ gzip: 131.74 kB
+dist/_worker.js  612.54 kB │ gzip: 131.96 kB
 
-✓ built in 407ms
+✓ built in 446ms

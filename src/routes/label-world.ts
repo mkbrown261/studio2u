@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import {sceneContentSecurityPolicy} from '../label-world/scene-security'
 import { html, raw } from 'hono/html'
 import type { AppEnv } from '../types'
 import type { SessionUser } from '../lib/session'
@@ -173,6 +174,9 @@ labelWorldRoutes.get('/label-world/dashboard', async c => {
 
 // Public shared-art headquarters; all label/user data continues to require session membership.
 async function headquartersPage(c:any, requireSession=false){
+  // Embedded glTF textures are loaded through same-document blob URLs. Scope this
+  // policy to the scene app; the original public/booking site's CSP is untouched.
+  c.header('Content-Security-Policy',sceneContentSecurityPolicy)
   c.header('Cache-Control','no-store')
   const user=await getSessionUser(c.env.DB,c.req.raw)
   if(requireSession&&!user)return c.redirect('/label-world/login?returnTo='+encodeURIComponent(new URL(c.req.url).pathname))
