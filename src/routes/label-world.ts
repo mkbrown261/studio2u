@@ -1,3 +1,4 @@
+import {currentReview} from '../label-world/reviewer/current'
 import { Hono } from 'hono'
 import {sceneContentSecurityPolicy} from '../label-world/scene-security'
 import { html, raw } from 'hono/html'
@@ -5,6 +6,7 @@ import type { AppEnv } from '../types'
 import type { SessionUser } from '../lib/session'
 import { getSessionUser } from '../lib/session'
 import { installLabelLogin } from '../label-world/login'
+import {installInternalSummary} from '../label-world/internal-summary'
 import {installResearchSourceRoutes} from '../label-world/research/routes'
 import {installReviewerRoutes} from '../label-world/reviewer/routes'
 import { installWorkspaceRoutes } from '../label-world/workspace-services'
@@ -123,7 +125,10 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/releases/:releaseId/workf
   const review=await db.prepare('SELECT assertions_json FROM lw_rights_reviews WHERE label_id=? AND release_id=? AND release_version=?').bind(label,id,release.version).first<{assertions_json:string}>()
   const rights=rightsGate(review ? JSON.parse(review.assertions_json) : null)
   const registrations=(await db.prepare('SELECT * FROM lw_registration_tasks WHERE label_id=? AND release_id=? ORDER BY organization').bind(label,id).all()).results
-  return c.json({ release,rights,rightsReviewRecorded:Boolean(review),registrations,readiness:{ status: rights.status==='BLOCKED'?'BLOCKED':'INCOMPLETE', checks:[{check:'audio_and_artwork',result:'NOT_TESTED'},{check:'current_distributor_rules',result:'NOT_TESTED'},{check:'package_integrity',result:'NOT_TESTED'},{check:'owner_delivery_approval',result:'NOT_TESTED'}] },distribution:{ capability:'UNVERIFIED', submission:'UNAVAILABLE', handoff:'PREPARATION_ONLY' } })
+  const technical=await currentReview(db,label,{...release,id},c.get('lwUser').id)
+  const mediaResults=technical.current?technical.findings.filter((f:any)=>['audio.technical','artwork.technical','master.integrity','artwork.integrity','master.version','artwork.version','master.existence','artwork.existence'].includes(f.check)):[]
+  const mediaStatus=mediaResults.some((f:any)=>f.status==='FAIL')?'FAIL':mediaResults.length===6&&mediaResults.every((f:any)=>f.status==='PASS')?'PASS':'NOT_TESTED'
+  return c.json({ release,rights,technicalReview:technical,rightsReviewRecorded:Boolean(review),registrations,readiness:{ status: rights.status==='BLOCKED'||technical.current&&technical.findings.some((f:any)=>f.status==='FAIL')?'BLOCKED':'INCOMPLETE', checks:[{check:'audio_and_artwork',result:mediaStatus},{check:'current_distributor_rules',result:'NOT_TESTED'},{check:'package_integrity',result:'NOT_TESTED'},{check:'owner_delivery_approval',result:'NOT_TESTED'}] },distribution:{ capability:'UNVERIFIED', submission:'UNAVAILABLE', handoff:'PREPARATION_ONLY' } })
 })
 labelWorldRoutes.get('/api/label-world/labels/:labelId/registrations', async c => {
   const result=await c.env.DB.prepare('SELECT t.*,r.title,r.artist FROM lw_registration_tasks t JOIN lw_releases r ON r.label_id=t.label_id AND r.id=t.release_id WHERE t.label_id=? ORDER BY t.created_at,t.organization').bind(c.req.param('labelId')).all()
@@ -154,6 +159,7 @@ installProviderRoutes(labelWorldRoutes)
 installResearchSourceRoutes(labelWorldRoutes)
 installWorkspaceRoutes(labelWorldRoutes)
 installReviewerRoutes(labelWorldRoutes)
+installInternalSummary(labelWorldRoutes)
 installLabelLogin(labelWorldRoutes)
 
 labelWorldRoutes.get('/label-world/dashboard', async c => {
