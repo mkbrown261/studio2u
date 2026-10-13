@@ -1,0 +1,24 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "studio2u",
+  "version": "0.1.0",
+  "description": "Read authorized Studio2U release reviews, research and employee messages.",
+  "author": {
+    "name": "Studio2U"
+  },
+  "homepage": "https://studio2u.pages.dev/label-world",
+  "repository": "https://github.com/mkbrown261/studio2u",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Studio2U Label World",
+        "shortDescription": "Authorized release and research evidence",
+        "developerName": "Studio2U",
+        "category": "Productivity",
+        "capabilities": [
+          "Read"
+        ]
+      }
+    }
+  }
+}
