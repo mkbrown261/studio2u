@@ -17,20 +17,24 @@
     "test:label-world:reviewer": "node tests/label-world-reviewer.mjs",
     "test:label-world:research": "node tests/label-world-research.mjs",
     "context:compile": "node tools/compile-label-context.mjs",
-    "test:label-world:context": "node tests/label-world-context.mjs"
+    "test:label-world:context": "node tests/label-world-context.mjs",
+    "test:label-world:mcp": "node tests/label-world-mcp.mjs && node tests/label-world-mcp-oauth.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "2.3.1",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
     "hono": "^4.12.30",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "stripe": "^22.5.0",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.11.1",
     "@hono/vite-dev-server": "^0.26.1",
+    "@modelcontextprotocol/client": "2.3.1",
     "vite": "^8.1.4",
     "wrangler": "^4.110.0",
     "yaml": "^2.9.1"
