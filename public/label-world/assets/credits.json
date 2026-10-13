@@ -78,7 +78,7 @@
       "source": "https://polyhaven.com/a/wooden_floor_02",
       "license": "CC0",
       "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-      "modifications": "Packed PBR maps and tinting. Marble source retained in Blender; final black veining uses authored shader."
+      "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
     },
     {
       "title": "brown_leather",
@@ -86,7 +86,7 @@
       "source": "https://polyhaven.com/a/brown_leather",
       "license": "CC0",
       "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-      "modifications": "Packed PBR maps and tinting. Marble source retained in Blender; final black veining uses authored shader."
+      "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
     },
     {
       "title": "marble_01",
@@ -94,7 +94,7 @@
       "source": "https://polyhaven.com/a/marble_01",
       "license": "CC0",
       "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-      "modifications": "Packed PBR maps and tinting. Marble source retained in Blender; final black veining uses authored shader."
+      "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
     }
   ],
   "locally_authored": "Rooms, furniture details and hanging foliage; no BagaPie asset used",
