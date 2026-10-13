@@ -59,3 +59,12 @@ Additional local walkthrough: actual WASD key taps, E at the Builder production 
 Production-worker security check: node tests/label-world-worker-security.mjs PASS. Scoped Label World CSP permits embedded glTF blob images/fetches and remains in force after global middleware. Existing original-site policy/login rendering retained. src/index.tsx only adds a path-scoped response wrapper; no original booking/login/UI logic altered.
 
 First Cloudflare deploy ad25c742 used the prior generated Pages routing policy and therefore did not serve the new scene bundles. Live bootstrap check failed; it is superseded by the corrected static exclusions in public/_routes.json. Built-worker tests now assert the deployed routing artifact serves JS/CSS/GLB paths without routing private HTML/API around auth. Loading HUD uses ordinary React DOM outside Canvas, avoiding the prior Html portal cleanup error seen during local initial loading. Final deployment and live scene evidence recorded below.
+
+
+## Final v2.2 production verification
+- GitHub feature/label-world-foundation pushed successfully through d12300c4cda9325635dc96a16c08c5d84ca16011; no merge to main claimed.
+- Cloudflare production deployment succeeded: https://e4ce5b1e.studio2u.pages.dev . Canonical https://studio2u.pages.dev/label-world visibly loads 1,217 mesh groups and the original Blender lobby/studio/conference/characters. Screenshot: docs/evidence/v2.2-production-headquarters.png.
+- Live guest Carla action opens a sign-in dialog with the correct researcher return destination; following it reaches the existing-account Label World login form. Authenticated production account testing remains pending.
+- Final production-only unused Meshopt WebAssembly decoder error removed by loading uncompressed GLBs directly with Three GLTFLoader and direct Drei progress/animation imports. Strict CSP remains unchanged. No new error observed after final load; retained browser console history includes errors from superseded builds.
+- Final build, built-worker security/static routing checks, and collision/interaction tests passed after the loader correction. The full earlier local suite and four authenticated fixture workspace interactions remain recorded above.
+- Original untracked Blender authoring scripts/assets remain preserved in the working tree; they are not part of this deployment. Docs-only evidence commits after d12300c do not change deployed application source.
