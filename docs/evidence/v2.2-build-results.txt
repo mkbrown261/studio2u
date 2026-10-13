@@ -11,10 +11,10 @@ vite v8.1.4 building client environment for production...
 transforming...✓ 574 modules transformed.
 rendering chunks...
 computing gzip size...
-public/label-world/app/main.js                            289.40 kB │ gzip:  88.33 kB
-public/label-world/app/chunks/Headquarters-D7wSMwZq.js  1,015.81 kB │ gzip: 273.66 kB
+public/label-world/app/main.js                            289.39 kB │ gzip:  88.32 kB
+public/label-world/app/chunks/Headquarters-CtrOHQSU.js  1,008.04 kB │ gzip: 270.96 kB
 
-✓ built in 406ms
+✓ built in 402ms
 [plugin builtin:vite-reporter]
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
@@ -27,4 +27,4 @@ rendering chunks...
 computing gzip size...
 dist/_worker.js  612.54 kB │ gzip: 131.96 kB
 
-✓ built in 446ms
+✓ built in 366ms

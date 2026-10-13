@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/static/*",
+    "/label-world/app/*",
+    "/label-world/assets/*",
+    "/label-world-ui.css",
+    "/label-world-hq.css",
+    "/label-world.js"
+  ]
+}
