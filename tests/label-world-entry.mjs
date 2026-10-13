@@ -23,3 +23,5 @@ console.log('PASS: real password verification, shared secure session cookie, sel
 const {isScenePage}=await import('../src/label-world/scene-security.ts')
 for(const path of ['/','/login','/dashboard','/status/messages/1','/api/label-world/labels','/label-worldevil'])assert.equal(isScenePage(path),false)
 console.log('PASS: embedded-texture security policy applies only to the Label World scene pages, not legacy routes')
+
+assert.equal(labelReturn('/label-world/inbox'),'/label-world/inbox');const inbox=await app.request('http://localhost/label-world/inbox',{},env);assert.equal(inbox.status,302);assert.equal(inbox.headers.get('location'),'/label-world/login?returnTo=%2Flabel-world%2Finbox');console.log('PASS: direct employee inbox is protected and preserves its sign-in destination')

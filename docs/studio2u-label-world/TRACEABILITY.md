@@ -169,3 +169,5 @@ Workflows W11–W14 retained as DESIGNED_ONLY; four proposed skills remain separ
 
 ## Eric milestone increment — 2026-10-12
 R006/R102/R105/R114: PARTIAL — private stored WAV/PNG intake, checksums, deterministic technical findings, versioned JSON reports, employee Inbox/corrections/unread and version consistency tested locally. Full release packaging, distributor/legal validation and broader skills remain pending. See ERIC_REVIEW_MILESTONE.md.
+
+2026-10-13 evidence addendum: R105 deterministic technical Reviewer subset now has live D1/R2 upload/report/Inbox/correction/re-login evidence on acbd044. Private report download byte integrity verified. R006/R102/R114 upload/storage support remains narrow WAV/PNG intake, not complete release engine. Carla official YouTube + normalized CSV ingestion subset is implemented with local fixture tests; live verification and retention worker activation pending. Broader social/music intelligence and Executive/Builder orchestration remain unfinished.

@@ -1,0 +1,12 @@
+{
+  "authenticated_browser_report_retrieval": "PASS",
+  "checksum_matches_private_report_record": true,
+  "byte_size": 2985,
+  "sha256": "f31cab6510941ffd3ffb6f14bbfba8a88c46581d9e5457fe94b3dc63d3124559",
+  "review_id": "ba2db940-fb90-488c-ab2a-f7e6dbcea312",
+  "deployed_commit": "acbd044",
+  "deployment_url": "https://d2ce20fe.studio2u.pages.dev",
+  "command_line_site_access": "403 transport restriction; no successful HTTP download claimed",
+  "authenticated_browser_download": "PASS",
+  "downloaded_bytes_match_stored_report": true
+}

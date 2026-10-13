@@ -10,7 +10,7 @@ for(const [kind,bytes] of [['master',wav],['artwork',png(64)]])assert.equal((awa
 const first=await (await call(path+'/reviews','POST',{requestId:'initial-review-test-001'})).json();assert.equal(first.status,'COMPLETED');assert.equal(first.findings.find(x=>x.check==='artwork.technical').status,'FAIL');assert.equal(first.findings.find(x=>x.check==='audio.technical').status,'PASS');assert.equal(first.findings.find(x=>x.check==='credits.complete').status,'FAIL');assert.equal(first.findings.find(x=>x.check==='package.integrity').status,'NOT_TESTED')
 assert.equal((await (await call(path+'/reviews','POST',{requestId:'initial-review-test-001'})).json()).replayed,true)
 assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM lw_reviews').get().n,1)
-const report=await call(root+'/reviews/'+first.reviewId+'/report');assert.equal(report.status,200);assert.equal((await report.json()).release.version,1)
+const report=await call(root+'/reviews/'+first.reviewId+'/report');assert.equal(report.status,200);const originalObject=f.sqlite.prepare('SELECT object_key FROM lw_assets WHERE id=(SELECT report_asset_id FROM lw_reviews WHERE id=?)').get(first.reviewId);assert.deepEqual(new Uint8Array(await report.clone().arrayBuffer()),objects.get(originalObject.object_key));assert.equal((await report.json()).release.version,1)
 assert.equal((await call(root+'/reviews/'+first.reviewId+'/report','GET',null,2)).status,404)
 f.sqlite.prepare("INSERT INTO lw_memberships VALUES (?,2,'editor')").run(label.id);assert.equal((await call(root+'/reviews/'+first.reviewId+'/report','GET',null,2)).status,404)
 assert.equal((await call(root+'/reviews/'+first.reviewId+'/corrections','POST',{content:'Replace undersized artwork and complete credits'})).status,201)

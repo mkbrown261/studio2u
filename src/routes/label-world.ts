@@ -5,6 +5,7 @@ import type { AppEnv } from '../types'
 import type { SessionUser } from '../lib/session'
 import { getSessionUser } from '../lib/session'
 import { installLabelLogin } from '../label-world/login'
+import {installResearchSourceRoutes} from '../label-world/research/routes'
 import {installReviewerRoutes} from '../label-world/reviewer/routes'
 import { installWorkspaceRoutes } from '../label-world/workspace-services'
 import { installProviderRoutes } from '../label-world/providers/routes'
@@ -150,6 +151,7 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/events', async c => {
 })
 
 installProviderRoutes(labelWorldRoutes)
+installResearchSourceRoutes(labelWorldRoutes)
 installWorkspaceRoutes(labelWorldRoutes)
 installReviewerRoutes(labelWorldRoutes)
 installLabelLogin(labelWorldRoutes)
@@ -187,6 +189,7 @@ async function headquartersPage(c:any, requireSession=false){
   return c.html(html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Studio2U · Label World Headquarters</title><link rel="stylesheet" href="/label-world-ui.css"><link rel="stylesheet" href="/label-world-hq.css"></head><body><div id="label-world-app"><p style="padding:32px;color:#e8bd6b;background:#080d12">Loading Studio2U headquarters…</p></div><script id="label-world-bootstrap" type="application/json">${raw(bootstrap)}</script><script type="module" src="/label-world/app/main.js"></script><noscript><p>JavaScript is required for 3D headquarters. <a href="/label-world/dashboard">Open accessible release dashboard</a>.</p></noscript></body></html>`)
 }
 labelWorldRoutes.get('/label-world',c=>headquartersPage(c))
+labelWorldRoutes.get('/label-world/inbox',c=>headquartersPage(c,true))
 labelWorldRoutes.get('/label-world/agents/:agent',c=>{
   if(!['researcher','reviewer','executive','builder'].includes(c.req.param('agent')))return c.notFound()
   return headquartersPage(c,true)

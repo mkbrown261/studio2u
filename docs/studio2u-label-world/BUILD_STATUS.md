@@ -72,3 +72,7 @@ First Cloudflare deploy ad25c742 used the prior generated Pages routing policy a
 
 ## Eric milestone increment — 2026-10-12
 Eric deterministic review increment: implemented and tested locally, production migration 0022 applied after backup; live workflow verification pending. See ERIC_REVIEW_MILESTONE.md. Original user records and legacy authoring assets preserved. No complete commercial viability claim.
+
+## Live Eric proof and Carla increment — 2026-10-13
+Eric production proof: acbd044 / d2ce20fe, actual D1/R2 synthetic upload, deliberate failure, correction/re-review, old history, Inbox unread persistence after re-login, and authenticated browser download byte/checksum match. See eric-production-report-integrity.json and production screenshots. Auth return worked for both Eric and Carla; original site dashboard/logout rendered. No reproducible login 404 on current deployment, so no invented root cause claimed. Local tenant/user authorization tests passed; production browser blocks direct unauthenticated API navigation, so no unsupported live HTTP status assertion.
+Carla source backend/UI implemented and tested with fixtures, not yet promoted to live-verified. See CARLA_SOURCE_MILESTONE.md. YouTube policy limits public API storage; a scoped 28-day retention worker accompanies activation. CSV normalization, provenance and report handoff implemented. Existing 23 broad skill specs remain designed; the implemented deterministic processor subsets are documented explicitly.

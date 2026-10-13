@@ -1,6 +1,7 @@
 export type Bindings = {
   DB: D1Database
   R2: R2Bucket
+  YOUTUBE_DATA_API_KEY?: string
   ADMIN_PASSWORD?: string
   STRIPE_SECRET_KEY?: string
   STRIPE_WEBHOOK_SECRET?: string
