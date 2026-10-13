@@ -1,5 +1,5 @@
 {
-  "blueprint": "2.0",
+  "blueprint": "2.2",
   "requirements": [
     {
       "id": "R001",
@@ -796,6 +796,426 @@
         "studio2u.reviewer_creative_social_qc",
         "studio2u.reviewer_release_qc"
       ]
+    },
+    {
+      "id": "R305",
+      "scope": "(P1b) Separate AI Employees Inbox with per-agent/task/release threads and dedicated navigation, completely isolated from client/engineer booking messages.",
+      "taskId": "TASK-R305",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R306",
+      "scope": "(P1b) Session-authenticated, label-member authorized messaging, server-authorized agent sender, tenant-scoped attachments and participant/read states; no `?email` as Label World identity.",
+      "taskId": "TASK-R306",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R307",
+      "scope": "(P1c) Structured version-bound agent approval cards, review/reject/request-changes, audit, idempotency, and no chat-text-as-approval bypass.",
+      "taskId": "TASK-R307",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R308",
+      "scope": "(P1b/P2) Persistent agent inbox notification queues, unread counts and preferences; realtime transport optional, replaceable and accurately labeled.",
+      "taskId": "TASK-R308",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R309",
+      "scope": "(P1c) PRO/rights/distribution registration packet and human official-site review/submit handoff, with versioned evidence and official source links.",
+      "taskId": "TASK-R309",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R310",
+      "scope": "(P2+) Provider-specific browser assistance only if officially permitted and user-supervised, with scoped session, secrets isolation, pause/stop and no automated legal declarations; otherwise manual handoff.",
+      "taskId": "TASK-R310",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R311",
+      "scope": "(P1c) Separate prepared, reported-submitted, pending verification, official confirmed and rejected statuses for filings/royalty claims.",
+      "taskId": "TASK-R311",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R312",
+      "scope": "(P2 V1 voice) Conversation with chosen agents using text and speech with streaming/turn interruption, text fallback, no lip-sync dependency and verified provider entitlement.",
+      "taskId": "TASK-R312",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R313",
+      "scope": "(P1b/P2) Select, hire, name and configure prebuilt agents from versioned skill templates per tenant; show configured vs executable status truthfully.",
+      "taskId": "TASK-R313",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R314",
+      "scope": "(P1b/P2) Per-skill connection onboarding/capability matrix with approved API keys/OAuth/scoped authorizations, provider costs, revocation and manual fallback.",
+      "taskId": "TASK-R314",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R315",
+      "scope": "(P3) Headless renderer-independent agents allow future Unreal MetaHuman lip-synced avatars without backend rewrite.",
+      "taskId": "TASK-R315",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R316",
+      "scope": "(P1 visual) Preserve existing Carla Researcher and Eric Reviewer Blender rigs as only presently reported 3D character implementations; Executive and Builder mesh/rig pending, backend roles available independent of mesh.",
+      "taskId": "TASK-R316",
+      "owner": "world",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-01"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R317",
+      "scope": "(P2) Royalty Recovery Dashboard for evidence-backed PRO, MLC, SoundExchange and distributor eligibility, missing claims, receipts, reminders and no speculative owed balances.",
+      "taskId": "TASK-R317",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R318",
+      "scope": "(P2) Typed creative handoff among Marketing, Videographer, Higgsfield adapter, Genjitsu/other editor, Reviewer and Social with likeness rights, timecodes, approvals and actual media evidence.",
+      "taskId": "TASK-R318",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R319",
+      "scope": "(P0 continuous) Source/deployment reconciliation records current branch/SHA, remote versus local state, actual tests, Cloudflare environment and whether production changed; no unverified deployment claims.",
+      "taskId": "TASK-R319",
+      "owner": "project-control",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-22"
+      ],
+      "status": "IN_PROGRESS",
+      "skills": []
+    },
+    {
+      "id": "R320",
+      "scope": "(P1b) Regression tests guarantee pre-existing booking messages, unread badges and engineer/customer permissions remain intact.",
+      "taskId": "TASK-R320",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-15"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R321",
+      "scope": "(P2) Voice/microphone consent, session indicators, privacy/retention, accessibility controls, text alternative and no high-risk action approved by speech alone.",
+      "taskId": "TASK-R321",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R322",
+      "scope": "(P1 visual): One shared accessible React dashboard shell with four approved role-based routes; strict Studio2U main-site styling boundary.",
+      "taskId": "TASK-R322",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-12"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R323",
+      "scope": "(P1 visual): Four high-fidelity dashboard layouts match supplied images; analytics examples and status figures clearly distinguished from live data.",
+      "taskId": "TASK-R323",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-16"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R324",
+      "scope": "(P1 visual): Real Blender headquarters inventories/exports with validated GLB, texture/UV/material fixing, preserved source and deployed room loader.",
+      "taskId": "TASK-R324",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-02"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R325",
+      "scope": "(P1 interaction): Explicit first-person movement and camera control (WASD, pointer lock, Shift, safe spawn, bounds) with collision and touch alternatives.",
+      "taskId": "TASK-R325",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-05"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R326",
+      "scope": "(P1 interaction): Central object/agent/station interaction registry, E/click/tap proximity prompts and permission-aware routing.",
+      "taskId": "TASK-R326",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-07"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R327",
+      "scope": "(P1 interaction): Shared HTML/React overlay opens from 3D, suspends camera, unlocks pointer, restores focus and camera position on close.",
+      "taskId": "TASK-R327",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-11"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R328",
+      "scope": "(P1 interaction): Carla selects Researcher and Eric opens Reviewer tablet; Executive/Builder station fallback when meshes absent.",
+      "taskId": "TASK-R328",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-10"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R329",
+      "scope": "(P1 interaction): Per-character verified animation state registry with idle-only fallback; missing greeting/tablet/walk clips nonblocking.",
+      "taskId": "TASK-R329",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-03"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R330",
+      "scope": "(P1 security): Public sanitized room separate from authenticated private label world; strict per-tenant records/asset authorization.",
+      "taskId": "TASK-R330",
+      "owner": "business-services",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-13"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R331",
+      "scope": "(P1 reliability): WebGL-disabled or broken assets never prevent direct agent dashboards, Inbox, release and provider settings.",
+      "taskId": "TASK-R331",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-12"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R332",
+      "scope": "(P2 personalization): Stable GLB object/material IDs and backend-scoped settings for cabinets, wall finish, trim with save/revert.",
+      "taskId": "TASK-R332",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-21"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R333",
+      "scope": "(P2 personalization): Evidence-driven per-label achievement/plaque registry with verified metric definition, deduplication and correction.",
+      "taskId": "TASK-R333",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-20"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R334",
+      "scope": "(P2 personalization): Optional congratulation in Agent Inbox and accessible/reduced-motion celebration from verified milestone only.",
+      "taskId": "TASK-R334",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-20"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R335",
+      "scope": "(P1 quality): Browser walkthrough for 3D/movement/overlays/permissions and visual screenshot comparisons for all four dashboards.",
+      "taskId": "TASK-R335",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-16"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R336",
+      "scope": "(P1 quality): Independent GLB reimport/test-viewer + animation tests, device-recorded performance and asset provenance manifest.",
+      "taskId": "TASK-R336",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-17"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R337",
+      "scope": "(P1 workflow): 3D contexts and direct-route dashboards share single authoritative label/release/task/approval/Inbox data services.",
+      "taskId": "TASK-R337",
+      "owner": "business-services",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R338",
+      "scope": "(P1 workflow): Integrate three active coding streams without duplicated work; status reconciled against current branch SHA and live deployment.",
+      "taskId": "TASK-R338",
+      "owner": "project-control",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-22"
+      ],
+      "status": "IN_PROGRESS",
+      "skills": []
+    },
+    {
+      "id": "R339",
+      "scope": "(P2 A&R): Carla metrics/trends provenance, date windows, data connection states, lawful authorized collection, no mock data marked live.",
+      "taskId": "TASK-R339",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-16"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
     }
   ],
   "nonfunctional": [
@@ -1404,6 +1824,50 @@
         "T14"
       ],
       "status": "PLANNED"
+    },
+    {
+      "id": "W11",
+      "scope": "Agent Inbox messages and action approvals (v2.1)",
+      "taskId": "TASK-W11",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    },
+    {
+      "id": "W12",
+      "scope": "PRO registration guided human submission (v2.1)",
+      "taskId": "TASK-W12",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    },
+    {
+      "id": "W13",
+      "scope": "Artist hires an agent and optionally talks to them (v2.1)",
+      "taskId": "TASK-W13",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    },
+    {
+      "id": "W14",
+      "scope": "Royalty recovery request (v2.1)",
+      "taskId": "TASK-W14",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
     }
   ]
 }

@@ -42,3 +42,16 @@ Artist uploads authorized portrait and optional clothing/shoe references -> conf
 
 ## W10 — A&R research and campaign feedback
 Sourced chart/scene/trend research -> research dossiers with dates/verified metrics -> emerging artist watchlists and hype hypotheses -> market-tailored marketing briefs -> test different original hooks/content formats on authorized pages -> retrieve actual platform metrics -> update hypotheses, not fabricated causal laws.
+
+
+## W11 — Agent Inbox messages and action approvals (v2.1)
+Authenticated label owner visits Studio2U Messages -> AI Employees -> chooses an agent/thread -> sees messages for their label only. A real task emits an internal event -> authorized worker creates factual agent message/unread notification -> owner reviews linked artifact and may reply -> agent uses reply as new input but NOT as legal approval -> structured approval is created/bound to source revision -> owner explicitly approves/rejects/requests changes -> action and result are audited. Browser/3D not required; booking messages remain isolated.
+
+## W12 — PRO registration guided human submission (v2.1)
+Publishing Admin gathers composition, writer, publisher and splits -> verifies source/provenance -> checks current ASCAP/BMI/other provider requirements -> generates revisioned packet/form field map -> sends Agent Inbox approval request -> owner verifies fields/splits -> chooses approved integration or manual official-site handoff -> owner submits official form where applicable -> uploads receipt or approved provider status check -> reported status stays pending until evidence verified -> durable royalty follow-up continues. No unapproved automated browser submissions.
+
+## W13 — Artist hires an agent and optionally talks to them (v2.1)
+Choose role -> list skills and capability requirements -> connect permissible API/OAuth or select guided handoff -> set name/voice/appearance/budget permissions -> perform capability dry-run -> agent appears in Inbox regardless of mesh -> text conversation supported when runtime exists -> optional real-time speech with consent, interrupt and text fallback -> agent delegates only through authorized tools/approval. Future MetaHuman lip sync is a separate renderer milestone.
+
+## W14 — Royalty recovery request (v2.1)
+Artist asks “Help me find uncollected royalties” -> Royalty Agent gathers authorized catalog/ownership records -> checks collection mechanisms and eligibility without guaranteed money -> prepares evidence-linked per-organization checklist (PRO, MLC, SoundExchange, distributor) -> asks questions in Agent Inbox -> owner reviews, submits permitted claims or manual official forms -> receipts tracked and scheduled follow-ups continue until verified or legitimately closed.

@@ -1,0 +1,43 @@
+id: "studio2u.editor_hook_selection"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "shortform_editor"
+goal: "Extract auditable short-form hook candidates from owned recording"
+trigger: "campaign preparation"
+inputs:
+  - "recordingId"
+  - "approvedTranscriptId"
+  - "platformTargets"
+tools:
+  - "audio.features"
+  - "lyrics.time_aligned"
+  - "campaign.hook_store"
+steps:
+  - "Use aligned lyric/beat/energy sections where actually measurable."
+  - "Propose first vocal entry, refrain, drop, punchline and emotional peak candidates."
+  - "Set exact start/end timecodes from recording timeline."
+  - "Explain creative hypothesis and prepare multiple opening variations."
+  - "Invite artist to prioritize sections; do not promise virality."
+outputs:
+  - "hookCandidateSet"
+  - "shortFormTimecodes"
+validations:
+  - "Timestamp range within measured audio duration."
+  - "Lyrics approved before public publication."
+approval_gates:
+  - "public text use of explicit lyric captions"
+failure_and_escalation:
+  - "instrumental -> use beat-drop and motif cues"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "hookAcceptanceRate"
+  - "retentionTestResultsWhenAvailable"
+test_scenarios:
+  - "low confidence transcript never declared exact"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

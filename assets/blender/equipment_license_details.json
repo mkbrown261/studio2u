@@ -1,0 +1,1434 @@
+[
+  {
+    "animationCount": 0,
+    "categories": [
+      {
+        "uid": "d7cebaeca8604ebab1480e413404b679",
+        "name": "Electronics & Gadgets",
+        "slug": "electronics-gadgets",
+        "uri": "https://api.sketchfab.com/v3/categories/d7cebaeca8604ebab1480e413404b679",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/336c224334b7e53e277d236a8355e90a-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/800x450.png"
+          }
+        ]
+      }
+    ],
+    "commentCount": 1,
+    "createdAt": "2020-03-12T08:21:57.951157",
+    "embedUrl": "https://sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/embed",
+    "faceCount": 11612,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 131,
+    "name": "Studio Monitors",
+    "publishedAt": "2020-03-12T08:54:55.152373",
+    "soundCount": 0,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "music",
+        "slug": "music",
+        "uri": "https://api.sketchfab.com/v3/tags/music"
+      },
+      {
+        "name": "studio",
+        "slug": "studio",
+        "uri": "https://api.sketchfab.com/v3/tags/studio"
+      },
+      {
+        "name": "realtime",
+        "slug": "realtime",
+        "uri": "https://api.sketchfab.com/v3/tags/realtime"
+      },
+      {
+        "name": "equipment",
+        "slug": "equipment",
+        "uri": "https://api.sketchfab.com/v3/tags/equipment"
+      },
+      {
+        "name": "movie",
+        "slug": "movie",
+        "uri": "https://api.sketchfab.com/v3/tags/movie"
+      },
+      {
+        "name": "asset",
+        "slug": "asset",
+        "uri": "https://api.sketchfab.com/v3/tags/asset"
+      },
+      {
+        "name": "game",
+        "slug": "game",
+        "uri": "https://api.sketchfab.com/v3/tags/game"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "b073ccdfb0144dec87fd6aaf24ff2adc",
+          "width": 1920,
+          "height": 1080,
+          "size": 120755,
+          "url": "https://media.sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/thumbnails/5c07fc7edad44df68fb99ddce9240166/c1d4ff541cc64b3bb2148b02dc2b1ffd.jpeg"
+        },
+        {
+          "uid": "6ada42d390ee460eaf99950a1490b590",
+          "width": 1024,
+          "height": 576,
+          "size": 29624,
+          "url": "https://media.sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/thumbnails/5c07fc7edad44df68fb99ddce9240166/d7c68b52ee664db0bb72a14d914c9764.jpeg"
+        },
+        {
+          "uid": "e4059a8e24314a3c9a1cecea31f800d6",
+          "width": 720,
+          "height": 405,
+          "size": 15650,
+          "url": "https://media.sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/thumbnails/5c07fc7edad44df68fb99ddce9240166/1a664df599914417ab3fcecac63c9913.jpeg"
+        },
+        {
+          "uid": "9e54bc5cdf5a40d385df86f16dfea44d",
+          "width": 256,
+          "height": 144,
+          "size": 3096,
+          "url": "https://media.sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/thumbnails/5c07fc7edad44df68fb99ddce9240166/5e38c6f811034d6aa758e5f136d0c26c.jpeg"
+        },
+        {
+          "uid": "33e01c2818424d16bc3f319d13d05159",
+          "width": 64,
+          "height": 36,
+          "size": 666,
+          "url": "https://media.sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/thumbnails/5c07fc7edad44df68fb99ddce9240166/63eeaa89d0554fed903bed7475cd015e.jpeg"
+        }
+      ]
+    },
+    "uid": "12b3ce23f32a4aa99cd5ba07330bf086",
+    "uri": "https://api.sketchfab.com/v3/models/12b3ce23f32a4aa99cd5ba07330bf086",
+    "user": {
+      "uid": "c4901efe45ec4328a4c8bb8e69b2027c",
+      "username": "kylermichaelson",
+      "displayName": "Kyler Michaelson",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/kylermichaelson",
+      "avatar": {
+        "uid": "dc919d9f872c4708a41f3ed3b804ece0",
+        "uri": "https://api.sketchfab.com/v3/avatars/dc919d9f872c4708a41f3ed3b804ece0",
+        "images": [
+          {
+            "width": 100,
+            "height": 100,
+            "size": 4484,
+            "url": "https://media.sketchfab.com/avatars/dc919d9f872c4708a41f3ed3b804ece0/f94fa55eed644065bff991d1a61b22df.jpeg"
+          },
+          {
+            "width": 90,
+            "height": 90,
+            "size": 3756,
+            "url": "https://media.sketchfab.com/avatars/dc919d9f872c4708a41f3ed3b804ece0/ee16707412b44064845a5599e6485729.jpeg"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 1326,
+            "url": "https://media.sketchfab.com/avatars/dc919d9f872c4708a41f3ed3b804ece0/fe45772d58f64ab692697b57739ce2f9.jpeg"
+          },
+          {
+            "width": 32,
+            "height": 32,
+            "size": 768,
+            "url": "https://media.sketchfab.com/avatars/dc919d9f872c4708a41f3ed3b804ece0/93decdfb9ec14cdd8abda5f06202745c.jpeg"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/c4901efe45ec4328a4c8bb8e69b2027c"
+    },
+    "vertexCount": 5810,
+    "viewCount": 5068,
+    "viewerUrl": "https://sketchfab.com/3d-models/studio-monitors-12b3ce23f32a4aa99cd5ba07330bf086",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "Custom designed studio monitor speakers. PBR ready texures. Part of a series of music recording studio equipment. Handmade textures including hand painted normal maps. Wood grain and metallic faceplate. The speaker cones are carbon fiber.",
+    "price": null,
+    "downloadCount": 2717,
+    "editorUrl": "https://sketchfab.com/models/12b3ce23f32a4aa99cd5ba07330bf086/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2022-07-21T03:52:24.584589",
+    "pbrType": "metalness",
+    "textureCount": 5,
+    "materialCount": 1
+  },
+  {
+    "animationCount": 1,
+    "categories": [
+      {
+        "uid": "d7cebaeca8604ebab1480e413404b679",
+        "name": "Electronics & Gadgets",
+        "slug": "electronics-gadgets",
+        "uri": "https://api.sketchfab.com/v3/categories/d7cebaeca8604ebab1480e413404b679",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/336c224334b7e53e277d236a8355e90a-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/800x450.png"
+          }
+        ]
+      },
+      {
+        "uid": "357487fbb30a44ee8a0adf9b24829919",
+        "name": "Music",
+        "slug": "music",
+        "uri": "https://api.sketchfab.com/v3/categories/357487fbb30a44ee8a0adf9b24829919",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/e46cf538674d8594fad0292580efcf5b-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/357487fbb30a44ee8a0adf9b24829919/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/357487fbb30a44ee8a0adf9b24829919/800x450.png"
+          }
+        ]
+      }
+    ],
+    "commentCount": 2,
+    "createdAt": "2017-10-18T07:20:19.651693",
+    "embedUrl": "https://sketchfab.com/models/e392c51356f24febb61ae27d1864628c/embed",
+    "faceCount": 3736,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 25,
+    "name": "Midi Keyboard",
+    "publishedAt": "2017-10-18T07:30:58.936193",
+    "soundCount": 1,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "midi",
+        "slug": "midi",
+        "uri": "https://api.sketchfab.com/v3/tags/midi"
+      },
+      {
+        "name": "midikeyboard",
+        "slug": "midikeyboard",
+        "uri": "https://api.sketchfab.com/v3/tags/midikeyboard"
+      },
+      {
+        "name": "keyboard",
+        "slug": "keyboard",
+        "uri": "https://api.sketchfab.com/v3/tags/keyboard"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "88dfc82aeea64520b16dda7aca71b6df",
+          "width": 1024,
+          "height": 576,
+          "size": 49238,
+          "url": "https://media.sketchfab.com/models/e392c51356f24febb61ae27d1864628c/thumbnails/7faf2c3c37f6418fa85d2e01c92248fe/1024x576.jpeg"
+        },
+        {
+          "uid": "209c32b49b4a4e939bb5f2bee2d36874",
+          "width": 720,
+          "height": 405,
+          "size": 31161,
+          "url": "https://media.sketchfab.com/models/e392c51356f24febb61ae27d1864628c/thumbnails/7faf2c3c37f6418fa85d2e01c92248fe/720x405.jpeg"
+        },
+        {
+          "uid": "2d498d28973440348bfd68cee740789d",
+          "width": 256,
+          "height": 144,
+          "size": 6980,
+          "url": "https://media.sketchfab.com/models/e392c51356f24febb61ae27d1864628c/thumbnails/7faf2c3c37f6418fa85d2e01c92248fe/256x144.jpeg"
+        },
+        {
+          "uid": "67a827fb3d3a4263adfdc6c39ac7cd14",
+          "width": 64,
+          "height": 36,
+          "size": 1279,
+          "url": "https://media.sketchfab.com/models/e392c51356f24febb61ae27d1864628c/thumbnails/7faf2c3c37f6418fa85d2e01c92248fe/64x36.jpeg"
+        }
+      ]
+    },
+    "uid": "e392c51356f24febb61ae27d1864628c",
+    "uri": "https://api.sketchfab.com/v3/models/e392c51356f24febb61ae27d1864628c",
+    "user": {
+      "uid": "c0c2b7bfc3bb46ddb82390f96d2daed8",
+      "username": "dennissoderblom",
+      "displayName": "dennissoderblom",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/dennissoderblom",
+      "avatar": {
+        "uid": "839fb53879454d1c953a0bc4683bb19f",
+        "uri": "https://api.sketchfab.com/v3/avatars/839fb53879454d1c953a0bc4683bb19f",
+        "images": [
+          {
+            "width": 32,
+            "height": 32,
+            "size": 1128,
+            "url": "https://media.sketchfab.com/avatars/839fb53879454d1c953a0bc4683bb19f/16c653aad4e1470388b3d24171e3b1a4.jpeg"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 1608,
+            "url": "https://media.sketchfab.com/avatars/839fb53879454d1c953a0bc4683bb19f/adbfe76cc5f048d9ae216e224e51b1a3.jpeg"
+          },
+          {
+            "width": 90,
+            "height": 90,
+            "size": 3436,
+            "url": "https://media.sketchfab.com/avatars/839fb53879454d1c953a0bc4683bb19f/e1dc8a61974044f7a9d1269d67708410.jpeg"
+          },
+          {
+            "width": 100,
+            "height": 100,
+            "size": 3899,
+            "url": "https://media.sketchfab.com/avatars/839fb53879454d1c953a0bc4683bb19f/8cee24290d5f48e8899558fec1d866e2.jpeg"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/c0c2b7bfc3bb46ddb82390f96d2daed8"
+    },
+    "vertexCount": 2680,
+    "viewCount": 2500,
+    "viewerUrl": "https://sketchfab.com/3d-models/midi-keyboard-e392c51356f24febb61ae27d1864628c",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "Just for fun, not good timing on animation but well",
+    "price": null,
+    "downloadCount": 915,
+    "editorUrl": "https://sketchfab.com/models/e392c51356f24febb61ae27d1864628c/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2022-07-20T18:33:14.142845",
+    "pbrType": null,
+    "textureCount": 2,
+    "materialCount": 23
+  },
+  {
+    "animationCount": 0,
+    "categories": [
+      {
+        "uid": "e56c5de1e9344241909de76c5886f551",
+        "name": "Art & Abstract",
+        "slug": "art-abstract",
+        "uri": "https://api.sketchfab.com/v3/categories/e56c5de1e9344241909de76c5886f551",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/876106eddb2a54aa1391eb2f4db0acb2-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/e56c5de1e9344241909de76c5886f551/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/e56c5de1e9344241909de76c5886f551/800x450.png"
+          }
+        ]
+      },
+      {
+        "uid": "d7cebaeca8604ebab1480e413404b679",
+        "name": "Electronics & Gadgets",
+        "slug": "electronics-gadgets",
+        "uri": "https://api.sketchfab.com/v3/categories/d7cebaeca8604ebab1480e413404b679",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/336c224334b7e53e277d236a8355e90a-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/800x450.png"
+          }
+        ]
+      }
+    ],
+    "commentCount": 0,
+    "createdAt": "2022-04-11T21:50:06.174753",
+    "embedUrl": "https://sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/embed",
+    "faceCount": 1344,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 8,
+    "name": "Super Low Poly Midi Keyboard",
+    "publishedAt": "2022-04-11T21:55:46.019068",
+    "soundCount": 0,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "music",
+        "slug": "music",
+        "uri": "https://api.sketchfab.com/v3/tags/music"
+      },
+      {
+        "name": "instrument",
+        "slug": "instrument",
+        "uri": "https://api.sketchfab.com/v3/tags/instrument"
+      },
+      {
+        "name": "midi",
+        "slug": "midi",
+        "uri": "https://api.sketchfab.com/v3/tags/midi"
+      },
+      {
+        "name": "Grand Piano",
+        "slug": "grand-piano",
+        "uri": "https://api.sketchfab.com/v3/tags/grand-piano"
+      },
+      {
+        "name": "musical-instrument",
+        "slug": "musical-instrument",
+        "uri": "https://api.sketchfab.com/v3/tags/musical-instrument"
+      },
+      {
+        "name": "midi-keyboard",
+        "slug": "midi-keyboard",
+        "uri": "https://api.sketchfab.com/v3/tags/midi-keyboard"
+      },
+      {
+        "name": "low-poly",
+        "slug": "low-poly",
+        "uri": "https://api.sketchfab.com/v3/tags/low-poly"
+      },
+      {
+        "name": "lowpoly",
+        "slug": "lowpoly",
+        "uri": "https://api.sketchfab.com/v3/tags/lowpoly"
+      },
+      {
+        "name": "piano",
+        "slug": "piano",
+        "uri": "https://api.sketchfab.com/v3/tags/piano"
+      },
+      {
+        "name": "keyboard",
+        "slug": "keyboard",
+        "uri": "https://api.sketchfab.com/v3/tags/keyboard"
+      },
+      {
+        "name": "midi-piano",
+        "slug": "midi-piano",
+        "uri": "https://api.sketchfab.com/v3/tags/midi-piano"
+      },
+      {
+        "name": "midi-controller",
+        "slug": "midi-controller",
+        "uri": "https://api.sketchfab.com/v3/tags/midi-controller"
+      },
+      {
+        "name": "digital-piano",
+        "slug": "digital-piano",
+        "uri": "https://api.sketchfab.com/v3/tags/digital-piano"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "720a5e08fab7409e8a64d466c590ac10",
+          "width": 1920,
+          "height": 1080,
+          "size": 163284,
+          "url": "https://media.sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/thumbnails/134cc38ee9ff4a42a9b4ae2337bf570b/02977b33e205456da58e4b4c30f94a73.jpeg"
+        },
+        {
+          "uid": "cb2fe3d085b341ac8273ccee884e3c18",
+          "width": 1024,
+          "height": 576,
+          "size": 41079,
+          "url": "https://media.sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/thumbnails/134cc38ee9ff4a42a9b4ae2337bf570b/a4575540b8034ccf989ec476ab36d1c0.jpeg"
+        },
+        {
+          "uid": "ef3520474a7a416ebfd36b6218f07f95",
+          "width": 720,
+          "height": 405,
+          "size": 24361,
+          "url": "https://media.sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/thumbnails/134cc38ee9ff4a42a9b4ae2337bf570b/2ad74afa1f814e32a7d082a96d37080f.jpeg"
+        },
+        {
+          "uid": "eeb5ab116a8b4bd68f7e5257626e529a",
+          "width": 256,
+          "height": 144,
+          "size": 5837,
+          "url": "https://media.sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/thumbnails/134cc38ee9ff4a42a9b4ae2337bf570b/8997ab8d916b4329a25ba382a876749d.jpeg"
+        },
+        {
+          "uid": "7c1b58dc428341c8a6772e755d111039",
+          "width": 64,
+          "height": 36,
+          "size": 1392,
+          "url": "https://media.sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/thumbnails/134cc38ee9ff4a42a9b4ae2337bf570b/6f652ea5fe9144cbb02fa2dcd32a2478.jpeg"
+        }
+      ]
+    },
+    "uid": "dd034472beb1473ab94544f5acf0fd91",
+    "uri": "https://api.sketchfab.com/v3/models/dd034472beb1473ab94544f5acf0fd91",
+    "user": {
+      "uid": "7c74d8edc09d4c3988f65e7270ef07c9",
+      "username": "designedbyjonathan",
+      "displayName": "Designed By Jonathan",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/designedbyjonathan",
+      "avatar": {
+        "uid": "90f8518c3bdc411dbf83aaf672550240",
+        "uri": "https://api.sketchfab.com/v3/avatars/90f8518c3bdc411dbf83aaf672550240",
+        "images": [
+          {
+            "width": 32,
+            "height": 32,
+            "size": 1277,
+            "url": "https://media.sketchfab.com/avatars/90f8518c3bdc411dbf83aaf672550240/7511796ee99b47a6babc6df95297de53.jpeg"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 1962,
+            "url": "https://media.sketchfab.com/avatars/90f8518c3bdc411dbf83aaf672550240/20f902b580344a9bb1ae2d620352a0b6.jpeg"
+          },
+          {
+            "width": 90,
+            "height": 90,
+            "size": 4313,
+            "url": "https://media.sketchfab.com/avatars/90f8518c3bdc411dbf83aaf672550240/c338da5244a64ea3b85184e0f31fbb50.jpeg"
+          },
+          {
+            "width": 100,
+            "height": 100,
+            "size": 4925,
+            "url": "https://media.sketchfab.com/avatars/90f8518c3bdc411dbf83aaf672550240/e0fbd15d518047b0a718d9dee3a24a69.jpeg"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/7c74d8edc09d4c3988f65e7270ef07c9"
+    },
+    "vertexCount": 1119,
+    "viewCount": 803,
+    "viewerUrl": "https://sketchfab.com/3d-models/super-low-poly-midi-keyboard-dd034472beb1473ab94544f5acf0fd91",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "I created a basic midi keyboard using Sketchup. Enjoy :)",
+    "price": null,
+    "downloadCount": 229,
+    "editorUrl": "https://sketchfab.com/models/dd034472beb1473ab94544f5acf0fd91/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2022-07-20T20:31:02.332514",
+    "pbrType": null,
+    "textureCount": 0,
+    "materialCount": 8
+  },
+  {
+    "animationCount": 0,
+    "categories": [
+      {
+        "uid": "606f202e5a3c4e62bf9aab1cd9f63e1b",
+        "name": "Furniture & Home",
+        "slug": "furniture-home",
+        "uri": "https://api.sketchfab.com/v3/categories/606f202e5a3c4e62bf9aab1cd9f63e1b",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/c999ae9e0525ccfb8fd8953190d5307d-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/606f202e5a3c4e62bf9aab1cd9f63e1b/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/606f202e5a3c4e62bf9aab1cd9f63e1b/800x450.png"
+          }
+        ]
+      },
+      {
+        "uid": "17d20ca7b35243d4a45171838b50704c",
+        "name": "Science & Technology",
+        "slug": "science-technology",
+        "uri": "https://api.sketchfab.com/v3/categories/17d20ca7b35243d4a45171838b50704c",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/86b1bae49e0ed3f43b2d59b26700234e-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/17d20ca7b35243d4a45171838b50704c/800x450.png"
+          }
+        ]
+      }
+    ],
+    "commentCount": 0,
+    "createdAt": "2021-07-22T21:54:07.265604",
+    "embedUrl": "https://sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/embed",
+    "faceCount": 534,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 105,
+    "name": "Basic Computer Monitor & TV - Lowpoly",
+    "publishedAt": "2021-07-22T22:03:41.760152",
+    "soundCount": 0,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "imac",
+        "slug": "imac",
+        "uri": "https://api.sketchfab.com/v3/tags/imac"
+      },
+      {
+        "name": "computer",
+        "slug": "computer",
+        "uri": "https://api.sketchfab.com/v3/tags/computer"
+      },
+      {
+        "name": "tv",
+        "slug": "tv",
+        "uri": "https://api.sketchfab.com/v3/tags/tv"
+      },
+      {
+        "name": "mac",
+        "slug": "mac",
+        "uri": "https://api.sketchfab.com/v3/tags/mac"
+      },
+      {
+        "name": "monitor",
+        "slug": "monitor",
+        "uri": "https://api.sketchfab.com/v3/tags/monitor"
+      },
+      {
+        "name": "lowpoly",
+        "slug": "lowpoly",
+        "uri": "https://api.sketchfab.com/v3/tags/lowpoly"
+      },
+      {
+        "name": "low",
+        "slug": "low",
+        "uri": "https://api.sketchfab.com/v3/tags/low"
+      },
+      {
+        "name": "poly",
+        "slug": "poly",
+        "uri": "https://api.sketchfab.com/v3/tags/poly"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "07e57b0f616e4ac692fa8752fb1677e5",
+          "width": 1920,
+          "height": 1080,
+          "size": 299921,
+          "url": "https://media.sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/thumbnails/e531dc6b50434867809b45ec5d366d4c/90d8fb446be04b5d89c88322e3a00336.jpeg"
+        },
+        {
+          "uid": "e3b7cb70535142da8a07820511148fb5",
+          "width": 1024,
+          "height": 576,
+          "size": 25424,
+          "url": "https://media.sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/thumbnails/e531dc6b50434867809b45ec5d366d4c/6662b0365ed74b5f8f8021a166c976da.jpeg"
+        },
+        {
+          "uid": "27276a7b9a4f4f99867cea47a6431911",
+          "width": 720,
+          "height": 405,
+          "size": 14288,
+          "url": "https://media.sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/thumbnails/e531dc6b50434867809b45ec5d366d4c/425d0e39082d4e04831c2d82a14b3515.jpeg"
+        },
+        {
+          "uid": "ab894ea07aa7475db0905e5100a9f3d9",
+          "width": 256,
+          "height": 144,
+          "size": 3681,
+          "url": "https://media.sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/thumbnails/e531dc6b50434867809b45ec5d366d4c/e9c932a9019d498ab504babc429278d5.jpeg"
+        },
+        {
+          "uid": "bcbdd8e702674869a70cbb2d77322114",
+          "width": 64,
+          "height": 36,
+          "size": 1137,
+          "url": "https://media.sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/thumbnails/e531dc6b50434867809b45ec5d366d4c/082c5e0b34fe48abbc705ecc03f8b4f2.jpeg"
+        }
+      ]
+    },
+    "uid": "967ebecf66ef4d69b90655b173fb444f",
+    "uri": "https://api.sketchfab.com/v3/models/967ebecf66ef4d69b90655b173fb444f",
+    "user": {
+      "uid": "d8ffb853c32e46ee8e0ccc00e6fc4615",
+      "username": "fatihmcnn",
+      "displayName": "fatihmcnn",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/fatihmcnn",
+      "avatar": {
+        "uid": "bcd260f0890f4f0a9dfe4e0d8d9e2cf1",
+        "uri": "https://api.sketchfab.com/v3/avatars/bcd260f0890f4f0a9dfe4e0d8d9e2cf1",
+        "images": [
+          {
+            "width": 32,
+            "height": 32,
+            "size": 1716,
+            "url": "https://media.sketchfab.com/avatars/bcd260f0890f4f0a9dfe4e0d8d9e2cf1/caf6f4ae8fcc4dc186550115553057c3.png"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 3380,
+            "url": "https://media.sketchfab.com/avatars/bcd260f0890f4f0a9dfe4e0d8d9e2cf1/bd8bc9b15c544bcaad7a9a1922a4ca11.png"
+          },
+          {
+            "width": 90,
+            "height": 90,
+            "size": 9546,
+            "url": "https://media.sketchfab.com/avatars/bcd260f0890f4f0a9dfe4e0d8d9e2cf1/9a210e0e712342bab35419a87243644d.png"
+          },
+          {
+            "width": 100,
+            "height": 100,
+            "size": 11311,
+            "url": "https://media.sketchfab.com/avatars/bcd260f0890f4f0a9dfe4e0d8d9e2cf1/eadf24c150da4ab78406c4e53b8a0879.png"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/d8ffb853c32e46ee8e0ccc00e6fc4615"
+    },
+    "vertexCount": 345,
+    "viewCount": 7092,
+    "viewerUrl": "https://sketchfab.com/3d-models/basic-computer-monitor-tv-lowpoly-967ebecf66ef4d69b90655b173fb444f",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "A simple computer monitor or TV. this is free! and low poly!",
+    "price": null,
+    "downloadCount": 3558,
+    "editorUrl": "https://sketchfab.com/models/967ebecf66ef4d69b90655b173fb444f/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2022-07-20T10:48:19.500070",
+    "pbrType": null,
+    "textureCount": 0,
+    "materialCount": 4
+  },
+  {
+    "animationCount": 0,
+    "categories": [
+      {
+        "uid": "d7cebaeca8604ebab1480e413404b679",
+        "name": "Electronics & Gadgets",
+        "slug": "electronics-gadgets",
+        "uri": "https://api.sketchfab.com/v3/categories/d7cebaeca8604ebab1480e413404b679",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/336c224334b7e53e277d236a8355e90a-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/800x450.png"
+          }
+        ]
+      },
+      {
+        "uid": "606f202e5a3c4e62bf9aab1cd9f63e1b",
+        "name": "Furniture & Home",
+        "slug": "furniture-home",
+        "uri": "https://api.sketchfab.com/v3/categories/606f202e5a3c4e62bf9aab1cd9f63e1b",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/c999ae9e0525ccfb8fd8953190d5307d-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/606f202e5a3c4e62bf9aab1cd9f63e1b/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/606f202e5a3c4e62bf9aab1cd9f63e1b/800x450.png"
+          }
+        ]
+      }
+    ],
+    "commentCount": 2,
+    "createdAt": "2019-11-30T14:26:14.102304",
+    "embedUrl": "https://sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/embed",
+    "faceCount": 1004,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 166,
+    "name": "Computer Monitor Lowpoly Model",
+    "publishedAt": "2019-11-30T14:34:30.958954",
+    "soundCount": 0,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "computer",
+        "slug": "computer",
+        "uri": "https://api.sketchfab.com/v3/tags/computer"
+      },
+      {
+        "name": "lcd",
+        "slug": "lcd",
+        "uri": "https://api.sketchfab.com/v3/tags/lcd"
+      },
+      {
+        "name": "tv",
+        "slug": "tv",
+        "uri": "https://api.sketchfab.com/v3/tags/tv"
+      },
+      {
+        "name": "pc",
+        "slug": "pc",
+        "uri": "https://api.sketchfab.com/v3/tags/pc"
+      },
+      {
+        "name": "desk",
+        "slug": "desk",
+        "uri": "https://api.sketchfab.com/v3/tags/desk"
+      },
+      {
+        "name": "monitor",
+        "slug": "monitor",
+        "uri": "https://api.sketchfab.com/v3/tags/monitor"
+      },
+      {
+        "name": "electronic",
+        "slug": "electronic",
+        "uri": "https://api.sketchfab.com/v3/tags/electronic"
+      },
+      {
+        "name": "display",
+        "slug": "display",
+        "uri": "https://api.sketchfab.com/v3/tags/display"
+      },
+      {
+        "name": "window",
+        "slug": "window",
+        "uri": "https://api.sketchfab.com/v3/tags/window"
+      },
+      {
+        "name": "hdmi",
+        "slug": "hdmi",
+        "uri": "https://api.sketchfab.com/v3/tags/hdmi"
+      },
+      {
+        "name": "computer-monitor",
+        "slug": "computer-monitor",
+        "uri": "https://api.sketchfab.com/v3/tags/computer-monitor"
+      },
+      {
+        "name": "lowpoly",
+        "slug": "lowpoly",
+        "uri": "https://api.sketchfab.com/v3/tags/lowpoly"
+      },
+      {
+        "name": "blender3d",
+        "slug": "blender3d",
+        "uri": "https://api.sketchfab.com/v3/tags/blender3d"
+      },
+      {
+        "name": "wood",
+        "slug": "wood",
+        "uri": "https://api.sketchfab.com/v3/tags/wood"
+      },
+      {
+        "name": "decoration",
+        "slug": "decoration",
+        "uri": "https://api.sketchfab.com/v3/tags/decoration"
+      },
+      {
+        "name": "screen",
+        "slug": "screen",
+        "uri": "https://api.sketchfab.com/v3/tags/screen"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "f5e0fefbf3654d85a6ed8962389517b4",
+          "width": 1920,
+          "height": 1080,
+          "size": 225967,
+          "url": "https://media.sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/thumbnails/950db5bb5c674404aac273170a8bae01/0d2eab21c9f24f9b84c96007104c213d.jpeg"
+        },
+        {
+          "uid": "625cc1d10d03489a80f2b011e1814076",
+          "width": 1024,
+          "height": 576,
+          "size": 26320,
+          "url": "https://media.sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/thumbnails/950db5bb5c674404aac273170a8bae01/aa7a8efa6f4c4d9c8f88b3eb209a027c.jpeg"
+        },
+        {
+          "uid": "68173136ea1b45ce9e24b1337d458760",
+          "width": 720,
+          "height": 405,
+          "size": 15134,
+          "url": "https://media.sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/thumbnails/950db5bb5c674404aac273170a8bae01/a205aaec53dc46a4b232096939211da4.jpeg"
+        },
+        {
+          "uid": "3def4dc2a5a049b1a4ee93da785948e7",
+          "width": 256,
+          "height": 144,
+          "size": 3493,
+          "url": "https://media.sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/thumbnails/950db5bb5c674404aac273170a8bae01/0728ca0f4ed340e0b42bfef4ab82d508.jpeg"
+        },
+        {
+          "uid": "b31075766fbf4508a8110aa7c96b53f6",
+          "width": 64,
+          "height": 36,
+          "size": 809,
+          "url": "https://media.sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/thumbnails/950db5bb5c674404aac273170a8bae01/47fae26322314d72bedb0cfb24f3e61e.jpeg"
+        }
+      ]
+    },
+    "uid": "1d4ee42eda804b02b05b63721921c1d7",
+    "uri": "https://api.sketchfab.com/v3/models/1d4ee42eda804b02b05b63721921c1d7",
+    "user": {
+      "uid": "c96d3a987d304d9599f20dda330233ea",
+      "username": "marcoZakaria",
+      "displayName": "Marco Zakaria",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/marcoZakaria",
+      "avatar": {
+        "uid": "51af6a870cce449eb75b0345feebaebb",
+        "uri": "https://api.sketchfab.com/v3/avatars/51af6a870cce449eb75b0345feebaebb",
+        "images": [
+          {
+            "width": 90,
+            "height": 90,
+            "size": 5719,
+            "url": "https://media.sketchfab.com/avatars/51af6a870cce449eb75b0345feebaebb/2ef0f894055b4bb69123b2a27fa2d379.jpeg"
+          },
+          {
+            "width": 100,
+            "height": 100,
+            "size": 6496,
+            "url": "https://media.sketchfab.com/avatars/51af6a870cce449eb75b0345feebaebb/ab11eedf96374486acb544f71a23b165.jpeg"
+          },
+          {
+            "width": 32,
+            "height": 32,
+            "size": 1359,
+            "url": "https://media.sketchfab.com/avatars/51af6a870cce449eb75b0345feebaebb/35f6f9b6c9a14a548ce472582d8a9bb5.jpeg"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 2584,
+            "url": "https://media.sketchfab.com/avatars/51af6a870cce449eb75b0345feebaebb/a8072a51447c4d41ab177b357111b420.jpeg"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/c96d3a987d304d9599f20dda330233ea"
+    },
+    "vertexCount": 536,
+    "viewCount": 16354,
+    "viewerUrl": "https://sketchfab.com/3d-models/computer-monitor-lowpoly-model-1d4ee42eda804b02b05b63721921c1d7",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "Simple low poly computer monitor 3D Model with materials made in Blender.",
+    "price": null,
+    "downloadCount": 7143,
+    "editorUrl": "https://sketchfab.com/models/1d4ee42eda804b02b05b63721921c1d7/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2022-07-20T12:40:36.587382",
+    "pbrType": null,
+    "textureCount": 0,
+    "materialCount": 4
+  },
+  {
+    "animationCount": 0,
+    "categories": [
+      {
+        "uid": "d7cebaeca8604ebab1480e413404b679",
+        "name": "Electronics & Gadgets",
+        "slug": "electronics-gadgets",
+        "uri": "https://api.sketchfab.com/v3/categories/d7cebaeca8604ebab1480e413404b679",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/336c224334b7e53e277d236a8355e90a-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/d7cebaeca8604ebab1480e413404b679/800x450.png"
+          }
+        ]
+      },
+      {
+        "uid": "357487fbb30a44ee8a0adf9b24829919",
+        "name": "Music",
+        "slug": "music",
+        "uri": "https://api.sketchfab.com/v3/categories/357487fbb30a44ee8a0adf9b24829919",
+        "icon": "https://static.sketchfab.com/static/builds/web/dist/static/assets/images/icons/categories/e46cf538674d8594fad0292580efcf5b-v2.svg",
+        "thumbnails": [
+          {
+            "width": "512",
+            "height": "288",
+            "url": "https://static.sketchfab.com/categories/357487fbb30a44ee8a0adf9b24829919/512x288.png"
+          },
+          {
+            "width": "800",
+            "height": "450",
+            "url": "https://static.sketchfab.com/categories/357487fbb30a44ee8a0adf9b24829919/800x450.png"
+          }
+        ]
+      }
+    ],
+    "commentCount": 1,
+    "createdAt": "2019-03-01T19:01:30.065434",
+    "embedUrl": "https://sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/embed",
+    "faceCount": 3782,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 42,
+    "name": "Yamaha MG06 Mixer Lowpoly",
+    "publishedAt": "2019-03-01T19:26:29.244989",
+    "soundCount": 0,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "console",
+        "slug": "console",
+        "uri": "https://api.sketchfab.com/v3/tags/console"
+      },
+      {
+        "name": "yamaha",
+        "slug": "yamaha",
+        "uri": "https://api.sketchfab.com/v3/tags/yamaha"
+      },
+      {
+        "name": "audio",
+        "slug": "audio",
+        "uri": "https://api.sketchfab.com/v3/tags/audio"
+      },
+      {
+        "name": "mixer",
+        "slug": "mixer",
+        "uri": "https://api.sketchfab.com/v3/tags/mixer"
+      },
+      {
+        "name": "mixing",
+        "slug": "mixing",
+        "uri": "https://api.sketchfab.com/v3/tags/mixing"
+      },
+      {
+        "name": "lowpoly",
+        "slug": "lowpoly",
+        "uri": "https://api.sketchfab.com/v3/tags/lowpoly"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "392f2bef63864695b0ca966e9ce7d12a",
+          "width": 1920,
+          "height": 1080,
+          "size": 226933,
+          "url": "https://media.sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/thumbnails/44be70e2644e4979a7f221f47efc3010/ea1b2dedd8cb4028ba4a34d623303827.jpeg"
+        },
+        {
+          "uid": "f5824c49691d4456a5214bd4534ee5f3",
+          "width": 1024,
+          "height": 576,
+          "size": 67883,
+          "url": "https://media.sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/thumbnails/44be70e2644e4979a7f221f47efc3010/861caa3f6f8a449ea520e99efdc1a277.jpeg"
+        },
+        {
+          "uid": "025a7e44ab6b4ae884afab84ff06c045",
+          "width": 720,
+          "height": 405,
+          "size": 40377,
+          "url": "https://media.sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/thumbnails/44be70e2644e4979a7f221f47efc3010/1441210159c0403bbeb2b790577f4b17.jpeg"
+        },
+        {
+          "uid": "b8a12c73d3a8494093c26a0aa8ae4ba7",
+          "width": 256,
+          "height": 144,
+          "size": 7383,
+          "url": "https://media.sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/thumbnails/44be70e2644e4979a7f221f47efc3010/809765efed384a83b981a163ca38244c.jpeg"
+        },
+        {
+          "uid": "261b17cc7563457cb63ff9a9882f5481",
+          "width": 64,
+          "height": 36,
+          "size": 1054,
+          "url": "https://media.sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/thumbnails/44be70e2644e4979a7f221f47efc3010/ee634d27240c4757b42fe82e6c426dc0.jpeg"
+        }
+      ]
+    },
+    "uid": "a03a0da5a3b84402a8751b75dd9bffb9",
+    "uri": "https://api.sketchfab.com/v3/models/a03a0da5a3b84402a8751b75dd9bffb9",
+    "user": {
+      "uid": "50a52f9ef73841ad9918080e50ff525f",
+      "username": "ivan-wsk",
+      "displayName": "Ivan_WSK",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/ivan-wsk",
+      "avatar": {
+        "uid": "5ec24085f0864f31b772e23d33bcf1b2",
+        "uri": "https://api.sketchfab.com/v3/avatars/5ec24085f0864f31b772e23d33bcf1b2",
+        "images": [
+          {
+            "width": 32,
+            "height": 32,
+            "size": 832,
+            "url": "https://media.sketchfab.com/avatars/5ec24085f0864f31b772e23d33bcf1b2/ee6831d935d14de7b2bf0ac1363f7604.jpeg"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 1396,
+            "url": "https://media.sketchfab.com/avatars/5ec24085f0864f31b772e23d33bcf1b2/addb97c77e2a40c084259d02d324200c.jpeg"
+          },
+          {
+            "width": 90,
+            "height": 90,
+            "size": 3576,
+            "url": "https://media.sketchfab.com/avatars/5ec24085f0864f31b772e23d33bcf1b2/5b666ae34cf34325a99607cb2bd32754.jpeg"
+          },
+          {
+            "width": 100,
+            "height": 100,
+            "size": 4103,
+            "url": "https://media.sketchfab.com/avatars/5ec24085f0864f31b772e23d33bcf1b2/4e15bda8d0164812ab9f452c53f870c2.jpeg"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/50a52f9ef73841ad9918080e50ff525f"
+    },
+    "vertexCount": 2034,
+    "viewCount": 1552,
+    "viewerUrl": "https://sketchfab.com/3d-models/yamaha-mg06-mixer-lowpoly-a03a0da5a3b84402a8751b75dd9bffb9",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "Yamaha MG06 6-channel mixing console.\n\nHighpoly model - https://sketchfab.com/3d-models/yamaha-mg06-mixer-highpoly-b3335d4114474ee1adf98a872d0e123b\n\nMidpoly model - https://sketchfab.com/3d-models/yamaha-mg06-mixer-midpoly-e17e34a195b74887af3e22647a86311d",
+    "price": null,
+    "downloadCount": 487,
+    "editorUrl": "https://sketchfab.com/models/a03a0da5a3b84402a8751b75dd9bffb9/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2025-05-04T15:17:02.087636",
+    "pbrType": "specular",
+    "textureCount": 6,
+    "materialCount": 1
+  },
+  {
+    "animationCount": 0,
+    "categories": [],
+    "commentCount": 0,
+    "createdAt": "2025-10-06T12:50:56.259077",
+    "embedUrl": "https://sketchfab.com/models/2de856e665044d41897ec6047f41aa91/embed",
+    "faceCount": 6552,
+    "isAgeRestricted": false,
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "likeCount": 2,
+    "name": "audio mixing console",
+    "publishedAt": "2025-10-06T13:02:48.095015",
+    "soundCount": 0,
+    "staffpickedAt": null,
+    "tags": [
+      {
+        "name": "music",
+        "slug": "music",
+        "uri": "https://api.sketchfab.com/v3/tags/music"
+      },
+      {
+        "name": "switch",
+        "slug": "switch",
+        "uri": "https://api.sketchfab.com/v3/tags/switch"
+      },
+      {
+        "name": "studio",
+        "slug": "studio",
+        "uri": "https://api.sketchfab.com/v3/tags/studio"
+      },
+      {
+        "name": "button",
+        "slug": "button",
+        "uri": "https://api.sketchfab.com/v3/tags/button"
+      },
+      {
+        "name": "stage",
+        "slug": "stage",
+        "uri": "https://api.sketchfab.com/v3/tags/stage"
+      },
+      {
+        "name": "electronics",
+        "slug": "electronics",
+        "uri": "https://api.sketchfab.com/v3/tags/electronics"
+      },
+      {
+        "name": "audio",
+        "slug": "audio",
+        "uri": "https://api.sketchfab.com/v3/tags/audio"
+      },
+      {
+        "name": "mixer",
+        "slug": "mixer",
+        "uri": "https://api.sketchfab.com/v3/tags/mixer"
+      },
+      {
+        "name": "realistic",
+        "slug": "realistic",
+        "uri": "https://api.sketchfab.com/v3/tags/realistic"
+      },
+      {
+        "name": "DJI",
+        "slug": "dji",
+        "uri": "https://api.sketchfab.com/v3/tags/dji"
+      },
+      {
+        "name": "concert",
+        "slug": "concert",
+        "uri": "https://api.sketchfab.com/v3/tags/concert"
+      },
+      {
+        "name": "sing",
+        "slug": "sing",
+        "uri": "https://api.sketchfab.com/v3/tags/sing"
+      },
+      {
+        "name": "unrealengine",
+        "slug": "unrealengine",
+        "uri": "https://api.sketchfab.com/v3/tags/unrealengine"
+      },
+      {
+        "name": "soundboard",
+        "slug": "soundboard",
+        "uri": "https://api.sketchfab.com/v3/tags/soundboard"
+      },
+      {
+        "name": "unity",
+        "slug": "unity",
+        "uri": "https://api.sketchfab.com/v3/tags/unity"
+      },
+      {
+        "name": "blender",
+        "slug": "blender",
+        "uri": "https://api.sketchfab.com/v3/tags/blender"
+      },
+      {
+        "name": "pbr",
+        "slug": "pbr",
+        "uri": "https://api.sketchfab.com/v3/tags/pbr"
+      },
+      {
+        "name": "lowpoly",
+        "slug": "lowpoly",
+        "uri": "https://api.sketchfab.com/v3/tags/lowpoly"
+      },
+      {
+        "name": "3dmodel",
+        "slug": "3dmodel",
+        "uri": "https://api.sketchfab.com/v3/tags/3dmodel"
+      },
+      {
+        "name": "construction",
+        "slug": "construction",
+        "uri": "https://api.sketchfab.com/v3/tags/construction"
+      },
+      {
+        "name": "faders",
+        "slug": "faders",
+        "uri": "https://api.sketchfab.com/v3/tags/faders"
+      }
+    ],
+    "thumbnails": {
+      "images": [
+        {
+          "uid": "c649dae9e41e4d7491285986cce23604",
+          "width": 1920,
+          "height": 1080,
+          "size": 485663,
+          "url": "https://media.sketchfab.com/models/2de856e665044d41897ec6047f41aa91/thumbnails/f59f4163fe21476095c8fd5e2f9d592b/ebc259b73b3b4b9b9402fb5e1e1a1c23.jpeg"
+        },
+        {
+          "uid": "f078023762d840df83195ab2e40c6edb",
+          "width": 1024,
+          "height": 576,
+          "size": 66188,
+          "url": "https://media.sketchfab.com/models/2de856e665044d41897ec6047f41aa91/thumbnails/f59f4163fe21476095c8fd5e2f9d592b/249363eef264431c9c1ad64847a097cb.jpeg"
+        },
+        {
+          "uid": "73ad98c8dc0b4e47afad9b446f045354",
+          "width": 720,
+          "height": 405,
+          "size": 32964,
+          "url": "https://media.sketchfab.com/models/2de856e665044d41897ec6047f41aa91/thumbnails/f59f4163fe21476095c8fd5e2f9d592b/d29520524adf4a4fa7428da411ddfdbe.jpeg"
+        },
+        {
+          "uid": "b9d53baf9dd74dcb850331d3d7796b02",
+          "width": 256,
+          "height": 144,
+          "size": 5799,
+          "url": "https://media.sketchfab.com/models/2de856e665044d41897ec6047f41aa91/thumbnails/f59f4163fe21476095c8fd5e2f9d592b/0d1c28a0971f429ebbbff5ee62a085ec.jpeg"
+        },
+        {
+          "uid": "ecd297582d0d4d98b892607c0a3ba864",
+          "width": 64,
+          "height": 36,
+          "size": 1222,
+          "url": "https://media.sketchfab.com/models/2de856e665044d41897ec6047f41aa91/thumbnails/f59f4163fe21476095c8fd5e2f9d592b/19419d2847dd41db8a066dfcd3b4ba23.jpeg"
+        }
+      ]
+    },
+    "uid": "2de856e665044d41897ec6047f41aa91",
+    "uri": "https://api.sketchfab.com/v3/models/2de856e665044d41897ec6047f41aa91",
+    "user": {
+      "uid": "c8719832ffb34758b41a02ef3fc31edd",
+      "username": "survivedua",
+      "displayName": "SURVIVED",
+      "account": "basic",
+      "profileUrl": "https://sketchfab.com/survivedua",
+      "avatar": {
+        "uid": "7ae1b27c531e41dba4781530a5017cfc",
+        "uri": "https://api.sketchfab.com/v3/avatars/7ae1b27c531e41dba4781530a5017cfc",
+        "images": [
+          {
+            "width": 32,
+            "height": 32,
+            "size": 921,
+            "url": "https://media.sketchfab.com/avatars/7ae1b27c531e41dba4781530a5017cfc/971a709ee01d4ad58f7ca73e287117b1.jpeg"
+          },
+          {
+            "width": 48,
+            "height": 48,
+            "size": 1160,
+            "url": "https://media.sketchfab.com/avatars/7ae1b27c531e41dba4781530a5017cfc/649bc448c5db4b9dafd3e03dd8b21fa0.jpeg"
+          },
+          {
+            "width": 90,
+            "height": 90,
+            "size": 2206,
+            "url": "https://media.sketchfab.com/avatars/7ae1b27c531e41dba4781530a5017cfc/a3229494cb6a400d9a70604df598316f.jpeg"
+          },
+          {
+            "width": 100,
+            "height": 100,
+            "size": 2454,
+            "url": "https://media.sketchfab.com/avatars/7ae1b27c531e41dba4781530a5017cfc/c5a419df37c74a8f9fa957f7f3dba1a1.jpeg"
+          }
+        ]
+      },
+      "uri": "https://api.sketchfab.com/v3/users/c8719832ffb34758b41a02ef3fc31edd"
+    },
+    "vertexCount": 4062,
+    "viewCount": 744,
+    "viewerUrl": "https://sketchfab.com/3d-models/audio-mixing-console-2de856e665044d41897ec6047f41aa91",
+    "isDownloadable": true,
+    "isProtected": false,
+    "description": "High-quality 3D model of a professional audio mixing console, designed for sound engineering and music production environments. The model features a detailed layout with multiple knobs, faders, switches, and input/output ports \u2014 ideal for use in studio visualizations, concert scenes, or game environments.\n\nCreated with attention to realistic proportions and clean topology, this asset is optimized for both rendering and real-time engines such as Unity or Unreal Engine.\n\nFeatures:\n\nPBR-ready materials\n\nRealistic layout of controls\n\nClean topology and optimized geometry\n\nSuitable for animation, product visualization, or virtual stage setups\n\nSoftware used: Blender",
+    "price": null,
+    "downloadCount": 202,
+    "editorUrl": "https://sketchfab.com/models/2de856e665044d41897ec6047f41aa91/edit",
+    "status": {
+      "warning": {},
+      "processing": "SUCCEEDED"
+    },
+    "source": "website",
+    "hasCommentsDisabled": false,
+    "updatedAt": "2025-10-07T19:57:18.865577",
+    "pbrType": "metalness",
+    "textureCount": 4,
+    "materialCount": 1
+  }
+]

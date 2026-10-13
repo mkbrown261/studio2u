@@ -1,0 +1,56 @@
+{
+  "releaseMode": "FAST_RELEASE",
+  "tenantId": "TENANT_ID",
+  "labelId": "LABEL_ID",
+  "artistId": "ARTIST_ID",
+  "release": {
+    "title": "Example Single",
+    "type": "SINGLE",
+    "upc": null,
+    "targetDistributor": "UnitedMasters",
+    "releaseDate": null,
+    "approval": "DRAFT"
+  },
+  "recordings": [
+    {
+      "recordingId": "RECORDING_ID",
+      "audioAssetId": "AUDIO_ID",
+      "durationMs": null,
+      "isrc": null,
+      "lyricsStatus": "DRAFT_UNCONFIRMED",
+      "masterRightsStatus": "UNKNOWN",
+      "thirdPartyBeatStatus": "UNKNOWN",
+      "sampleClearanceStatus": "UNKNOWN",
+      "contributors": []
+    }
+  ],
+  "compositions": [
+    {
+      "compositionId": "COMPOSITION_ID",
+      "title": "Example Single",
+      "iswc": null,
+      "songwriterParties": [],
+      "publisherParties": [],
+      "proAffiliations": [],
+      "splitVerification": "UNKNOWN"
+    }
+  ],
+  "registrationTasks": [
+    {
+      "organization": "PRO",
+      "status": "NOT_STARTED"
+    },
+    {
+      "organization": "MLC",
+      "status": "NOT_STARTED"
+    },
+    {
+      "organization": "SOUNDEXCHANGE",
+      "status": "NOT_STARTED"
+    },
+    {
+      "organization": "COPYRIGHT_OFFICE",
+      "status": "NOT_STARTED"
+    }
+  ]
+}

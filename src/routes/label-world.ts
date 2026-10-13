@@ -1,8 +1,10 @@
 import { Hono } from 'hono'
-import { html } from 'hono/html'
+import { html, raw } from 'hono/html'
 import type { AppEnv } from '../types'
 import type { SessionUser } from '../lib/session'
 import { getSessionUser } from '../lib/session'
+import { installLabelLogin } from '../label-world/login'
+import { installWorkspaceRoutes } from '../label-world/workspace-services'
 import { installProviderRoutes } from '../label-world/providers/routes'
 import { releaseInput } from '../label-world/contracts'
 import { modeInput, organizations, rightsInput, rightsGate, registrationInput, text } from '../label-world/release-operations'
@@ -146,14 +148,16 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/events', async c => {
 })
 
 installProviderRoutes(labelWorldRoutes)
+installWorkspaceRoutes(labelWorldRoutes)
+installLabelLogin(labelWorldRoutes)
 
-labelWorldRoutes.get('/label-world', async c => {
+labelWorldRoutes.get('/label-world/dashboard', async c => {
   const user = await getSessionUser(c.env.DB, c.req.raw)
-  if (!user) return c.redirect('/login')
-  return c.html(html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Label World · Studio2U</title>
+  if (!user) return c.redirect('/label-world/login?returnTo=%2Flabel-world%2Fdashboard')
+  return c.html(html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Label World Dashboard · Studio2U</title>
   <style>[hidden]{display:none!important}body{margin:0;background:#101018;color:#eee;font:16px system-ui}main{max-width:900px;margin:auto;padding:48px 24px}a{color:#e8bf6b}h1{font-size:44px}section{padding:24px;background:#1c1b28;border:1px solid #393244;border-radius:16px;margin:24px 0}input,select,button{padding:12px;border-radius:8px;margin:6px;border:1px solid #5b5066;background:#252233;color:#fff}button{background:#d6b567;color:#15111d;cursor:pointer}button:disabled{opacity:.4}label{display:inline-block}li{padding:10px}#lw-message{min-height:24px;color:#e8bf6b}.status{color:#bcb1ce;line-height:1.7}</style></head><body><main id="label-world">
-  <a href="/">Studio2U</a><h1>Your label starts here.</h1><p>Welcome, ${user.name}. Create a label workspace and your first release draft.</p>
-  <p class="status">Foundation preview: workspaces and release drafts are available. The 3D headquarters, character assets, uploads, background agent execution and release ZIP generation are still being built.</p>
+  <a href="/label-world">Headquarters &amp; employee dashboards</a> · <a href="/">Studio2U</a><h1>Your label starts here.</h1><p>Welcome, ${user.name}. Create a label workspace and your first release draft.</p>
+  <p class="status">Foundation preview: workspaces and release drafts are available. The 3D headquarters and employee workspaces are available from the headquarters. Uploads, background agent execution and release ZIP generation remain unfinished.</p>
   <p id="lw-message" role="status"></p>
   <section><h2>Label workspace</h2><label>Current label <select id="lw-labels"></select></label><form id="lw-label-form"><label>New label name <input name="name" maxlength="100" required></label><button>Create label</button></form></section>
   <section><h2>Release drafts</h2><ul id="lw-releases"></ul><form id="lw-release-form"><label>Artist <input name="artist" maxlength="200" required></label><label>Title <input name="title" maxlength="200" required></label><label>Type <select name="releaseType"><option value="single">Single</option><option value="ep">EP</option><option value="album">Album</option></select></label><label>Workflow <select name="releaseMode"><option value="FAST_RELEASE">Fast Release</option><option value="MANAGED_RELEASE">Managed Release</option></select></label><label>Distributor <input name="targetDistributor" value="UnitedMasters" maxlength="200" required></label><button id="lw-release-submit" disabled>Create release</button><button id="lw-cancel-edit" type="button" hidden>Cancel revision</button></form><p class="status">Both workflows require rights review. Distribution, PRO, MLC, SoundExchange and copyright are separate processes. No external submissions are enabled.</p></section>
@@ -165,4 +169,19 @@ labelWorldRoutes.get('/label-world', async c => {
   <form id="lw-reasoning-test"><label>Test message <input name="prompt" maxlength="8000" required placeholder="Ask a question to test your selected model"></label><button>Send test message</button></form><pre id="lw-reasoning-output" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><p class="status">This tests the provider connection. Employee workflows and business tools are still being built. Test messages are sent to your selected provider.</p></section>
   <section><h2>Your first team</h2><p>Researcher · A&amp;R and sourced requirements</p><p>Reviewer · File and metadata quality assurance</p><p class="status">Character modeling follows your supplied references. No agent jobs are running in this preview.</p></section>
   </main><script src="/label-world.js" defer></script></body></html>`)
+})
+
+// Public shared-art headquarters; all label/user data continues to require session membership.
+async function headquartersPage(c:any, requireSession=false){
+  c.header('Cache-Control','no-store')
+  const user=await getSessionUser(c.env.DB,c.req.raw)
+  if(requireSession&&!user)return c.redirect('/label-world/login?returnTo='+encodeURIComponent(new URL(c.req.url).pathname))
+  c.header('Cache-Control','no-store')
+  const bootstrap=JSON.stringify({authenticated:Boolean(user),userName:user?.name||null}).replace(/</g,'\\u003c')
+  return c.html(html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Studio2U · Label World Headquarters</title><link rel="stylesheet" href="/label-world-ui.css"><link rel="stylesheet" href="/label-world-hq.css"></head><body><div id="label-world-app"><p style="padding:32px;color:#e8bd6b;background:#080d12">Loading Studio2U headquarters…</p></div><script id="label-world-bootstrap" type="application/json">${raw(bootstrap)}</script><script type="module" src="/label-world/app/main.js"></script><noscript><p>JavaScript is required for 3D headquarters. <a href="/label-world/dashboard">Open accessible release dashboard</a>.</p></noscript></body></html>`)
+}
+labelWorldRoutes.get('/label-world',c=>headquartersPage(c))
+labelWorldRoutes.get('/label-world/agents/:agent',c=>{
+  if(!['researcher','reviewer','executive','builder'].includes(c.req.param('agent')))return c.notFound()
+  return headquartersPage(c,true)
 })

@@ -34,3 +34,6 @@ Planning documents only. A reference image is not a 3D model. This bundle does n
 - `ACCEPTANCE_TESTS.md` — evidence of completion rather than checkbox optimism
 - `CLI_HANDOFF.md` — immediately actionable code-agent instructions
 - Earlier v1 docs are retained and expanded.
+
+## Current authoritative blueprint: v2.2 — adopted 2026-10-12
+Read START_HERE_v2_2.md and V2_2_IMPLEMENTATION.md. Archived supplied source: docs/blueprint-archive/v2.2-source/. Prior v2/v2.1 scope remains valid; the newer consolidated prompt governs ordering. Actual progress/evidence is in BUILD_STATUS.md, not the planning package's historical status. TRACEABILITY.json now maps 94 requirements and 14 workflows; 23 skills remain design contracts.

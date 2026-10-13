@@ -1,0 +1,30 @@
+
+> build
+> npm run build:label-world && vite build
+
+
+> build:label-world
+> vite build --config vite.label-world.config.ts
+
+vite v8.1.4 building client environment for production...
+
+transforming...✓ 574 modules transformed.
+rendering chunks...
+computing gzip size...
+public/label-world/app/main.js                            289.40 kB │ gzip:  88.33 kB
+public/label-world/app/chunks/Headquarters-D7wSMwZq.js  1,015.81 kB │ gzip: 273.66 kB
+
+✓ built in 749ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+vite v8.1.4 building ssr environment for production...
+
+transforming...✓ 325 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/_worker.js  611.99 kB │ gzip: 131.74 kB
+
+✓ built in 407ms

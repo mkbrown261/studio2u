@@ -31,3 +31,10 @@ lerna-debug.log*
 
 # misc
 .DS_Store
+
+# Label World browser bundles are reproducibly built from src/client.
+public/label-world/app/
+
+# Large editable sources are preserved locally and privately archived in R2.
+assets/blender/**/*.blend
+assets/blender/**/*.blend1

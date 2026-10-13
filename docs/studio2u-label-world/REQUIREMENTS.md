@@ -80,3 +80,53 @@ Priority: P0 foundation, P1 first end-to-end vertical slice, P2 expansion, P3 fu
 - R219 Platform-specific social exports using versioned presets, not assumptions that all platform limits match.
 - R220 Multi-provider connection settings with exact capabilities, costs, feature flags, revocation and token isolation.
 - R221 Agent evaluations against sample releases, invalid files, missing ownership, provider outages and simulated-but-clearly-marked demo mode.
+
+
+## v2.1 ADDENDUM — AI Employee communication, approved form handoff, roster and voice
+This section adds new requirements without rewriting/reassigning R001–R304 or v2 R111–R221. Priority is listed explicitly; all new entries begin `DESIGNED_NOT_IMPLEMENTED` unless the **current actual repository** demonstrates otherwise.
+
+- R305 (P1b) Separate AI Employees Inbox with per-agent/task/release threads and dedicated navigation, completely isolated from client/engineer booking messages.
+- R306 (P1b) Session-authenticated, label-member authorized messaging, server-authorized agent sender, tenant-scoped attachments and participant/read states; no `?email` as Label World identity.
+- R307 (P1c) Structured version-bound agent approval cards, review/reject/request-changes, audit, idempotency, and no chat-text-as-approval bypass.
+- R308 (P1b/P2) Persistent agent inbox notification queues, unread counts and preferences; realtime transport optional, replaceable and accurately labeled.
+- R309 (P1c) PRO/rights/distribution registration packet and human official-site review/submit handoff, with versioned evidence and official source links.
+- R310 (P2+) Provider-specific browser assistance only if officially permitted and user-supervised, with scoped session, secrets isolation, pause/stop and no automated legal declarations; otherwise manual handoff.
+- R311 (P1c) Separate prepared, reported-submitted, pending verification, official confirmed and rejected statuses for filings/royalty claims.
+- R312 (P2 V1 voice) Conversation with chosen agents using text and speech with streaming/turn interruption, text fallback, no lip-sync dependency and verified provider entitlement.
+- R313 (P1b/P2) Select, hire, name and configure prebuilt agents from versioned skill templates per tenant; show configured vs executable status truthfully.
+- R314 (P1b/P2) Per-skill connection onboarding/capability matrix with approved API keys/OAuth/scoped authorizations, provider costs, revocation and manual fallback.
+- R315 (P3) Headless renderer-independent agents allow future Unreal MetaHuman lip-synced avatars without backend rewrite.
+- R316 (P1 visual) Preserve existing Carla Researcher and Eric Reviewer Blender rigs as only presently reported 3D character implementations; Executive and Builder mesh/rig pending, backend roles available independent of mesh.
+- R317 (P2) Royalty Recovery Dashboard for evidence-backed PRO, MLC, SoundExchange and distributor eligibility, missing claims, receipts, reminders and no speculative owed balances.
+- R318 (P2) Typed creative handoff among Marketing, Videographer, Higgsfield adapter, Genjitsu/other editor, Reviewer and Social with likeness rights, timecodes, approvals and actual media evidence.
+- R319 (P0 continuous) Source/deployment reconciliation records current branch/SHA, remote versus local state, actual tests, Cloudflare environment and whether production changed; no unverified deployment claims.
+- R320 (P1b) Regression tests guarantee pre-existing booking messages, unread badges and engineer/customer permissions remain intact.
+- R321 (P2) Voice/microphone consent, session indicators, privacy/retention, accessibility controls, text alternative and no high-risk action approved by speech alone.
+
+**Test references:** `ADOPTION_AND_TEST_MATRIX.md`, `AGENT_INBOX_SPEC.md`, `APPROVAL_AND_BROWSER_HANDOFF.md`. **Proposed skills** in `proposed_skills/` do not change the original 23 registered contract count until explicitly merged and tested by CLI.
+
+
+## v2.2 ADDENDUM — approved dashboards and interactive headquarters (R322–R339)
+
+These 18 new requirements supplement, never replace, existing R001–R321. All are DESIGN REQUIREMENTS until verified in real code. See `START_HERE_v2_2.md` and `V2_2_ACCEPTANCE_TESTS.md`.
+
+- R322 (P1 visual): One shared accessible React dashboard shell with four approved role-based routes; strict Studio2U main-site styling boundary.
+- R323 (P1 visual): Four high-fidelity dashboard layouts match supplied images; analytics examples and status figures clearly distinguished from live data.
+- R324 (P1 visual): Real Blender headquarters inventories/exports with validated GLB, texture/UV/material fixing, preserved source and deployed room loader.
+- R325 (P1 interaction): Explicit first-person movement and camera control (WASD, pointer lock, Shift, safe spawn, bounds) with collision and touch alternatives.
+- R326 (P1 interaction): Central object/agent/station interaction registry, E/click/tap proximity prompts and permission-aware routing.
+- R327 (P1 interaction): Shared HTML/React overlay opens from 3D, suspends camera, unlocks pointer, restores focus and camera position on close.
+- R328 (P1 interaction): Carla selects Researcher and Eric opens Reviewer tablet; Executive/Builder station fallback when meshes absent.
+- R329 (P1 interaction): Per-character verified animation state registry with idle-only fallback; missing greeting/tablet/walk clips nonblocking.
+- R330 (P1 security): Public sanitized room separate from authenticated private label world; strict per-tenant records/asset authorization.
+- R331 (P1 reliability): WebGL-disabled or broken assets never prevent direct agent dashboards, Inbox, release and provider settings.
+- R332 (P2 personalization): Stable GLB object/material IDs and backend-scoped settings for cabinets, wall finish, trim with save/revert.
+- R333 (P2 personalization): Evidence-driven per-label achievement/plaque registry with verified metric definition, deduplication and correction.
+- R334 (P2 personalization): Optional congratulation in Agent Inbox and accessible/reduced-motion celebration from verified milestone only.
+- R335 (P1 quality): Browser walkthrough for 3D/movement/overlays/permissions and visual screenshot comparisons for all four dashboards.
+- R336 (P1 quality): Independent GLB reimport/test-viewer + animation tests, device-recorded performance and asset provenance manifest.
+- R337 (P1 workflow): 3D contexts and direct-route dashboards share single authoritative label/release/task/approval/Inbox data services.
+- R338 (P1 workflow): Integrate three active coding streams without duplicated work; status reconciled against current branch SHA and live deployment.
+- R339 (P2 A&R): Carla metrics/trends provenance, date windows, data connection states, lawful authorized collection, no mock data marked live.
+
+**Status discipline:** active coding-agent reports of GLB export, dashboard work or Inbox startup remain `IN_PROGRESS_REPORTED` until inspected and browser-tested.

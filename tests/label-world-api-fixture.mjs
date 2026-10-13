@@ -7,7 +7,7 @@ const { Hono }=await import('hono'),{ csrf }=await import('hono/csrf'),{ labelWo
 export function fixture(){
  const sqlite=new DatabaseSync(':memory:');sqlite.exec(`PRAGMA foreign_keys=ON;CREATE TABLE users(id INTEGER PRIMARY KEY,email TEXT,name TEXT,phone TEXT,is_engineer INTEGER,is_artist INTEGER,is_platform_admin INTEGER);CREATE TABLE sessions(token TEXT,user_id INTEGER,expires_at TEXT);`)
  for(let i=1;i<=4;i++){sqlite.prepare('INSERT INTO users VALUES (?,?,?,NULL,0,1,0)').run(i,`test${i}@example.invalid`,`Test ${i}`);sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)').run(`test-session-${i}`,i,'2099-01-01 00:00:00')}
- sqlite.exec(readFileSync('migrations/0018_label_world.sql','utf8'));sqlite.exec(readFileSync('migrations/0019_label_world_release_operations.sql','utf8'));sqlite.exec(readFileSync('migrations/0020_label_world_reasoning.sql','utf8'))
+ sqlite.exec(readFileSync('migrations/0018_label_world.sql','utf8'));sqlite.exec(readFileSync('migrations/0019_label_world_release_operations.sql','utf8'));sqlite.exec(readFileSync('migrations/0020_label_world_reasoning.sql','utf8'));sqlite.exec(readFileSync('migrations/0021_label_world_workspace.sql','utf8'))
  class Statement{
   constructor(sql,args=[]){this.sql=sql;this.args=args}bind(...args){return new Statement(this.sql,args)}
   async first(){return sqlite.prepare(this.sql).get(...this.args)||null}

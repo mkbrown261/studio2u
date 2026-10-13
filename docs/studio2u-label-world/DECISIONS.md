@@ -51,3 +51,12 @@ Every changed decision requires date, rationale, tradeoffs, affected requirement
 - ADR-025 ACCEPTED: Store the received YAML contracts unchanged; their DESIGNED_NOT_IMPLEMENTED status is explicit. The two null approval_gates lists mean no skill-specific gate in the source, not a bypass of shared tenant/rights/provider authorization. Canonical runtime status stays UNAVAILABLE. Helper functions tested in this milestone do not make any complete skill implemented. Affects R117/R221.
 
 - ADR-026 ACCEPTED (2026-10-12): Founder directs user-selectable OpenAI/Claude/Kimi/Qwen/OpenRouter. Implement personal BYOK credentials with AES-GCM, personal preference per label, live catalogs where official APIs establish them, exact Qwen model IDs otherwise, and explicit test generation. Fixed hosts/region IDs prevent arbitrary credential forwarding. Provider selection does not grant employee tools or activate any skill; model outputs do not verify release rights/readiness. Platform-paid accounts and per-agent overrides remain future work. See REASONING_PROVIDERS.md. Preserve release/Blender work.
+
+## v2.2 implementation decisions — 2026-10-12
+- Adopt supplied v2.2 as the ordering authority; retain v2/v2.1 documents/94 requirements, 14 workflows, 23 unchanged skills and four separate proposals. Archive originals verbatim.
+- Extend the existing Hono/D1/R2 application and shared secure Studio2U session without editing original login/public/booking/customer/engineer UI. Scoped Label World sign-in has an allowlisted destination.
+- Export artwork non-destructively. Correct sofa placement in recovered editable copy and GLB node transforms; private R2 source archive avoids GitHub's 100 MB per-file limit. Public deployment contains generic artwork only.
+- Choose lightweight radius/AABB collision with short substeps from actual furniture bounds, fixed eye height, explicit first-person controller and a shared interaction registry. Avoid per-decoration physics and OrbitControls.
+- Keep Canvas mounted beneath real React dashboard overlays. Close restores pose and focus; pointer lock can resume only from another user gesture. Accessible direct routes require no scene.
+- Existing Carla idle and Eric scroll are the only exported clips. No missing character/gesture invented. No fake work animation or agent execution claim.
+- Ship truthful persistent text/research/creative drafts; record the remaining Inbox/agent/release engine tasks as unfinished. Preserve all original service and encryption secrets.

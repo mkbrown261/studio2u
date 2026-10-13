@@ -1,0 +1,49 @@
+id: "studio2u.ar_discover_music"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "ar_researcher"
+goal: "Find credible chart, regional and underground opportunities"
+trigger: "scheduled or ad hoc discovery"
+inputs:
+  - "labelGenres"
+  - "markets"
+  - "allowedSources"
+  - "researchWindow"
+tools:
+  - "research.allowed_sources"
+  - "research.catalog_queries"
+  - "watchlist.update"
+steps:
+  - "Select authorized data feeds and document coverage limitations."
+  - "Search chart and underground sources with retrieval date."
+  - "Deduplicate artists, tracks and reposts."
+  - "Distinguish verified metrics from growth hypotheses and scene assessment."
+  - "Build source-linked artist dossiers and follow-up watchlist."
+outputs:
+  - "discoveryDossiers"
+  - "sourceLog"
+  - "watchlistUpdates"
+validations:
+  - "Every metric has source/timestamp."
+  - "No scraped restricted data or fabricated streams."
+approval_gates:
+  - "outreach to artists"
+  - "paid acquisition or campaign launch"
+failure_and_escalation:
+  - "source lacks access -> mark unavailable"
+  - "ambiguous artist -> NEEDS_REVIEW"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "sourcedDiscoveries"
+  - "validSourceRatio"
+  - "usefulRecommendations"
+test_scenarios:
+  - "restricted social feed must not be fabricated"
+  - "duplicate artist merged without losing sources"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

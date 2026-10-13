@@ -24,3 +24,6 @@
 
 ### Interpretation and constraints
 The founder's current habit is **descriptive**, not a universal compliance rule. Fast Release still checks ownership, permissions, samples/covers and delivery terms, and tracks missing rights before making a delivery-ready claim. Artist/user owns final legal declarations. This plan is not legal advice. Official form fields, platform APIs, terms, fees and content rules must be rechecked before launch or automated submission.
+
+## v2.2 repository adoption and interaction increment — 2026-10-12
+Preserved exact supplied text package and all earlier requirements. Integrated existing five Blender exports, four reference dashboards and separate persisted employee chats. Added first-person controls/colliders/proximity registry, retained-scene workspace overlays and scoped sign-in return. Moved two lobby seats left, corrected deterministic door poses, retained original Blender file and privately archived editable source. Added local browser/API/asset/legacy regression evidence. No autonomous business skills or provider integrations falsely marked complete. Commit/deployment evidence is recorded after successful push/deploy in BUILD_STATUS.md.

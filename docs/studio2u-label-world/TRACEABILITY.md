@@ -122,3 +122,46 @@ Canonical source: Master Plan v2.0. All earlier registered scope is retained. Ma
 ## Source document coverage
 
 All canonical documents are retained. RELEASE_DATA_SPEC/DATA_MODEL map to R103/R114/R116/R118/R120; RELEASE_OPERATIONS to R111/R112/R113/R115/R119; AGENT_ROLES/AGENT_SKILL_SYSTEM/SKILL_CATALOG and all YAML to R106/R117/R221; CREATIVE_VIDEO_PIPELINE to R109/R120/R121/R122/R213/R214/R219; SOCIAL_A_AND_R_INTELLIGENCE to R123/R124/R126/R215/R216; BROWSER_ACCESS_SECURITY/INTEGRATIONS to R006/R008/R110/R125/R220; ARCHITECTURE to R001–R008/R005; PRODUCT_VISION/README to R002–R004/R209/R301–R304; WORKFLOWS to the W tasks; ROADMAP/START_HERE/CHANGELOG/CLI_HANDOFF/DECISIONS/BUILD_STATUS/ACCEPTANCE_TESTS to R007 and every gate.
+
+
+## v2.1/v2.2 additive requirements — no earlier scope removed
+
+| ID | Task | Owner | Gate | Acceptance | Status |
+|---|---|---|---|---|---|
+| R305 | TASK-R305 | inbox | v2.1 business utility | HQ-19 | PARTIAL_LOCAL_TESTED |
+| R306 | TASK-R306 | inbox | v2.1 business utility | HQ-19 | PARTIAL_LOCAL_TESTED |
+| R307 | TASK-R307 | inbox | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R308 | TASK-R308 | inbox | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R309 | TASK-R309 | business-services | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R310 | TASK-R310 | business-services | v2.1 business utility | HQ-19 | DEFERRED |
+| R311 | TASK-R311 | business-services | v2.1 business utility | HQ-19 | PARTIAL_LOCAL_TESTED |
+| R312 | TASK-R312 | inbox | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R313 | TASK-R313 | business-services | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R314 | TASK-R314 | business-services | v2.1 business utility | HQ-19 | PARTIAL_LOCAL_TESTED |
+| R315 | TASK-R315 | business-services | v2.1 business utility | HQ-19 | DEFERRED |
+| R316 | TASK-R316 | world | v2.1 business utility | HQ-01 | LOCAL_TESTED |
+| R317 | TASK-R317 | business-services | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R318 | TASK-R318 | business-services | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R319 | TASK-R319 | project-control | v2.1 business utility | HQ-22 | IN_PROGRESS |
+| R320 | TASK-R320 | business-services | v2.1 business utility | HQ-15 | PARTIAL_LOCAL_TESTED |
+| R321 | TASK-R321 | inbox | v2.1 business utility | HQ-19 | DESIGNED_ONLY |
+| R322 | TASK-R322 | ui | v2.2 interaction | HQ-12 | LOCAL_TESTED |
+| R323 | TASK-R323 | ui | v2.2 interaction | HQ-16 | PARTIAL_LOCAL_TESTED |
+| R324 | TASK-R324 | world | v2.2 interaction | HQ-02 | LOCAL_TESTED |
+| R325 | TASK-R325 | world | v2.2 interaction | HQ-05 | PARTIAL_LOCAL_TESTED |
+| R326 | TASK-R326 | world | v2.2 interaction | HQ-07 | PARTIAL_LOCAL_TESTED |
+| R327 | TASK-R327 | world | v2.2 interaction | HQ-11 | LOCAL_TESTED |
+| R328 | TASK-R328 | world | v2.2 interaction | HQ-10 | PARTIAL_LOCAL_TESTED |
+| R329 | TASK-R329 | world | v2.2 interaction | HQ-03 | LOCAL_TESTED |
+| R330 | TASK-R330 | business-services | v2.2 interaction | HQ-13 | PARTIAL_LOCAL_TESTED |
+| R331 | TASK-R331 | ui | v2.2 interaction | HQ-12 | LOCAL_TESTED |
+| R332 | TASK-R332 | world | v2.2 interaction | HQ-21 | DEFERRED |
+| R333 | TASK-R333 | world | v2.2 interaction | HQ-20 | DEFERRED |
+| R334 | TASK-R334 | world | v2.2 interaction | HQ-20 | DEFERRED |
+| R335 | TASK-R335 | ui | v2.2 interaction | HQ-16 | PARTIAL_LOCAL_TESTED |
+| R336 | TASK-R336 | world | v2.2 interaction | HQ-17 | PARTIAL_LOCAL_TESTED |
+| R337 | TASK-R337 | business-services | v2.2 interaction | HQ-19 | PARTIAL_LOCAL_TESTED |
+| R338 | TASK-R338 | project-control | v2.2 interaction | HQ-22 | IN_PROGRESS |
+| R339 | TASK-R339 | business-services | v2.1 business utility | HQ-16 | PARTIAL_LOCAL_TESTED |
+
+Workflows W11–W14 retained as DESIGNED_ONLY; four proposed skills remain separate from the unchanged 23 canonical contracts. Local verification does not imply production verification. See BUILD_STATUS.md and V2_2_IMPLEMENTATION.md.

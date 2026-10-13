@@ -1,0 +1,48 @@
+id: "studio2u.publishing_browser_handoff"
+version: "0.1.0"
+status: "PROPOSED_NOT_REGISTERED"
+owner_role: "publishing_admin"
+goal: "Prepare PRO registration and direct human through permissible submission and evidence collection"
+trigger: "PRO packet ready and owner must review/submit"
+inputs:
+  - "compositionId"
+  - "packetRevision"
+  - "targetProvider"
+  - "writerAndPublisherShares"
+tools:
+  - "publishing.validate_packet"
+  - "approval.request"
+  - "agent_inbox.send_internal_message"
+  - "connected_services.get_capability"
+steps:
+  - "Confirm provider and composition rights facts with version provenance."
+  - "Validate shares/identifiers and packet; stop on disputed legal facts."
+  - "Resolve provider capability: approved API, permitted supervised browser, or manual guided handoff."
+  - "Send review card with prepared field map and official provider URL."
+  - "Wait for explicit authenticated approval and required human official-site submission."
+  - "Collect evidence and leave submitted-reported separate from verified-confirmed."
+outputs:
+  - "packetRef"
+  - "approvalId"
+  - "submissionTrackingId"
+validations:
+  - "Never imply prepared packet equals submitted or registered."
+  - "No unapproved account access or credentials in prompts."
+approval_gates:
+  - "ownership confirmation"
+  - "provider submission"
+failure_and_escalation:
+  - "provider disallows automation -> human manual handoff"
+permissions:
+  - "tenant_scope_enforced"
+  - "approved_provider_capability_only"
+  - "audit_logged"
+metrics:
+  - "packetsReviewed"
+  - "evidenceVerified"
+test_scenarios:
+  - "stale packet approval rejected"
+  - "user-reported submission remains unverified"
+knowledge_sources:
+  - "APPROVAL_AND_BROWSER_HANDOFF.md"
+  - "official_provider_docs_must_be_verified_before_activation"
