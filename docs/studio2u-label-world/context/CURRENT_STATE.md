@@ -1,0 +1,2 @@
+# Current state — 2026-10-13
+Verified starting local/remote branch feature/label-world-foundation, HEAD 737e860e95e851a152ef5344d3d06e238a630678. Active production deployment verified via Cloudflare API: 068d738e-3918-4006-875c-af7bf969f3df, same SHA. Legacy untracked Blender assets/scripts preserved. Current task: context milestones A–F, in progress; no context deployment claimed. Working Eric/Carla subsets and internal summaries must remain intact. Read ../BUILD_STATUS.md and evidence receipts for historical tests; verify actual current state.

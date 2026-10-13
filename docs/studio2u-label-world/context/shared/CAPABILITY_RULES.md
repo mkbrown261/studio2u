@@ -1,0 +1,2 @@
+# Capability Rules
+All 23 canonical skill contracts remain DESIGNED_NOT_IMPLEMENTED as complete skills. Implemented subsets: reviewer PCM WAV/PNG validation and reports; researcher public YouTube discovery and authorized normalized CSV reports; stored internal summaries and release drafts. No autonomous tool gateway, ZIP generation, sample detection, loudness analysis, legal clearance, social metrics or royalty filings are enabled by reasoning.
