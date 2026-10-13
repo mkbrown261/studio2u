@@ -12,6 +12,7 @@ const date=(ms:number)=>new Date(Date.now()+ms).toISOString()
 function origin(c:any){const url=new URL(c.req.url);if(url.protocol!=='https:'&&!['127.0.0.1','localhost','studio.invalid'].includes(url.hostname))throw Error();return url.origin}
 function resource(c:any){return origin(c)+'/label-world/mcp'}
 function failure(c:any,error='invalid_request',status=400){return c.json({error},status)}
+function recoverAuthorization(c:any){return c.html(html`<!doctype html><html><head><meta charset="utf-8"><title>Reconnect to Studio2U</title></head><body style="background:#080d12;color:white;font:16px system-ui"><main style="max-width:640px;margin:40px auto;padding:24px"><h1>This connection request is no longer active</h1><p>The request may have expired or already finished. This does not mean your Studio2U password is incorrect.</p><p><a style="color:#f4cd74" href="/label-world/login">Sign in to Label World</a> · <a style="color:#f4cd74" href="/label-world">Continue to headquarters</a></p><p>To connect Codex or Claude Code, restart the connection from that client to receive a fresh authorization link. For an existing Codex configuration, run <code>codex mcp login studio2u</code>. In Claude Code, use <code>/mcp</code>.</p></main></body></html>`,400)}
 function strictValue(value:any,max=2000){if(typeof value!=='string'||!value.length||value.length>max||/[\r\n\x00]/.test(value))throw Error();return value}
 export function validRedirect(uri:string){const u=new URL(uri);return !u.username&&!u.password&&!u.hash&&(u.protocol==='https:'||u.protocol==='http:'&&['127.0.0.1','[::1]','localhost'].includes(u.hostname))}
 async function limited(c:any,key:string,max=60){const window=new Date().toISOString().slice(0,16),r=await c.env.DB.prepare('INSERT INTO lw_mcp_limits(key,window,requests) VALUES (?,?,1) ON CONFLICT(key,window) DO UPDATE SET requests=requests+1 WHERE requests<? RETURNING requests').bind(key,window,max).first();return Boolean(r)}
@@ -34,7 +35,12 @@ mcpRoutes.post(base+'/register',safe(async(c:any)=>{
 }))
 mcpRoutes.get(base+'/authorize',safe(async(c:any)=>{
  const db=c.env.DB;let request:any
- if(c.req.query('request'))request=await db.prepare('SELECT * FROM lw_mcp_requests WHERE id=? AND consumed=0 AND expires_at>?').bind(strictValue(c.req.query('request'),64),date(0)).first()
+ if(c.req.query('request')){
+  const id=c.req.query('request'),params=new URL(c.req.url).searchParams
+  if(!/^[a-f0-9]{64}$/.test(id)||params.getAll('request').length!==1)return recoverAuthorization(c)
+  request=await db.prepare('SELECT * FROM lw_mcp_requests WHERE id=? AND consumed=0 AND expires_at>?').bind(id,date(0)).first()
+  if(!request||request.resource!==resource(c))return recoverAuthorization(c)
+ }
  else{
   const params=new URL(c.req.url).searchParams;if([...params.keys()].some(k=>params.getAll(k).length!==1))return failure(c)
  const q=c.req.query(),client=await db.prepare('SELECT * FROM lw_mcp_clients WHERE id=?').bind(strictValue(q.client_id,64)).first()

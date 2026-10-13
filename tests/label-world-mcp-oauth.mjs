@@ -24,6 +24,16 @@ assert.equal((await request('/label-world/oauth/consent','POST',{request:rid,csr
 const payload=new URLSearchParams({request:rid,csrf,label:a.id,decision:'allow'});for(const s of authQuery.get('scope').split(' '))payload.append('scope',s)
 const allowed=await request('/label-world/oauth/consent','POST',payload,{cookie,origin});assert.equal(allowed.status,302);const callback=new URL(allowed.headers.get('Location')),code=callback.searchParams.get('code');assert.equal(callback.searchParams.get('iss'),origin);assert.equal(callback.searchParams.get('state'),'opaque-state-test')
 assert.equal((await request('/label-world/oauth/consent','POST',payload,{cookie,origin})).status,403)
+// Stale browser continuations offer safe recovery without replaying authorization.
+async function assertRecovery(path){const response=await request(path,'GET',null,{cookie});assert.equal(response.status,400);assert.match(response.headers.get('Content-Type'),/text\/html/);const page=await response.text();assert.ok(page.includes('href="/label-world/login"'));assert.ok(page.includes('href="/label-world"'));assert.ok(!page.includes('name="csrf"'));assert.equal(response.headers.get('Cache-Control'),'no-store')}
+await assertRecovery(returned) // already consumed
+await assertRecovery('/label-world/oauth/authorize?request='+'f'.repeat(64))
+await assertRecovery('/label-world/oauth/authorize?request=malformed')
+await assertRecovery(returned+'&request='+rid)
+const expiring=await request('/label-world/oauth/authorize?'+authQuery),expiredPath=new URL(expiring.headers.get('Location'),origin).searchParams.get('returnTo'),expiredId=new URL(expiredPath,origin).searchParams.get('request')
+f.sqlite.prepare("UPDATE lw_mcp_requests SET expires_at='2020-01-01T00:00:00Z' WHERE id=?").run(expiredId)
+await assertRecovery(expiredPath)
+assert.equal((await request('/api/label-world/ai-connections','GET',null,{cookie})).status,200)
 const tokenParams={grant_type:'authorization_code',client_id:client,redirect_uri:'http://127.0.0.1:54321/callback',resource,code,code_verifier:verifier}
 assert.equal((await request('/label-world/oauth/token','POST',{...tokenParams,code_verifier:'a'.repeat(43)})).status,400)
 assert.equal((await request('/label-world/oauth/token','POST',{...tokenParams,resource:origin+'/other'})).status,400)
