@@ -76,3 +76,17 @@ Read-only tools passed. A later action scope could request an existing Eric revi
 - [Claude MCP](https://code.claude.com/docs/en/mcp), [plugin manifests](https://code.claude.com/docs/en/plugins-reference)
 - [MCP authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization), [HTTP transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports)
 - [Official TypeScript SDK HTTP integration](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/serving/http.md)
+
+## Hosted preview proof and delivery
+
+Connector implementation checkpoints: `49d9cd2aa9cae3fdba318667d4e239f6f698c8db` (A), `f84efce08e4bcf8d5fd17504e21f8e8d2f384eac` (B), `d80584bf445434ded9e18add2fe58490c5ec798a` (UI/package/local evidence). These were pushed to the feature branch; no merge to main.
+
+Cloudflare preview `43b21835-e789-4303-9318-a4b82a960507`, source `d80584bf445434ded9e18add2fe58490c5ec798a`, exact alias **https://feature-label-world-foundati.studio2u.pages.dev**. Cloudflare truncates this branch alias; packages were corrected to the returned alias, not a guessed hostname. The preview path `/label-world/mcp` returns401 without a token, and both discovery documents return200 with the exact preview resource audience.
+
+Native Codex completed real HTTPS browser OAuth against this hosted worker using only the previously approved synthetic QA account/label. It retrieved the existing current review, unchanged credits/rights failures and package NOT_TESTED, real retained public YouTube observations, and user-imported CSV provenance/timestamps. No new artist record, collection, upload, approval or external submission was created. Hosted UI showed Connected, then persisted Disconnected; the native client then failed initialization with Auth required. Temporary CLI entries were removed through normal CLI commands. No AI-client credentials were inspected/exported.
+
+D1 migrations0024/0025 applied after a private mode0600 backup. They add metadata/OAuth tables only. Canonical production remains `068d738e-3918-4006-875c-af7bf969f3df`, source `737e860e95e851a152ef5344d3d06e238a630678`, independently rechecked after preview. Pending website ICM live comparison is not promoted by this preview. Use the preview's AI Connections panel or its exact endpoint for the verified connector now; production connection instructions become active only after promotion.
+
+Receipt: `docs/evidence/mcp-deployment-receipt.json`; hosted screenshot: `docs/evidence/mcp-cloud-ai-connections.png`. `commit_dirty:true` records preserved legacy untracked assets/scripts, which are excluded from the deployed build. Later documentation/package URL commits do not change the deployed application source.
+
+Final Inspector:9tools/5resources,0errors/19portability warnings (legal nullable type arrays and open persisted-record extension fields). Native Codex accepts these schemas; broader client portability is not asserted. Final dependency audit is unchanged from baseline:3moderate/7high,0critical. No unrelated dependency upgrade was performed.

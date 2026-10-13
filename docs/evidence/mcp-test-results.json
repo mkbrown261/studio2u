@@ -130,10 +130,35 @@
     }
   ],
   "limitations": [
-    "Synthetic localhost QA, not production client proof",
     "No website subscription inference demonstrated",
     "No token/cost improvement claim",
     "Marketplace approval pending",
-    "Website ICM live comparison pending"
-  ]
+    "Website ICM live comparison pending",
+    "Hosted client proof uses isolated QA records; canonical production app unchanged"
+  ],
+  "hostedPreview": {
+    "url": "https://feature-label-world-foundati.studio2u.pages.dev",
+    "deploymentId": "43b21835-e789-4303-9318-a4b82a960507",
+    "sourceSha": "d80584bf445434ded9e18add2fe58490c5ec798a",
+    "nativeOAuth": "PASSED",
+    "nativeToolReads": "PASSED",
+    "findings": "Current persisted review: credits.complete FAIL, rights.declaration FAIL, package.integrity NOT_TESTED",
+    "research": "Existing public YouTube observations and user-imported CSV returned with timestamps/provenance; no new collection or inferred metrics",
+    "separateStudioLlmKey": "NOT_REQUIRED",
+    "disconnect": "AUTH_REQUIRED_AT_NATIVE_INITIALIZATION",
+    "audienceMetadata": "EXACT_PREVIEW_RESOURCE",
+    "anonymous": "HTTP401"
+  },
+  "dependencyAudit": {
+    "total": 10,
+    "moderate": 3,
+    "high": 7,
+    "critical": 0,
+    "note": "Same vulnerability counts as baseline; no unrelated npm audit fix applied"
+  },
+  "schemaMigrations": {
+    "0024": "APPLIED_ADDITIVE_ONLY",
+    "0025": "APPLIED",
+    "backup": "Private SQL export mode0600; never committed"
+  }
 }
