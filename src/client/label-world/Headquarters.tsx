@@ -1,6 +1,8 @@
 import React,{Suspense,useEffect,useMemo,useRef,useState,useCallback,Component,type ReactNode} from 'react'
-import {Canvas,useFrame,useThree} from '@react-three/fiber'
-import {useGLTF,useProgress,useAnimations} from '@react-three/drei'
+import {Canvas,useFrame,useThree,useLoader} from '@react-three/fiber'
+import {useProgress} from '@react-three/drei/core/Progress.js'
+import {useAnimations} from '@react-three/drei/core/useAnimations.js'
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js'
 import {clone} from 'three/addons/utils/SkeletonUtils.js'
 import {Vector3,MeshStandardMaterial} from 'three'
 import {employees,rooms,type AgentId} from './registry'
@@ -13,7 +15,7 @@ const assets='/label-world/assets/'
 function AssetLoading(){const {progress,errors}=useProgress();return <div className="hq-loading" role="status">{errors.length?'Asset loading failed. Use the dashboard or retry.':`Loading your Blender headquarters · ${Math.round(progress)}%`}</div>}
 class SceneBoundary extends Component<{children:ReactNode;onError:()=>void},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true}};componentDidCatch(){this.props.onError()};render(){return this.state.failed?null:this.props.children}}
 function World({doors,onInteract,onLoaded}:{doors:DoorState;onInteract:(id:string)=>void;onLoaded:(name:string,count:number)=>void}){
- const models=useGLTF([assets+'studio.glb',assets+'lobby.glb',assets+'conference.glb']) as any[]
+ const models=useLoader(GLTFLoader,[assets+'studio.glb',assets+'lobby.glb',assets+'conference.glb']) as any[]
  const scenes=useMemo(()=>models.map(m=>m.scene.clone(true)),[models])
  const water=useRef<MeshStandardMaterial|null>(null)
  useEffect(()=>{scenes.forEach((scene,index)=>{let count=0;scene.traverse((node:any)=>{if(node.isMesh){count++;node.receiveShadow=true;if(node.name.toLowerCase().includes('ocean')){const material=Array.isArray(node.material)?node.material[0]:node.material;if(material?.normalMap){node.material=material.clone();water.current=node.material}}}});onLoaded(['studio','lobby','conference'][index],count)})},[scenes])
@@ -25,7 +27,7 @@ function World({doors,onInteract,onLoaded}:{doors:DoorState;onInteract:(id:strin
  return <group onClick={e=>{let object=e.object;for(let i=0;object&&i<5;i++,object=object.parent as any){const target=interactables.find(t=>t.objects.some(name=>object.name.includes(name)));if(target){e.stopPropagation();onInteract(target.id);return}}}}>{scenes.map((scene,i)=><primitive key={i} object={scene}/>)}</group>
 }
 function Employee({id,state,preview,onSelect,onLoaded}:{id:'researcher'|'reviewer';state:string;preview:boolean;onSelect:(id:string)=>void;onLoaded:(name:string,count:number)=>void}){
- const model=useGLTF(employees[id].model!) as any
+ const model=useLoader(GLTFLoader,employees[id].model!) as any
  const scene=useMemo(()=>clone(model.scene),[model.scene])
  const {actions,names,mixer}=useAnimations(model.animations,scene)
  useEffect(()=>{let count=0;scene.traverse((o:any)=>{if(o.isMesh){count++;o.castShadow=true}});onLoaded(id,count)},[scene])
