@@ -21,3 +21,7 @@ Official references:
 Unfinished: scheduled research refresh (manual repeat works), source permission expansion/OAuth, additional source adapters, future platforms, generic worker recovery, complete Executive/Builder aggregation and real artist commercial pilot. No complete product or commercial viability claim.
 
 Activation preparation: production D1 backup completed (/private/tmp/studio2u-before-research.sql, 0600); additive migration 0023 applied successfully. Private retention Worker deployed with no public endpoint, daily scheduled trigger and version 54fa0f73-4952-433c-baa8-c158828c4a0c. Actual future scheduled run not yet observed; expiration code tested locally. Provided YouTube key stored as production Pages secret YOUTUBE_DATA_API_KEY, not printed/committed. Live source UI request still pending.
+
+
+## Subsequent verified baseline — 2026-10-13
+Earlier pending statements above are historical. Live verification on 15ba034/2095f412 collected 10 actual YouTube observations, imported one synthetic normalized CSV row, detected its duplicate and verified the authenticated report-download bytes/hash. See docs/evidence/carla-live-source-verification.json. The deployed 737e860 app preserves these services and actual internal summaries. Retention Worker version 9464cdb3-20bf-4c64-a90a-61a7d428f9cd has daily 03:00 UTC cron; deployment is verified but no scheduled-run execution is claimed here. Context tests now prove expired observations excluded from reasoning as well as source deletion fixtures.

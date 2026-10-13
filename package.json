@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "vite",
     "dev:sandbox": "wrangler pages dev dist --d1=DB --r2=R2 --ip 0.0.0.0 --port 3000",
-    "build": "npm run build:label-world && vite build",
+    "build": "npm run context:compile && npm run build:label-world && vite build",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy dist --project-name studio2u",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
@@ -15,7 +15,9 @@
     "build:label-world": "vite build --config vite.label-world.config.ts",
     "test:label-world:worker": "npm run build && node tests/label-world-worker-security.mjs",
     "test:label-world:reviewer": "node tests/label-world-reviewer.mjs",
-    "test:label-world:research": "node tests/label-world-research.mjs"
+    "test:label-world:research": "node tests/label-world-research.mjs",
+    "context:compile": "node tools/compile-label-context.mjs",
+    "test:label-world:context": "node tests/label-world-context.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

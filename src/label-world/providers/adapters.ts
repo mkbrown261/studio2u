@@ -60,8 +60,8 @@ export async function listModels(provider:Provider,key:string,config:EndpointCon
   }
   throw new ProviderError('Provider catalog pagination exceeded')
 }
-export async function generate(provider:Provider,key:string,config:EndpointConfig,model:string,prompt:string){
-  const system='You are a Studio2U Label World assistant. Give useful reasoning. Do not claim you executed tools, inspected files, registered rights, or submitted releases. No business tools are available in this connection test.'
+export async function generate(provider:Provider,key:string,config:EndpointConfig,model:string,prompt:string,context?:{instructions:string}){
+  const system=context?.instructions??'You are a Studio2U Label World assistant. Give useful reasoning. Do not claim you executed tools, inspected files, registered rights, or submitted releases. No business tools are available in this connection test.'
   let data:any,answer:string
   if(provider==='openai'){
     data=await request(provider,key,config,'/responses',{model,instructions:system,input:prompt,max_output_tokens:2048,store:false})

@@ -1,0 +1,117 @@
+{
+  "scope": "Local isolated SQLite/R2-interface synthetic fixture; mock reasoning, not a production trace",
+  "request": "Eric, explain why this release failed and what to correct.",
+  "trace": {
+    "manifestVersion": "1.0.0",
+    "manifestHash": "1424a4316cbb0fb2788ccbf696477ffa955495ea2f8b1e63e5ecd5d0b8abee23",
+    "knowledgeVersion": "2026-10-13",
+    "employee": "reviewer",
+    "workflow": "review_release",
+    "skillId": "studio2u.reviewer_release_qc",
+    "skillVersion": "1.0.0",
+    "skillHash": "9eef2345a99cdea2f0ce9b7a19ee115ace1d41efb17baec4ec241866081c34de",
+    "capability": "REASONING_ONLY",
+    "sources": [
+      {
+        "id": "boundaries",
+        "hash": "d5a78fe0835035f784927d682fdc958860e66a339533cee2b00649774c62a42f"
+      },
+      {
+        "id": "evidence_rules",
+        "hash": "3896ae4c5a787b941d4a5d99f7130f1b28fcbc8c4610e2d0d8ef39b20fc036bd"
+      },
+      {
+        "id": "security",
+        "hash": "a42cd341d4495009ab3b7af0a429304ef71db58d15d2fff76f9f1f29111ac4b8"
+      },
+      {
+        "id": "capability_rules",
+        "hash": "6b9530a537486e1a6b8643e04d44f55f2c66ec14cf68a1feb827bba8b1f3fcc2"
+      },
+      {
+        "id": "reviewer.route",
+        "hash": "ef2ed50dd10721e7a9450a4cf75bccb9dfefd68ff079e61bd2475cbf9f0b6010"
+      },
+      {
+        "id": "reviewer.role",
+        "hash": "22b2ee1cb42c9ccac6fc8c2a37d8e5a2fe85938623d1be309be86beb72e98a7e"
+      },
+      {
+        "id": "review_release.entry",
+        "hash": "56d63c4c0977a13a605c0af7d617ec4f4e212fb00a3088e62fbd1dfe7ec60e7b"
+      },
+      {
+        "id": "review_release.procedure",
+        "hash": "77eb75bad15110f7fc98d14a1ef7a68c0bbe1f47623f5c605af806fdd00437ee"
+      },
+      {
+        "id": "review_release.output",
+        "hash": "1e3b4db1140231c79603f720c91b7b85afa7963f7b44720059c3eb9b2b82783e"
+      }
+    ],
+    "chars": 7919,
+    "approxTokens": 1980,
+    "warnings": [],
+    "evidenceRefs": [
+      "3c85cc18-15a3-42e6-9a1a-7c153a0d8203",
+      "0bac0f52-a3f6-420f-83ee-935f7192ce0f",
+      "375c1018-0396-4cd4-92ec-4eee1e5c03fa"
+    ],
+    "releaseVersion": 1
+  },
+  "authoritativeFindingStatuses": [
+    {
+      "check": "master.integrity",
+      "status": "PASS"
+    },
+    {
+      "check": "audio.technical",
+      "status": "PASS"
+    },
+    {
+      "check": "master.version",
+      "status": "PASS"
+    },
+    {
+      "check": "artwork.integrity",
+      "status": "PASS"
+    },
+    {
+      "check": "artwork.technical",
+      "status": "FAIL"
+    },
+    {
+      "check": "artwork.version",
+      "status": "PASS"
+    },
+    {
+      "check": "metadata.required",
+      "status": "PASS"
+    },
+    {
+      "check": "credits.complete",
+      "status": "FAIL"
+    },
+    {
+      "check": "rights.declaration",
+      "status": "FAIL"
+    },
+    {
+      "check": "package.integrity",
+      "status": "NOT_TESTED"
+    }
+  ],
+  "mockExplanation": {
+    "summary": "Artwork is too small according to the stored artwork.technical FAIL. Rights remain unverified; package integrity is NOT_TESTED.",
+    "evidenceRefs": [
+      "0bac0f52-a3f6-420f-83ee-935f7192ce0f"
+    ],
+    "limitations": [
+      "Owner attestations are not independent clearance."
+    ],
+    "nextSteps": [
+      "Replace artwork and run the existing review again."
+    ]
+  },
+  "findingsUnchanged": true
+}

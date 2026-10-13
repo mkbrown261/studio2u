@@ -36,3 +36,7 @@ Sources: authorized chart APIs/feeds, music discovery services, public official 
 - **Producer** is conversational beat collaborator, optionally using Suno/authorized generators, and maintains version/provenance/rights; production and catalog roles may be distinct backend specialists even when sharing a visual character.
 
 Each role is defined by reusable skills in `SKILL_CATALOG.md` and `skills/*.yaml`. A character animation is evidence of a **task state**, not evidence that registration, generation or delivery succeeded.
+
+
+## ICM-inspired context increment — 2026-10-13
+Current identities remain Carla Researcher, Eric Reviewer, Executive and Builder / Producer. Four context routes preserve separate evidence scopes. Eric uses persisted current/stale review findings; Carla uses authorized unexpired observations and source limits; Executive reuses internalSummary; Builder reads stored assets/workspace. Existing character/dashboard mappings are unchanged.

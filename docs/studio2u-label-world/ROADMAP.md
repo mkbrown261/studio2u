@@ -81,3 +81,7 @@ This **implementation sequencing overlay** supersedes older numeric gate order w
 **Phase LATER EXPERIENCE:** approved additional character meshes, valid greeting/tablet/walk clips, true per-label cabinet and finish customization, verified streaming milestone plaque wall with opt-in celebration, richer voice and optional MetaHumans/Unreal.
 
 Gate exit requires GLB/animation source evidence, browser walkthrough, privacy and two-label checks, screenshots versus approved references, UI regression tests and real commit/deployment evidence. `V2_2_ACCEPTANCE_TESTS.md` is the test checklist.
+
+
+## ICM-inspired context increment — 2026-10-13
+Context milestones A–E implemented/tested locally; F regression and local comparison completed, controlled live model comparison and production rollout pending an explicitly selected provider. Do not mark full skills, ZIP generation, registrations or autonomous orchestration complete. Preserve commercial pilot/product scope.

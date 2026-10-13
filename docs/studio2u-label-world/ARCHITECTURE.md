@@ -45,3 +45,7 @@ Provider adapters implement capabilities, authentication, cost estimation, submi
 
 ## v2.2 — renderer/interaction separation
 Use a standalone R3F scene with GLB `SceneAssetRegistry`, camera/movement/collision system, `InteractableRegistry`, animation clip capability registry and React overlay manager. 3D scene emits `openAgent(agentId, labelContext, entityContext)`; shared React workspace/router consumes it, retrieves authoritatively scoped D1/R2 data, and may render over Canvas or as direct route without WebGL. Never put private business data in public glTF or make URL email matching a label auth mechanism. Pointer-lock released on opening overlay and only re-locked on user gesture. Stable configurable GLB material/prop IDs reserved for future cabinet finishes and verified achievement wall.
+
+
+## ICM-inspired context increment — 2026-10-13
+Short file routing + versioned role/skill instructions + authoritative D1/R2 context + deterministic domain tools + provider-neutral reasoning. Root instructions serve developers; only approved compiled manifest resources serve runtime employees. Runtime context is server-only, bounded, tenant/user scoped and has no execution capability. Existing review/research services and internal summary remain authoritative. No generic agent framework introduced.

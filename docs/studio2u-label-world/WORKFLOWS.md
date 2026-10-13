@@ -55,3 +55,7 @@ Choose role -> list skills and capability requirements -> connect permissible AP
 
 ## W14 — Royalty recovery request (v2.1)
 Artist asks “Help me find uncollected royalties” -> Royalty Agent gathers authorized catalog/ownership records -> checks collection mechanisms and eligibility without guaranteed money -> prepares evidence-linked per-organization checklist (PRO, MLC, SoundExchange, distributor) -> asks questions in Agent Inbox -> owner reviews, submits permitted claims or manual official forms -> receipts tracked and scheduled follow-ups continue until verified or legitimately closed.
+
+
+## ICM-inspired context increment — 2026-10-13
+Context workflow IDs: review_release, research_artist, coordinate_label, prepare_release. The loader selects from server-known employee and stored release mode. Existing lw_tasks provide status/retry/artifact checkpoints; context reload revalidates membership/current versions. A model explanation does not complete or approve business work. Unknown routes/operations fail controlled; mandatory context over budget requires a narrower request.

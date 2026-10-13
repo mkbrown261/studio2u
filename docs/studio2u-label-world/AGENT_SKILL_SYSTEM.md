@@ -28,3 +28,7 @@ Inputs/outputs must be schemas, not vague chat messages. Example: catalog.transc
 
 ## Frontend behavior
 3D work animation is driven by task status events. An agent can appear busy on one real job while another task is queued; no fake completed status. If user asks agent to perform unimplemented skill, UI must say DESIGNED / UNAVAILABLE, not pretend success.
+
+
+## ICM-inspired context increment — 2026-10-13
+Context routing discovers the unchanged 23 YAML contracts. Only the selected role contract is sent per call (Builder chooses Fast/Managed from stored release mode). Canonical complete-skill status stays DESIGNED_NOT_IMPLEMENTED; specific implemented deterministic subsets remain separate. Loading a contract never grants tools. Manifest hashes bind instructions/contracts to conversational traces.

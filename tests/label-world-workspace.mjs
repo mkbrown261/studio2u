@@ -43,7 +43,7 @@ f.sqlite.prepare('INSERT INTO lw_provider_connections(user_id,provider,endpoint_
 f.sqlite.prepare('INSERT INTO lw_reasoning_preferences(label_id,user_id,provider,model) VALUES (?,?,?,?)').run(a.body.id,1,'openai','gpt-test')
 f.sqlite.prepare("INSERT INTO lw_research_records(id,label_id,kind,title,content,created_by) VALUES ('other-secret',?,'notes','OTHER TENANT PRIVATE','Never expose',2)").run(b.body.id)
 const originalFetch=globalThis.fetch;let providerCalls=0;let providerPrompt=''
-globalThis.fetch=async(url,options)=>{providerCalls++;assert.equal(options.headers.Authorization,'Bearer '+privateKey);const request=JSON.parse(options.body);providerPrompt=request.input;return new Response(JSON.stringify({model:'gpt-test',output:[{type:'message',content:[{type:'output_text',text:'Based on your saved note, media checks remain untested.'}]}],usage:{output_tokens:12}}),{headers:{'Content-Type':'application/json'}})}
+globalThis.fetch=async(url,options)=>{providerCalls++;assert.equal(options.headers.Authorization,'Bearer '+privateKey);const request=JSON.parse(options.body);providerPrompt=request.input;return new Response(JSON.stringify({model:'gpt-test',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({summary:'Media checks remain NOT_TESTED.',evidenceRefs:[JSON.parse(providerPrompt).release?.id].filter(Boolean),limitations:['No current report'],nextSteps:['Run deterministic review']})}]}],usage:{output_tokens:12}}),{headers:{'Content-Type':'application/json'}})}
 try{
  const generated=await call(root+'/inbox/reviewer/messages','POST',{content:'What blocks release?',releaseId:release.body.id,messageId:'dedupe-message-12345'})
  assert.equal(generated.body.status,'COMPLETED');assert.equal(providerCalls,1)

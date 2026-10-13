@@ -64,3 +64,7 @@ Every changed decision requires date, rationale, tradeoffs, affected requirement
 
 ## Eric milestone increment — 2026-10-12
 Deterministic Eric review works without an LLM. Technical PASS describes executed file/metadata checks only; rights attestations remain human review and no chat/review grants release approval. Existing assets/tasks/messages reused; additive migration 0022 only. Isolated production QA account explicitly approved by user after automatic approval review requested specific authorization.
+
+
+## ICM-inspired context increment — 2026-10-13
+ADR CTX-001: choose concise shared developer routing and a server-only compiled whitelist over arbitrary filesystem browsing or a general-purpose framework. Treat SQL/R2 evidence as authoritative and textual content as data. Separate trusted instruction channel from data channel across existing adapters. Never silently slice mandatory policies/rights/evidence to meet budget. Reject invalid explanation schema/evidence IDs; generated prose is labeled reasoning and cannot mutate business state. Live output accuracy remains subject to evaluation.

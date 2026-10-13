@@ -28,3 +28,7 @@ T18: Baseline performance measured on defined hardware; draw calls, memory, fram
 
 ## Evidence templates
 For each test record: commit SHA, build version, test runner and command, environment, fixtures, outcome, output artifact path or screenshot, timestamp, known exclusions, reviewer. Status VERIFIED only after independently observable positive result.
+
+
+## ICM-inspired context increment — 2026-10-13
+Run tests/label-world-context-foundation.mjs, label-world-context.mjs, label-world-context-evaluation.mjs and the full prior regression/build/worker suites. Assert whitelist confinement, route cycles, mandatory policy budgets, hashes, correct role/canonical contracts, same-provider choice without tools/fallback, raw observations/expiry, current/stale reviews, no deterministic report mutation, authorized traces, preserved histories/auth/booking messages and absent runtime instructions in frontend bundles. Live explanation correctness/accuracy/cost remain distinct from mock tests.

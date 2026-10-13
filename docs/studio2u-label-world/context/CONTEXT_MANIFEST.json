@@ -518,7 +518,10 @@
         "authorized_records_read"
       ],
       "status": "REASONING_ONLY",
-      "maxChars": 24000
+      "maxChars": 24000,
+      "alternateSkills": {
+        "MANAGED_RELEASE": "studio2u.release_managed_prepare"
+      }
     }
   ]
 }

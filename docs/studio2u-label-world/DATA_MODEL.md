@@ -26,3 +26,7 @@ Relationships: a composition can have many recordings; a recording can appear on
 - `agent_skill`, `skill_version`, `skill_execution`, `knowledge_source`, `evidence_artifact` for auditable work and updates.
 - `browser_session` **only if allowed and supported**: scoped tenant, provider/domain, explicit consent, redacted audit, session expiry, revocation; no password text available to agents.
 Detailed per-field contract: `RELEASE_DATA_SPEC.md`.
+
+
+## ICM-inspired context increment — 2026-10-13
+Additive migration 0024_label_world_context.sql adds lw_context_traces linked to existing employee messages and label/user membership. Stores instruction/skill hashes, entity revisions and evidence IDs, stage, actual provider usage when supplied, and request latency. No prompts, raw YouTube observations, credentials or object keys copied into traces. Task checkpoints are reconstructed from existing scoped lw_tasks/lw_reviews; no competing task database.
