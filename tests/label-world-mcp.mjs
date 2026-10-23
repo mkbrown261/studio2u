@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import {fixture} from './label-world-api-fixture.mjs'
-const {createStudioMcp,mcpScopes}=await import('../src/label-world/mcp/server.ts')
+const {createStudioMcp,readScopes}=await import('../src/label-world/mcp/server.ts')
 const {Client,StreamableHTTPClientTransport}=await import('@modelcontextprotocol/client')
 const f=fixture();f.sqlite.prepare("INSERT INTO lw_labels(id,name) VALUES ('mcp-label','MCP QA')").run();f.sqlite.prepare("INSERT INTO lw_memberships VALUES ('mcp-label',1,'owner')").run();f.sqlite.prepare("INSERT INTO lw_releases(id,label_id,title,artist,release_type) VALUES ('mcp-release','mcp-label','Synthetic release','QA','single')").run()
-let valid=true;const handler=createStudioMcp(f.db,{userId:1,grantId:'test',labelIds:['mcp-label'],scopes:[...mcpScopes]},async()=>valid)
+let valid=true;const handler=createStudioMcp(f.db,{userId:1,grantId:'test',labelIds:['mcp-label'],scopes:[...readScopes]},async()=>valid)
 const client=new Client({name:'studio2u-test',version:'1.0.0'}),transport=new StreamableHTTPClientTransport(new URL('https://studio.invalid/label-world/mcp'),{fetch:(url,options)=>handler.fetch(new Request(url,options))})
 await client.connect(transport)
-const tools=await client.listTools();assert.equal(tools.tools.length,9);assert.ok(tools.tools.every(t=>t.annotations.readOnlyHint))
+const tools=await client.listTools();// Read-only grants: the original 9 read tools plus read-only autonomy helpers; never a write tool.
+assert.ok(tools.tools.every(t=>t.annotations.readOnlyHint));for(const n of ['studio2u_whoami','studio2u_list_labels','studio2u_list_releases','studio2u_get_release','studio2u_get_review','studio2u_list_research_reports','studio2u_list_research_observations','studio2u_list_agent_messages','studio2u_get_task_status'])assert.ok(tools.tools.some(t=>t.name===n),n);assert.ok(!tools.tools.some(t=>/^studio2u_(claim|complete|update|create|report|save)_/.test(t.name)),JSON.stringify(tools.tools.map(t=>t.name)))
 const labels=await client.callTool({name:'studio2u_list_labels',arguments:{}});assert.equal(labels.structuredContent.data.items[0].id,'mcp-label')
 const release=await client.callTool({name:'studio2u_get_release',arguments:{labelId:'mcp-label',releaseId:'mcp-release'}});assert.equal(release.structuredContent.data.release.title,'Synthetic release')
 assert.equal((await client.callTool({name:'studio2u_get_release',arguments:{labelId:'other-label',releaseId:'mcp-release'}})).isError,true)

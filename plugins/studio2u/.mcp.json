@@ -2,7 +2,7 @@
   "mcpServers": {
     "studio2u": {
       "type": "http",
-      "url": "https://feature-label-world-foundati.studio2u.pages.dev/label-world/mcp"
+      "url": "https://studio2u.pages.dev/label-world/mcp"
     }
   }
 }

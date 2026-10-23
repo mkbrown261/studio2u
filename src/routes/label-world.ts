@@ -12,6 +12,8 @@ import {installResearchSourceRoutes} from '../label-world/research/routes'
 import {installReviewerRoutes} from '../label-world/reviewer/routes'
 import { installWorkspaceRoutes } from '../label-world/workspace-services'
 import { installProviderRoutes } from '../label-world/providers/routes'
+import { installAutonomyRoutes } from '../label-world/autonomy/routes'
+import { createRelease, ServiceError } from '../label-world/autonomy/service'
 import { releaseInput } from '../label-world/contracts'
 import { modeInput, organizations, rightsInput, rightsGate, registrationInput, text } from '../label-world/release-operations'
 
@@ -53,16 +55,13 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/releases', async c => {
   return c.json({ releases: result.results })
 })
 labelWorldRoutes.post('/api/label-world/labels/:labelId/releases', async c => {
-  let input: ReturnType<typeof releaseInput>
-  let mode: ReturnType<typeof modeInput>, distributor: string
-  try { const body = await c.req.json(); input = releaseInput(body); mode = modeInput(body.releaseMode); distributor = text(body.targetDistributor ?? 'UnitedMasters') } catch { return c.json({ error: 'Provide artist, title, valid release type/mode and distributor' }, 400) }
-  const id = crypto.randomUUID(), label = c.req.param('labelId'), db = c.env.DB
-  await db.batch([
-    db.prepare('INSERT INTO lw_releases(id,label_id,artist,title,release_type,release_mode,target_distributor) VALUES (?,?,?,?,?,?,?)').bind(id,label,input.artist,input.title,input.releaseType,mode,distributor),
-    ...organizations.map(org => db.prepare('INSERT INTO lw_registration_tasks(id,label_id,release_id,organization,owner_role) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),label,id,org,org==='PRO'?'publishing_admin':org==='COPYRIGHT'?'rights_admin':'royalty_admin')),
-    db.prepare('INSERT INTO lw_audit_events(id,label_id,release_id,actor_id,action,payload_json) VALUES (?,?,?,?,?,?)').bind(crypto.randomUUID(),label,id,c.get('lwUser').id,'release.created',JSON.stringify({ releaseMode: mode, targetDistributor: distributor, followUp: organizations }))
-  ])
-  return c.json({ id, ...input, releaseMode: mode, targetDistributor: distributor, state: 'DRAFT', workflowState: 'INTAKE_PENDING', version: 1 }, 201)
+  let body: any
+  try { body = await c.req.json() } catch { return c.json({ error: 'Provide artist, title, valid release type/mode and distributor' }, 400) }
+  try { return c.json(await createRelease(c.env.DB, c.req.param('labelId'), c.get('lwUser').id, body, 'web'), 201) }
+  catch (e) {
+    if (!(e instanceof ServiceError)) throw e // unexpected storage failure: 500, batch already rolled back
+    return e.status === 400 ? c.json({ error: 'Provide artist, title, valid release type/mode and distributor' }, 400) : c.json({ error: e.message }, e.status as any)
+  }
 })
 labelWorldRoutes.get('/api/label-world/labels/:labelId/settings', async c => {
   const label = await c.env.DB.prepare('SELECT id,name,headquarters_json FROM lw_labels WHERE id=?').bind(c.req.param('labelId')).first()
@@ -158,6 +157,7 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/events', async c => {
 })
 
 installProviderRoutes(labelWorldRoutes)
+installAutonomyRoutes(labelWorldRoutes)
 installResearchSourceRoutes(labelWorldRoutes)
 installWorkspaceRoutes(labelWorldRoutes)
 installReviewerRoutes(labelWorldRoutes)
