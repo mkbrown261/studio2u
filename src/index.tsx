@@ -75,6 +75,7 @@ import { PrivacyPage } from './pages/privacy'
 import { SecurityPolicyPage } from './pages/security-policy'
 import { RefundPolicyPage } from './pages/refund-policy'
 import { PricingPage } from './pages/pricing'
+import { LabelWorldLanding } from './pages/label-world-landing'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -162,11 +163,20 @@ app.get('/', async (c) => {
   })
 })
 
+// Label World marketing page (the app itself lives under /label-world).
+app.get('/label', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  return c.render(<LabelWorldLanding signedIn={Boolean(user)} />, {
+    title: 'Label World: Run Your Own Label',
+    description: 'Run your own record label with AI employees. Release on UnitedMasters, register with ASCAP and SoundExchange, and recover the royalties you are owed.'
+  })
+})
+
 // ---------- SEO: sitemap + robots ----------
 app.get('/sitemap.xml', async (c) => {
   const origin = new URL(c.req.url).origin
   const engineers = await getPublishedEngineersForSitemap(c.env.DB)
-  const staticPaths = ['/', '/engineers', '/pricing', '/terms', '/privacy', '/security', '/refund-policy', '/consent']
+  const staticPaths = ['/', '/label', '/engineers', '/pricing', '/terms', '/privacy', '/security', '/refund-policy', '/consent']
   const urls = [
     ...staticPaths.map((p) => `<url><loc>${origin}${p}</loc></url>`),
     ...engineers.map((e) => `<url><loc>${origin}/engineers/${e.id}</loc></url>`)
