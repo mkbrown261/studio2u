@@ -5,8 +5,8 @@ export type AgentId = 'researcher'|'reviewer'|'executive'|'builder'
 export const agents: Record<AgentId,{name:string,role:string,icon:string,color:string,portrait?:string}> = {
  researcher:{name:'Carla',role:'Researcher / A&R Agent',icon:'radar',color:'gold',portrait:'/label-world/assets/carla-portrait.png'},
  reviewer:{name:'Eric',role:'Reviewer Agent',icon:'shield',color:'purple',portrait:'/label-world/assets/eric-portrait.png'},
- executive:{name:'Executive',role:'Strategy · Decisions · Growth',icon:'crown',color:'gold'},
- builder:{name:'Builder / Producer',role:'Creative Production & Release',icon:'wave',color:'cyan'}
+ executive:{name:'Executive',role:'Strategy · Decisions · Growth',icon:'crown',color:'gold',portrait:'/label-world/assets/executive-portrait.png'},
+ builder:{name:'Builder / Producer',role:'Creative Production & Release',icon:'wave',color:'cyan',portrait:'/label-world/assets/builder-portrait.png'}
 }
 export async function api(path:string,body?:unknown){const r=await fetch('/api/label-world'+path,body!==undefined?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const d=await r.json();if(r.status===401)window.dispatchEvent(new Event('label-world-session-expired'));if(!r.ok)throw new Error(d.error||`Request failed (${r.status})`);return d}
 const paths: Record<string,React.ReactNode>={
@@ -17,7 +17,7 @@ export function Badge({children,tone='muted'}:{children:React.ReactNode,tone?:st
 export function Panel({title,icon,action,children,className=''}:{title:string,icon?:string,action?:React.ReactNode,children:React.ReactNode,className?:string}){return <section className={`lw-panel ${className}`}><header>{icon&&<Icon name={icon}/>}<h3>{title}</h3>{action&&<div className="lw-panel-action">{action}</div>}</header>{children}</section>}
 export function Empty({title='No records yet',detail='Connect or import a supported data source to populate this workspace.',icon='folder'}:{title?:string,detail?:string,icon?:string}){return <div className="lw-empty"><Icon name={icon} size={28}/><strong>{title}</strong><p>{detail}</p></div>}
 export function Button({children,onClick,disabled=false,gold=false,type='button',title}:{children:React.ReactNode,onClick?:()=>void,disabled?:boolean,gold?:boolean,type?:'button'|'submit',title?:string}){return <button type={type} className={`lw-button ${gold?'gold':''}`} disabled={disabled} onClick={onClick} title={title}>{children}</button>}
-export function PendingButton({children}:{children:React.ReactNode}){return <Button disabled title="This capability is not implemented yet">{children}</Button>}
+export function PendingButton({children}:{children:React.ReactNode}){return <Button disabled title="Coming soon">{children}</Button>}
 export function Sparkline({color='#e7bf60',seed=1,bars=false}:{color?:string,seed?:number,bars?:boolean}){const vals=Array.from({length:18},(_,i)=>12+((i*13+seed*7)%27)+i*1.8);return <svg className="lw-sparkline" viewBox="0 0 160 65" aria-label="Illustrative demo data">{bars?vals.map((v,i)=><rect key={i} x={i*9} y={65-v} width="5" height={v} fill={color} opacity={.35+i/27}/>):<path d={'M'+vals.map((v,i)=>`${i*9},${65-v}`).join(' L')} fill="none" stroke={color} strokeWidth="2"/>}</svg>}
 export type Message={research_report_id?:string;review_id?:string;id:string,role?:string,sender_type?:string,content:string,created_at?:string,status?:string}
 export function AgentConversationPanel({agent,labelId,releaseId,ask,setAsk}:{agent:AgentId,labelId:string,releaseId?:string,ask?:string,setAsk?:(s:string)=>void}){

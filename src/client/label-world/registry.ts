@@ -1,9 +1,14 @@
 export type AgentId='researcher'|'reviewer'|'executive'|'builder'
-export const employees:Record<AgentId,{name:string;role:string;model:string|null;responsibilities:string[];runtime:string}>={
- researcher:{name:'Carla',role:'Researcher / A&R',model:'/label-world/assets/carla.glb',responsibilities:['Source music intelligence','Track artists and opportunities','Record evidence and uncertainty'],runtime:'Skills not yet executable'},
- reviewer:{name:'Eric',role:'Reviewer',model:'/label-world/assets/eric.glb',responsibilities:['Review audio, artwork and metadata','Check release rights evidence','Report blockers and packaging readiness'],runtime:'Skills not yet executable'},
- executive:{name:'Executive',role:'Label command center',model:null,responsibilities:['Set priorities','Delegate work','Review approvals and real outcomes'],runtime:'Skills not yet executable; physical model pending'},
- builder:{name:'Builder',role:'Producer / Builder',model:null,responsibilities:['Maintain briefs, lyrics and credits','Organize song assets','Prepare release packages'],runtime:'Skills not yet executable; physical model pending'}
+// Character slots. Drop a GLB at `model` (and a PNG at `portrait`) and the character
+// appears in the 3D headquarters automatically; a missing file never breaks the scene.
+// `placement` positions characters whose GLB root has no world transform (Carla/Eric
+// are already placed inside their exported files, so theirs are null).
+export type Placement={position:[number,number,number];rotationY:number;scale?:number}
+export const employees:Record<AgentId,{name:string;role:string;model:string|null;portrait:string;placement:Placement|null;responsibilities:string[];runtime:string}>={
+ researcher:{name:'Carla',role:'Researcher / A&R',model:'/label-world/assets/carla.glb',portrait:'/label-world/assets/carla-portrait.png',placement:null,responsibilities:['Source music intelligence','Track artists and opportunities','Record evidence and uncertainty'],runtime:'Works your label queue'},
+ reviewer:{name:'Eric',role:'Reviewer',model:'/label-world/assets/eric.glb',portrait:'/label-world/assets/eric-portrait.png',placement:null,responsibilities:['Review audio, artwork and metadata','Check release rights evidence','Report blockers and packaging readiness'],runtime:'Works your label queue'},
+ executive:{name:'Executive',role:'Label command center',model:'/label-world/assets/executive.glb',portrait:'/label-world/assets/executive-portrait.png',placement:{position:[-7,0,6.6],rotationY:Math.PI},responsibilities:['Set priorities','Delegate work','Review approvals and real outcomes'],runtime:'Works your label queue'},
+ builder:{name:'Builder',role:'Producer / Builder',model:'/label-world/assets/builder.glb',portrait:'/label-world/assets/builder-portrait.png',placement:{position:[0,0,-.55],rotationY:0},responsibilities:['Maintain briefs, lyrics and credits','Organize song assets','Prepare release packages'],runtime:'Works your label queue'}
 }
 export const rooms={
  lobby:{label:'Main lobby',url:'/label-world/assets/lobby.glb',camera:[2.8,1.7,10.3],target:[-1.9,1.6,6.8]},

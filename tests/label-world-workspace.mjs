@@ -34,7 +34,7 @@ assert.equal((await call(workspace)).body.workspace.lyrics,'Draft lyrics')
 assert.equal((await call(workspace,'PUT',{brief:'Stale',revision:0})).status,409)
 assert.equal((await call(root+'/inbox/reviewer/messages','POST',{content:'Review',releaseId:'missing'})).status,404)
 assert.ok(!JSON.stringify(sent.body).includes('encrypted_key'))
-assert.equal((await call(root+'/tasks')).body.workerStatus,'NOT_IMPLEMENTED')
+assert.equal((await call(root+'/tasks')).body.workerStatus,'RUNNING_EVERY_5_MINUTES')
 const {encryptKey,keyContext}=await import('../src/label-world/providers/vault.ts')
 f.env.LLM_KEY_ENCRYPTION_SECRET=Buffer.alloc(32,7).toString('base64')
 const privateKey='test-private-key-never-leak',config='{}'

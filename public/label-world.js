@@ -38,13 +38,14 @@ async function loadReleases() {
   }
   if (!result.releases.length) releases.textContent = 'Create your first release draft below.'
   await loadRegistrations()
+  loadQueue().catch(()=>{})
 }
 async function showWorkflow(id) {
-  const scope=labelId;selectedRelease={id}
+  const scope=labelId;selectedRelease={id};loadSubmissions(id).catch(report)
   const result=await api('/labels/'+encodeURIComponent(scope)+'/releases/'+encodeURIComponent(id)+'/workflow')
   if(scope!==labelId||selectedRelease?.id!==id)return
   selectedRelease={id,version:result.release.version}
-  document.getElementById('lw-workflow-summary').textContent=`${result.release.title} · Rights: ${result.rights.status} · Delivery readiness: ${result.readiness.status}. External submission unavailable.`
+  document.getElementById('lw-workflow-summary').textContent=`${result.release.title} · Rights: ${result.rights.status} · Delivery readiness: ${result.readiness.status}. See Submissions below for your filled-in forms.`
   const fields=document.getElementById('lw-rights-fields');fields.replaceChildren()
   for(const category of rightsCategories){
     const row=element('div'),label=element('label',category.replaceAll('_',' ')+' ')
@@ -170,3 +171,40 @@ document.getElementById('lw-reasoning-test').addEventListener('submit',event=>{
 })
 labels.addEventListener('change',()=>{document.getElementById('lw-reasoning-output').textContent='';loadProviderStatus().catch(report)})
 loadProviderStatus().catch(report)
+
+// ---- Submissions (UnitedMasters / ASCAP / SoundExchange packets) ----
+function fieldValue(v){if(v==null)return '';if(Array.isArray(v))return v.map(x=>typeof x==='object'?Object.entries(x).filter(([,y])=>y!=null).map(([k,y])=>k+': '+y).join(', '):x).join('\n');if(typeof v==='object')return JSON.stringify(v);return String(v)}
+async function loadSubmissions(id){
+  const scope=labelId,box=document.getElementById('lw-submissions');box.replaceChildren(element('p','Loading forms…'))
+  const base='/labels/'+encodeURIComponent(scope)+'/releases/'+encodeURIComponent(id)+'/submissions'
+  const list=await api(base);if(scope!==labelId||selectedRelease?.id!==id)return;box.replaceChildren()
+  for(const sub of list.submissions){
+    const packet=(await api(base+'/'+sub.target.toLowerCase())).packet
+    const card=element('div');card.className='lw-packet'
+    const h=element('h3',{UNITEDMASTERS:'UnitedMasters release',ASCAP:'ASCAP work registration',SOUNDEXCHANGE:'SoundExchange recording claim'}[sub.target]);const pill=element('span',sub.status.replaceAll('_',' '));pill.className='lw-pill '+sub.status;h.append(pill);card.append(h)
+    card.append(element('p',packet.applicabilityReason))
+    if(packet.missing.length)card.append(element('p',packet.missing.length+' detail(s) still needed. Your agent will ask, or answer below.'))
+    for(const w of packet.warnings){const p=element('p','⚠ '+w);p.className='lw-miss';card.append(p)}
+    const details=element('details');details.open=sub.status==='READY';details.append(element('summary','Show every field'))
+    for(const sec of packet.sections){details.append(element('h4',sec.title));for(const f of sec.fields){const row=element('div');row.className='lw-field';row.append(element('strong',f.label));const val=element('span',f.status==='MISSING'?(f.question||'Missing'):f.status==='HUMAN_ONLY'?f.note:fieldValue(f.value)||'(optional, leave blank)');if(f.status==='MISSING')val.className='lw-miss';if(f.status==='HUMAN_ONLY')val.className='lw-human';row.append(val);if(f.status==='READY'){const b=element('button','Copy');b.type='button';b.addEventListener('click',async()=>{await navigator.clipboard.writeText(fieldValue(f.value));b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200)});row.append(b)}else row.append(element('span',''));details.append(row)}}
+    card.append(details)
+    const link=element('a','Open '+packet.officialUrl.replace('https://',''));link.href=packet.officialUrl;link.target='_blank';link.rel='noopener';card.append(link)
+    if(['READY','NEEDS_CORRECTION','SUBMITTED_REPORTED'].includes(sub.status)&&labelRole!=='viewer'){
+      const form=element('form');const ref=element('input');ref.name='confirmationRef';ref.placeholder='Confirmation # shown after you pressed Submit';ref.maxLength=200;const btn=element('button',sub.status==='SUBMITTED_REPORTED'?'Update confirmation':'I submitted it');form.append(ref,btn)
+      form.addEventListener('submit',async e=>{e.preventDefault();btn.disabled=true;try{await api(base+'/report',{target:sub.target,outcome:'SUBMITTED',confirmationRef:ref.value||undefined,evidence:ref.value?undefined:'User confirmed submission on the dashboard'});message.textContent=sub.target+' recorded as submitted. Your label will check back until it is accepted.';await loadSubmissions(id)}catch(err){report(err)}finally{btn.disabled=false}})
+      card.append(form)
+    }
+    if(sub.status==='VERIFIED')card.append(element('p','Verified: '+(packet.verifiedEvidence||'confirmed on provider site')))
+    box.append(card)
+  }
+  if(!list.submissions.length)box.append(element('p','No provider forms apply yet.'))
+}
+// ---- Agent queue ----
+async function loadQueue(){
+  const scope=labelId,ul=document.getElementById('lw-queue');if(!ul)return;ul.replaceChildren();if(!scope)return
+  const q=await api('/labels/'+encodeURIComponent(scope)+'/queue');if(scope!==labelId)return
+  const st=document.getElementById('lw-engine-status');st.textContent=q.engine?'Engine last ran '+new Date(q.engine.lastRun).toLocaleString()+'. It checks every release every 5 minutes, even when your computer is off.':'Your engine will run within 5 minutes.'
+  if(!q.open.length)ul.append(element('li','Nothing waiting. Your label is caught up.'))
+  for(const t of q.open){const li=element('li',`${t.title} · ${t.status.replaceAll('_',' ').toLowerCase()}${t.capability==='SCREEN_CONTROL'?' · needs screen control (Claude/Codex on your computer)':''}${t.run_after&&new Date(t.run_after)>new Date()?' · next check '+new Date(t.run_after).toLocaleDateString():''}`);ul.append(li)}
+}
+document.getElementById('lw-run-engine')?.addEventListener('click',async e=>{const b=e.currentTarget;if(!labelId)return;b.disabled=true;try{const r=await api('/labels/'+encodeURIComponent(labelId)+'/engine/run',{});message.textContent='Checked '+r.summary.releases+' release(s); '+r.summary.queued+' new task(s) queued.';await loadQueue();if(selectedRelease)await loadSubmissions(selectedRelease.id)}catch(err){report(err)}finally{b.disabled=false}})

@@ -35,8 +35,8 @@ export function installAutonomyRoutes(app: any) {
     const b = await body(c)
     return c.json(await completeTask(db, c.get('lwUser').id, [label], { taskId: id, outcome: b.outcome ?? 'COMPLETED', summary: b.summary ?? 'Resolved on the website' }, 'web'))
   }))
-  app.get(base + '/notifications/feed', wrap(async c => c.json({ notifications: await listNotifications(c.env.DB, c.req.param('labelId'), c.get('lwUser').id, c.req.query('unread') === '1') })))
-  app.post(base + '/notifications/:id/read', wrap(async c => {
+  app.get(base + '/label-notifications', wrap(async c => c.json({ notifications: await listNotifications(c.env.DB, c.req.param('labelId'), c.get('lwUser').id, c.req.query('unread') === '1') })))
+  app.post(base + '/label-notifications/:id/read', wrap(async c => {
     await c.env.DB.prepare('UPDATE lw_notifications SET read_at=CURRENT_TIMESTAMP WHERE label_id=? AND id=? AND (user_id=? OR user_id IS NULL)').bind(c.req.param('labelId'), c.req.param('id'), c.get('lwUser').id).run()
     return c.json({ ok: true })
   }))
