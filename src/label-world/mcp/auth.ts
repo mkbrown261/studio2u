@@ -34,6 +34,15 @@ function page(title:string,body:any){return html`<!doctype html><html lang="en">
 const scopeNames:Record<string,[string,string]>={'labels:read':['See your labels','Label names and your role'],'releases:read':['See releases','Songs, credits and release details'],'reviews:read':['See review reports','Your private review results'],'research:read':['See research reports','Your private research results'],'messages:read':['See label messages','Messages in your label workspace'],'tasks:read':['See the task queue','What your label agents are working on'],'knowledge:read':['Read the label knowledge base','Saved guides and notes'],'releases:write':['Fill in release details','Create releases and save song info you confirm'],'submissions:write':['Record submissions','Log the UnitedMasters, ASCAP and SoundExchange submissions you make'],'tasks:write':['Work the task queue','Claim and finish tasks from your always-on label queue'],'offline_access':['Stay connected','Keep working for up to 30 days, even with your laptop closed']}
 const notices:Record<string,string>={label:'Pick at least one label, or type a name to create your first label.',scope:'Keep at least one permission checked.',name:'Label names must be 1–100 characters.'}
 function strictValue(value:any,max=2000){if(typeof value!=='string'||!value.length||value.length>max||/[\r\n\x00]/.test(value))throw Error();return value}
+const loopbackHosts=['127.0.0.1','[::1]','localhost']
+// RFC 8252 §7.3: native apps pick a fresh loopback port each login, so match loopback redirects on scheme+host+path and ignore the port.
+export function redirectAllowed(registered:string[],uri:unknown){
+ if(typeof uri!=='string'||uri.length>2000)return false
+ if(registered.includes(uri))return true
+ let u:URL;try{u=new URL(uri)}catch{return false}
+ if(u.protocol!=='http:'||!loopbackHosts.includes(u.hostname)||u.username||u.password||u.hash)return false
+ return registered.some(r=>{try{const x=new URL(r);return x.protocol==='http:'&&x.hostname===u.hostname&&x.pathname===u.pathname&&x.search===u.search}catch{return false}})
+}
 export function validRedirect(uri:string){const u=new URL(uri);return !u.username&&!u.password&&!u.hash&&(u.protocol==='https:'||u.protocol==='http:'&&['127.0.0.1','[::1]','localhost'].includes(u.hostname))}
 async function limited(c:any,key:string,max=60){const window=new Date().toISOString().slice(0,16),r=await c.env.DB.prepare('INSERT INTO lw_mcp_limits(key,window,requests) VALUES (?,?,1) ON CONFLICT(key,window) DO UPDATE SET requests=requests+1 WHERE requests<? RETURNING requests').bind(key,window,max).first();return Boolean(r)}
 const safe=(fn:any)=>async(c:any)=>{try{return await fn(c)}catch{return failure(c)}}
@@ -43,7 +52,7 @@ mcpRoutes.use(path,async(c:any,next:any)=>{c.header('Cache-Control','no-store');
 }
 mcpRoutes.get('/.well-known/oauth-protected-resource/label-world/mcp',c=>c.json({resource:resource(c),authorization_servers:[origin(c)],scopes_supported:[...mcpScopes],resource_name:'Studio2U Label World connector'}))
 mcpRoutes.get('/.well-known/oauth-protected-resource',c=>c.json({resource:resource(c),authorization_servers:[origin(c)],scopes_supported:[...mcpScopes]}))
-mcpRoutes.get('/.well-known/oauth-authorization-server',c=>c.json({issuer:origin(c),authorization_endpoint:origin(c)+base+'/authorize',token_endpoint:origin(c)+base+'/token',registration_endpoint:origin(c)+base+'/register',revocation_endpoint:origin(c)+base+'/revoke',response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],token_endpoint_auth_methods_supported:['none'],code_challenge_methods_supported:['S256'],scopes_supported:[...mcpScopes,'offline_access'],authorization_response_iss_parameter_supported:true}))
+mcpRoutes.get('/.well-known/oauth-authorization-server',c=>c.json({issuer:origin(c),authorization_endpoint:origin(c)+base+'/authorize',token_endpoint:origin(c)+base+'/token',registration_endpoint:origin(c)+base+'/register',revocation_endpoint:origin(c)+base+'/revoke',response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],token_endpoint_auth_methods_supported:['none'],code_challenge_methods_supported:['S256'],scopes_supported:[...mcpScopes,'offline_access']}))
 mcpRoutes.post(base+'/register',safe(async(c:any)=>{
  if(!await limited(c,'register:'+ (c.req.header('CF-Connecting-IP')??'local'),10))return failure(c,'temporarily_unavailable',429)
  const body=await c.req.json(),redirects=body.redirect_uris
@@ -64,7 +73,7 @@ mcpRoutes.get(base+'/authorize',safe(async(c:any)=>{
  else{
   const params=new URL(c.req.url).searchParams;if([...params.keys()].some(k=>params.getAll(k).length!==1))return failure(c)
  const q=c.req.query(),client=await db.prepare('SELECT * FROM lw_mcp_clients WHERE id=?').bind(strictValue(q.client_id,64)).first()
-  if(!client||!JSON.parse(client.redirects_json).includes(q.redirect_uri)||q.response_type!=='code'||q.resource!==resource(c)||q.code_challenge_method!=='S256'||!/^[-_a-zA-Z0-9]{43}$/.test(q.code_challenge??''))return failure(c)
+  if(!client||!redirectAllowed(JSON.parse(client.redirects_json),q.redirect_uri)||q.response_type!=='code'||q.resource!==resource(c)||q.code_challenge_method!=='S256'||!/^[-_a-zA-Z0-9]{43}$/.test(q.code_challenge??''))return failure(c)
   const scopes=(q.scope??mcpScopes.join(' ')).split(' ').filter(Boolean)
   if(!scopes.length||scopes.some((s:string)=>s!=='offline_access'&&!mcpScopes.includes(s as any)))return failure(c,'invalid_scope')
   if(!await limited(c,'authorize:'+(c.req.header('CF-Connecting-IP')??'local'),60))return failure(c,'temporarily_unavailable',429)
