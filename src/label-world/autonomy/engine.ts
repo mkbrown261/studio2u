@@ -14,7 +14,7 @@ import { buildPacket, derivedStatus, targets, type Target, type ReleaseRow, type
 import type { Intake } from './intake'
 import { decryptKey } from '../providers/vault'
 
-export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP'] as const
+export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP'] as const
 export type TaskKind = typeof taskKinds[number]
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
@@ -199,6 +199,14 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     const queued = await enqueue(db, { label: t.label_id, release: t.release_id, kind: 'REGISTRATION_FOLLOW_UP', role: t.organization === 'PRO' ? 'publishing_administrator' : 'royalty_admin', title: `${t.organization} follow-up: ${t.title}`, input: { registrationTaskId: t.id, organization: t.organization }, dedupe: `reg:${t.id}:${started.slice(0, 7)}` })
     await db.prepare('UPDATE lw_registration_tasks SET next_review_at=? WHERE id=? AND (next_review_at IS NULL OR next_review_at<=?)').bind(later(14 * 86400000), t.id, started).run()
     if (queued) { summary.followUps = Number(summary.followUps) + 1; labelsWithWork.add(t.label_id) }
+  }
+  // Money Found cases: a passed follow-up date becomes one agent task per case per day.
+  const { dueCases } = await import('./cases')
+  summary.cases = 0
+  for (const c of await dueCases(db, opts.labelIds)) {
+    const q = await enqueue(db, { label: c.label_id, kind: 'CASE_STEP', role: 'case_manager', title: `Case follow-up: ${c.title}`, input: { caseId: c.id, playbook: c.playbook }, dedupe: `case:${c.id}:${started.slice(0, 10)}` })
+    await db.prepare("UPDATE lw_cases SET next_follow_up_at=? WHERE id=? AND next_follow_up_at<=?").bind(later(7 * 86400000), c.id, started).run()
+    if (q) { summary.cases = Number(summary.cases) + 1; labelsWithWork.add(c.label_id) }
   }
   for (const label of labelsWithWork) if ((await wakeAgents(db, env, label, opts.fetcher)) === 'WOKEN') summary.woken = Number(summary.woken) + 1
   await db.prepare('UPDATE lw_engine_runs SET finished_at=?,summary_json=? WHERE id=?').bind(now(), JSON.stringify(summary), run.id).run()

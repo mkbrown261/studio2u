@@ -166,6 +166,7 @@ export async function claimNext(db: any, actor: number, labels: string[], agent:
     if (task.kind === 'COLLECT_INTAKE') context.submissions = await listSubmissions(db, task.label_id, task.release_id)
     context.parties = await listParties(db, task.label_id)
   }
+  if (input.caseId) { const { getCase } = await import('./cases'); context.case = await getCase(db, task.label_id, actor, input.caseId) }
   if (input.registrationTaskId) context.registration = await db.prepare('SELECT id,organization,status,applicability,reason,receipt_url,reported_status FROM lw_registration_tasks WHERE label_id=? AND id=?').bind(task.label_id, input.registrationTaskId).first()
   return { task: { id: task.id, labelId: task.label_id, releaseId: task.release_id, kind: task.kind, capability: task.capability, title: task.title, attempt: task.attempts, leaseUntil: task.lease_until, input }, context, instructions: instructionsFor(task.kind) }
 }
@@ -176,6 +177,7 @@ export function instructionsFor(kind: string) {
     case 'COLLECT_INTAKE': return `Fill the missing fields listed in input.questions (each says which providers need it). First reuse context.parties and anything already known; then ask the user the remaining questions in plain language. Save answers with studio2u_update_intake (and studio2u_save_party for writers). If the user is not available, complete with WAITING_FOR_INPUT and the questions so Studio2U notifies them. ${common}`
     case 'FILL_PROVIDER_FORM': return `Requires screen control. Open context.packet.officialUrl in the user's browser. The user logs in. Enter every READY field from context.packet.sections exactly. Do NOT press the final Submit or tick legal attestations: show the user the review screen and let them do it. Then call studio2u_report_submission with outcome SUBMITTED and the confirmation shown. If you cannot control a screen, release the task with outcome WAITING_FOR_INPUT. ${common}`
     case 'VERIFY_SUBMISSION': return `Requires screen control. With the user logged in, open the provider status page and check whether the release/work/recording shows as approved/registered. If yes, call studio2u_report_submission outcome VERIFIED with the exact text you saw as evidence. If rejected, use NEEDS_CORRECTION with the reason. If still pending, complete the task with outcome WAITING_FOR_INPUT and retryAfterMinutes=2880. ${common}`
+    case 'CASE_STEP': return `Work context.case using context.case.playbook. Do the next step(s), follow every standingRules item, ask the user only for context.case.stillNeeded, save facts with studio2u_update_case, write emails/letters with studio2u_draft_case_message (never send until the owner approves on the Money Found board; then send from the user's email and call studio2u_mark_draft_sent). Log what you did with a note on studio2u_update_case and set followUpInDays. ${common}`
     case 'REGISTRATION_FOLLOW_UP': return `Review context.registration. Prepare what is needed for this organization (PRO, MLC, SoundExchange, Copyright Office), using the release intake. Do not claim any registration is confirmed without provider evidence. ${common}`
     default: return common
   }
