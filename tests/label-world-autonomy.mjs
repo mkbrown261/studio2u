@@ -207,6 +207,23 @@ const q = await (await web('/queue')).json(); assert.ok(q.engine.lastRun)
 const crossSite = await app.request('http://localhost/api/label-world/labels/lab-a/releases/' + R + '/intake/patch', { method: 'POST', headers: { Cookie: 'studio2u_session=test-session-1', Origin: 'https://evil.invalid', 'Content-Type': 'text/plain' }, body: '{"patch":{"genre":"x"}}' }, env)
 assert.equal(crossSite.status, 403)
 
+// ---------- website chat answered by the user's own Codex/Claude via MCP ----------
+sqlite.exec(`INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,role,content,status) VALUES ('msg-1','lab-a',1,'executive','user','What should we push this month?','WAITING_FOR_PROVIDER'),('msg-x','lab-b',2,'executive','user','other label','WAITING_FOR_PROVIDER')`)
+const inbox = await connect(1, ['lab-a'], [...mcpScopes], 'Codex')
+const pending = await inbox.call('list_unanswered_messages', { labelId: 'lab-a' })
+assert.deepEqual(pending.messages.map(m => m.id), ['msg-1'])
+assert.ok((await inbox.call('list_unanswered_messages', { labelId: 'lab-b' })).error)
+assert.ok((await inbox.call('reply_to_message', { labelId: 'lab-b', messageId: 'msg-x', reply: 'nope' })).error)
+assert.ok((await ro.client.listTools()).tools.every(t => t.name !== 'studio2u_reply_to_message'))
+const replied = await inbox.call('reply_to_message', { labelId: 'lab-a', messageId: 'msg-1', reply: 'Push Night Drive: finish the ASCAP packet first.' })
+assert.equal(replied.employeeId, 'executive')
+assert.ok((await inbox.call('reply_to_message', { labelId: 'lab-a', messageId: 'msg-1', reply: 'dup' })).error)
+assert.equal(sqlite.prepare("SELECT status FROM lw_employee_messages WHERE id='msg-1'").get().status, 'COMPLETED')
+assert.equal(sqlite.prepare("SELECT role FROM lw_employee_messages WHERE reply_to='msg-1'").get().role, 'assistant')
+assert.equal((await inbox.call('list_unanswered_messages', { labelId: 'lab-a' })).messages.length, 0)
+
+await inbox.client.close(); await inbox.handler.close()
+
 for (const c of [ro, b, forged, viewer]) { await c.client.close(); await c.handler.close() }
 await a.client.close().catch(() => {}); await a.handler.close()
 sqlite.close()
