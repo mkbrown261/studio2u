@@ -65,6 +65,16 @@ await request('/api/label-world/ai-connections/'+grant.id+'/disconnect','POST',{
 assert.equal(f.sqlite.prepare('SELECT revoked_at FROM lw_mcp_grants WHERE id=?').get(grant.id).revoked_at,null)
 assert.equal((await request('/label-world/oauth/revoke','POST',{client_id:client,token:tokens2.access_token})).status,200)
 assert.equal((await request('/label-world/mcp','GET',null,{token:tokens2.access_token})).status,401)
+// Brand-new user with no label: friendly retry instead of invalid_request, then label created during consent.
+{const c3='studio2u_session=test-session-3',q3=new URLSearchParams(authQuery);q3.set('state','fresh-user')
+const page=await request('/label-world/oauth/authorize?'+q3,'GET',null,{cookie:c3});assert.equal(page.status,200);const t=await page.text()
+assert.ok(t.includes('name="new_label"'));assert.ok(t.includes('<style>')&&!t.includes('&lt;'));assert.ok(t.includes('Authorize'))
+const rid=t.match(/name="request" value="([a-f0-9]+)"/)[1],csrf=t.match(/name="csrf" value="([a-f0-9]+)"/)[1]
+const empty=await request('/label-world/oauth/consent','POST',{request:rid,csrf,scope:'labels:read',decision:'allow'},{cookie:c3,origin});assert.equal(empty.status,303);assert.ok(empty.headers.get('Location').includes('notice=label'))
+const again=await (await request(empty.headers.get('Location'),'GET',null,{cookie:c3})).text();assert.ok(again.includes('Pick at least one label'))
+const rid2=again.match(/name="request" value="([a-f0-9]+)"/)[1],csrf2=again.match(/name="csrf" value="([a-f0-9]+)"/)[1];assert.equal(rid2,rid)
+const ok=await request('/label-world/oauth/consent','POST',{request:rid,csrf:csrf2,scope:'labels:read',new_label:'Fresh Records',decision:'allow'},{cookie:c3,origin});assert.equal(ok.status,302);assert.ok(new URL(ok.headers.get('Location')).searchParams.get('code'))
+assert.equal(f.sqlite.prepare("SELECT l.name FROM lw_labels l JOIN lw_memberships m ON m.label_id=l.id WHERE m.user_id=3 AND m.role='owner'").get().name,'Fresh Records')}
 await native.close()
 console.log('PASS MCP OAuth B: actual PKCE authorization/explicit selected-label consent, existing session identity, hashed tokens, 10-minute access, rotated refresh/reuse family revocation, issuer/resource/exact redirect binding, consent/code replay, malformed arguments, cookie-only/anonymous/other-label denial and official HTTP client reading stored QA release; no model key.')
 f.sqlite.close()
