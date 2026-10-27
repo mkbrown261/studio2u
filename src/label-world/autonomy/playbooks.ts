@@ -41,7 +41,7 @@ export const PLAYBOOKS: Playbook[] = [
     id: 'tv-cue-sheet', version: 1, owner: 'executive',
     name: 'My song was on TV and I never got paid (missing cue sheet)',
     summary: 'Get the production company to file the cue sheet, then claim the missed performance royalties from your PRO before the retro deadline.',
-    triggers: ['tv', 'show', 'episode', 'cue sheet', 'cuesheet', 'sync', 'placement', 'baddies', 'network', 'netflix', 'film', 'movie', 'aired'],
+    triggers: ['tv', 'tv show', 'on a show', 'episode', 'cue sheet', 'cuesheet', 'sync', 'placement', 'baddies', 'network', 'netflix', 'film', 'movie', 'aired'],
     needs: [
       { key: 'show', question: 'What show (or film) was it on?', required: true },
       { key: 'episode', question: 'Which season/episode, if you know it?', required: false },
@@ -204,22 +204,39 @@ export const PLAYBOOKS: Playbook[] = [
     followUpDays: [7, 14]
   },
   {
-    id: 'release-check', version: 1, owner: 'reviewer',
-    name: 'Release check before distribution',
-    summary: 'Make sure a release is correct before it goes to UnitedMasters: metadata, credits, splits, artwork, licenses and registrations.',
-    triggers: ['release', 'drop', 'distribute', 'unitedmasters', 'united masters', 'upload', 'put out'],
-    needs: [],
-    steps: [
-      'Load the release packet (studio2u_get_submission_packet UNITEDMASTERS) and fix every MISSING field by asking the user.',
-      'Check artwork (see Artwork playbook), explicit flag, featured artist spelling (must match existing profiles exactly), producer/writer credits and splits totaling 100%.',
-      'Check third-party audio (beat/sample) licenses are attached.',
-      'Confirm the release date is at least 3 weeks out (UnitedMasters recommendation).',
-      'Queue PRO, MLC and SoundExchange registration follow-ups for the release.'
+    id: 'release-check', version: 2, owner: 'reviewer',
+    name: 'Release on UnitedMasters without getting edit requests',
+    summary: 'Pre-flight the release against UnitedMasters review rules, link the right artist profiles, then fill the form with the user (they press Submit).',
+    triggers: ['release', 'drop', 'distribute', 'unitedmasters', 'united masters', 'upload', 'put out', 'rejected', 'edit request', 'wrong profile', 'wrong artist page'],
+    needs: [
+      { key: 'spotifyArtistUrl', question: 'Paste your Spotify artist profile link (Spotify > your profile > Share > Copy link).', required: false },
+      { key: 'appleArtistUrl', question: 'Paste your Apple Music artist link.', required: false }
     ],
-    rules: [],
-    contacts: [{ name: 'UnitedMasters', how: 'https://app.unitedmasters.com', source: 'https://support.unitedmasters.com' }],
-    facts: ['UnitedMasters recommends submitting at least 3 weeks ahead.'],
-    followUpDays: []
+    steps: [
+      'Run studio2u_run lint_release first. Fix every BLOCKER and FIX by asking the user only what is missing (no screen needed).',
+      'Link artist profiles: UnitedMasters asks before release details whether to distribute to existing Spotify/Apple profiles. Paste the profile URLs ("I already have my profile link"). This is the most reliable way to avoid landing on another artist\'s page (important when someone uses a similar name).',
+      'Get the packet (get_submission_packet UNITEDMASTERS). Only then use the screen: open app.unitedmasters.com in the user\'s browser, user logs in, type every READY field exactly. Featured artists, producers and songwriters: one name per line, names only.',
+      'Upload: WAV master, 3000×3000 cover art, beat license / sample clearance if any (UnitedMasters rejects uncleared samples).',
+      'Stop at review. The user ticks the attestations and presses Submit. Then report_submission with the confirmation.',
+      'If UnitedMasters sends an edit request: read the note, match it to the lint rule, fix it, and help the user resubmit.',
+      'After approval: remind the user to claim Spotify for Artists (UnitedMasters offers instant verification), share the MasterLink, and open the PRO / SoundExchange registration cases for the new songs.'
+    ],
+    rules: ['Never put artist names, "Single", "Official Audio", "Clean", "EP", "feat." or "prod." in titles.', 'Never use a major or existing label name, or "UnitedMasters", as the label.', 'Songwriters/producers are never Main or Featured artists.', 'Do not censor titles with asterisks; mark Explicit instead.'],
+    contacts: [
+      { name: 'UnitedMasters app', how: 'https://app.unitedmasters.com', source: 'https://support.unitedmasters.com' },
+      { name: 'UnitedMasters support (wrong profile, redelivery, clearance docs)', how: 'support@unitedmasters.com', source: 'https://support.unitedmasters.com/hc/en-us/articles/4406883104531' }
+    ],
+    facts: [
+      'Every release is manually reviewed; unfixed edit requests block approval and can delay the release date.',
+      'UnitedMasters recommends submitting at least 3 weeks before release.',
+      'Release/track titles must not contain artist names, producer credits, "Single", "Official Audio", "Clean" or "EP"; version info goes in parentheses; no censored words; standard fonts only.',
+      'Label must not be an existing/major label or "UnitedMasters"; use your artist name if you have no label.',
+      'Cover art: original, no logos/brands/photos you don\'t own; square 3000×3000 (max 6000), JPG or PNG.',
+      'Any track with a sample is rejected unless cleared; send clearance docs with the submission or to support@unitedmasters.com.',
+      'Wrong Spotify/Apple profile after release: email support@unitedmasters.com with the correct profile links and they redeliver; someone else on your profile: report it in Spotify for Artists / Apple Music for Artists.',
+      'YouTube Content ID is available on DEBUT+ and SELECT for $4.99 per release (checked 2026-10-27).'
+    ],
+    followUpDays: [3, 7]
   },
   {
     id: 'artwork', version: 1, owner: 'builder',
@@ -238,14 +255,63 @@ export const PLAYBOOKS: Playbook[] = [
     facts: ['UnitedMasters requires square art, minimum 3000×3000 px (6000×6000 max), at least 72 dpi, JPG or PNG.'],
     followUpDays: []
   }
+,
+  {
+    id: 'social-intel', version: 1, owner: 'researcher',
+    name: 'Read my Instagram / TikTok / YouTube analytics (read-only)',
+    summary: 'With the user logged in, read their own analytics screens once, save compact numbers per post, and report what is working and what to change.',
+    triggers: ['instagram', 'tiktok', 'retention', 'analytics', 'insights', 'reels', 'views', 'engagement', 'followers', 'content', 'posts', 'socials', 'skip rate'],
+    needs: [{ key: 'platforms', question: 'Which accounts should I read: Instagram, TikTok, YouTube? (You stay logged in yourself.)', required: true }],
+    steps: [
+      'Ask which platforms. The user logs in. Never post, like, follow, comment or DM.',
+      'Instagram (Professional dashboard / Insights on each Reel): views, reach, avg watch time, skip rate, retention at 3s, shares, saves, follows. TikTok Studio > Analytics > each post: views, avg watch time, watched full video %, retention curve drop-off second, traffic source. YouTube Studio > Analytics: views, avg view duration, CTR, audience retention.',
+      'Read the last 20–30 posts. Save ONE row per post with studio2u_run save_social_snapshot (kind MY_POST). Put numbers in metrics; no screenshots stored.',
+      'Save one MY_ACCOUNT row per platform (followers, 28-day reach, top audience cities/ages).',
+      'Write the report as a reply: top 3 posts and why (hook in first 2s, length, sound, topic), where viewers drop off, best posting times, and 5 concrete next posts. Compare to benchmarks only if you cite the source.',
+      'Schedule a re-read in 14 days (update_case followUpInDays:14). Do not re-read daily.'
+    ],
+    rules: ['Read-only. Never interact with or change the account.', 'Only the user\'s own accounts, while they are logged in and watching or have approved.', 'Store numbers, not screenshots or private messages.'],
+    contacts: [],
+    facts: ['YouTube removed its general Trending page in July 2025; use YouTube Charts (charts.youtube.com) and category charts instead.', 'Instagram shows a Reels retention chart and skip rate (first 3 seconds) in Reels insights.'],
+    followUpDays: [14]
+  },
+  {
+    id: 'trend-scout', version: 1, owner: 'researcher',
+    name: 'What\'s trending in my lane right now',
+    summary: 'Check public charts and the user\'s own Explore / For You feed for songs, sounds and formats rising in their genre, and turn it into content ideas.',
+    triggers: ['trending', 'trend', 'viral', 'explore', 'for you', 'fyp', 'charts', 'what\'s hot', 'popping', 'sounds'],
+    needs: [{ key: 'genre', question: 'What lane are we scouting (genre, city, vibe)?', required: true }],
+    steps: [
+      'Prefer public pages without a screen session: YouTube Charts (charts.youtube.com: Top songs, Trending music videos, Top Shorts songs), Spotify Viral 50, Apple Music charts. Fetch them as pages if you can; otherwise open them in the browser.',
+      'Only if the user asks and is logged in: scroll their Instagram Explore / TikTok For You for about 2 minutes, read-only, noting sounds, formats and hooks in their genre.',
+      'Save each notable item with save_social_snapshot (kind TREND or CHART) with rank/views/sound name in metrics.',
+      'Reply with: 5 rising songs/sounds in the lane, 3 repeatable formats, and 3 post ideas the artist could shoot this week with their own music.',
+      'Re-scout weekly at most.'
+    ],
+    rules: ['Read-only. No engagement on the user\'s behalf.', 'Cite where each trend was seen and when.'],
+    contacts: [{ name: 'YouTube Charts', how: 'https://charts.youtube.com', source: 'https://techcrunch.com/2025/07/10/youtube-is-getting-rid-of-its-trending-page-and-trending-now-list/' }],
+    facts: ['YouTube replaced Trending with category charts (e.g. trending music videos, weekly top podcast shows) in July 2025.'],
+    followUpDays: [7]
+  }
+]
+
+/** When agents may use the user's screen. Screen sessions are expensive (screenshots are
+ *  thousands of tokens each), so they are a last resort, not a default. */
+export const SCREEN_POLICY = [
+  'Use Studio2U tools and public web pages first. Use the screen only when there is no API: provider forms (UnitedMasters, ASCAP, SoundExchange, BMI, MLC), the user\'s own analytics (Instagram, TikTok, YouTube Studio), Suno/creative tools, or the user asks.',
+  'Prefer reading the page structure (accessibility snapshot / DOM text) over screenshots; take screenshots only to confirm a step, small (JPEG, ~1000px wide).',
+  'One focused session per task. Do not leave the browser polling or re-check pages on a loop; save what you read with Studio2U tools and close the tab.',
+  'The user logs in themselves and presses every final Submit / Pay / Publish button.',
+  'Never post, like, follow, comment, DM or change settings on social accounts.'
 ]
 
 export const playbookById = (id: string) => PLAYBOOKS.find(p => p.id === id)
 
 /** Pick likely playbooks from plain-language text. */
 export function suggestPlaybooks(text: string, limit = 3) {
-  const t = ' ' + text.toLowerCase() + ' '
-  return PLAYBOOKS.map(p => ({ p, score: p.triggers.reduce((n, k) => n + (t.includes(k) ? (k.length > 5 ? 2 : 1) : 0), 0) }))
+  const t = ' ' + text.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ') + ' '
+  const hit = (k: string) => k.length <= 4 ? t.includes(' ' + k + ' ') : t.includes(k)
+  return PLAYBOOKS.map(p => ({ p, score: p.triggers.reduce((n, k) => n + (hit(k) ? (k.length > 5 ? 2 : 1) : 0), 0) }))
     .filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, limit)
     .map(x => ({ id: x.p.id, name: x.p.name, owner: x.p.owner, summary: x.p.summary }))
 }
@@ -265,5 +331,5 @@ export function ascapClaimDeadline(airDate: string, party: 'writer' | 'publisher
 }
 
 export function playbookBrief(p: Playbook) {
-  return { ...p, standingRules: STANDING_RULES }
+  return { ...p, standingRules: STANDING_RULES, screenPolicy: SCREEN_POLICY }
 }

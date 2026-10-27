@@ -46,9 +46,11 @@ assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM lw_mcp_tokens WHERE has
 assert.equal((await request('/label-world/mcp','GET',null,{cookie})).status,401)
 const native=new Client({name:'OAuth SDK fixture',version:'1.0.0'}),transport=new StreamableHTTPClientTransport(new URL(resource),{fetch:(url,opts)=>app.request(new Request(url,{...opts,headers:{...Object.fromEntries(new Headers(opts?.headers)),Authorization:'Bearer '+tokens.access_token}}),{},f.env)})
 await native.connect(transport)
-const labels=await native.callTool({name:'studio2u_list_labels',arguments:{}});assert.deepEqual(labels.structuredContent.data.items.map(l=>l.id),[a.id])
-const release=await native.callTool({name:'studio2u_get_release',arguments:{labelId:a.id,releaseId:r.id}});assert.equal(release.structuredContent.data.release.title,'OAuth QA release')
-assert.equal((await native.callTool({name:'studio2u_get_release',arguments:{labelId:b.id,releaseId:r.id}})).isError,true)
+assert.deepEqual((await native.listTools()).tools.map(t=>t.name).sort(),['studio2u_guide','studio2u_run','studio2u_start']) // compact surface over the real endpoint
+const viaRun=async(tool,args)=>{const r=await native.callTool({name:'studio2u_run',arguments:{tool,args}});return r.isError?{isError:true}:JSON.parse(r.content[0].text)}
+const labels=await viaRun('list_labels',{});assert.deepEqual(labels.items.map(l=>l.id),[a.id])
+const release=await viaRun('get_release',{labelId:a.id,releaseId:r.id});assert.equal(release.release.title,'OAuth QA release')
+assert.equal((await viaRun('get_release',{labelId:b.id,releaseId:r.id})).isError,true)
 assert.equal((await request('/label-world/mcp','GET',null,{token:'a'.repeat(64)})).status,401)
 assert.equal((await request('/label-world/mcp','GET',null,{token:tokens.access_token,origin:'https://evil.invalid'})).status,403)
 f.sqlite.prepare("UPDATE lw_mcp_tokens SET expires_at='2020-01-01T00:00:00Z' WHERE hash=?").run(await digest(tokens.access_token))

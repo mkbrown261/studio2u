@@ -20,7 +20,7 @@ async function requireMember(db: any, label: string, user: number) { if (!await 
 export async function getProfile(db: any, label: string) {
   const r: any = await db.prepare('SELECT * FROM lw_label_identity WHERE label_id=?').bind(label).first()
   if (!r) return null
-  return { artistName: r.artist_name, legalName: r.legal_name, aliases: JSON.parse(r.aliases_json), pro: r.pro, ipi: r.ipi, firstUsedYear: r.first_used_year, socials: JSON.parse(r.socials_json), updatedAt: r.updated_at }
+  return { artistName: r.artist_name, legalName: r.legal_name, spotifyArtistId: r.spotify_artist_id ?? null, appleArtistId: r.apple_artist_id ?? null, aliases: JSON.parse(r.aliases_json), pro: r.pro, ipi: r.ipi, firstUsedYear: r.first_used_year, socials: JSON.parse(r.socials_json), updatedAt: r.updated_at }
 }
 export async function saveProfile(db: any, label: string, actor: number, b: any) {
   await requireEditor(db, label, actor)
@@ -32,9 +32,14 @@ export async function saveProfile(db: any, label: string, actor: number, b: any)
   if (year !== null && (!Number.isInteger(year) || year < 1950 || year > new Date().getFullYear())) throw new ServiceError('firstUsedYear invalid')
   const socials: Record<string, string> = {}
   for (const k of ['instagram', 'tiktok', 'youtube', 'spotify', 'appleMusic', 'x']) { const v = clean(b?.socials?.[k], k, 300, false); if (v) socials[k] = v }
+  const spotify = typeof b?.spotifyArtistUrl === 'string' ? (/(?:artist[/:])([A-Za-z0-9]{22})/.exec(b.spotifyArtistUrl)?.[1] ?? null) : null
+  const apple = typeof b?.appleArtistUrl === 'string' ? (/(?:artist\/[^/]*\/|\bid=?)(\d{5,15})/.exec(b.appleArtistUrl)?.[1] ?? /(\d{6,15})(?:\?.*)?$/.exec(b.appleArtistUrl)?.[1] ?? null) : null
+  if (b?.spotifyArtistUrl && !spotify) throw new ServiceError('That does not look like a Spotify artist link (open.spotify.com/artist/...).')
+  if (b?.appleArtistUrl && !apple) throw new ServiceError('That does not look like an Apple Music artist link (music.apple.com/.../artist/...).')
   await db.prepare(`INSERT INTO lw_label_identity(label_id,artist_name,legal_name,aliases_json,pro,ipi,first_used_year,socials_json,updated_at) VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
     ON CONFLICT(label_id) DO UPDATE SET artist_name=excluded.artist_name,legal_name=excluded.legal_name,aliases_json=excluded.aliases_json,pro=excluded.pro,ipi=excluded.ipi,first_used_year=excluded.first_used_year,socials_json=excluded.socials_json,updated_at=CURRENT_TIMESTAMP`)
     .bind(label, artist, legal, JSON.stringify(aliases), b?.pro || null, ipi, year, JSON.stringify(socials)).run()
+  if (spotify || apple) await db.prepare('UPDATE lw_label_identity SET spotify_artist_id=COALESCE(?,spotify_artist_id),apple_artist_id=COALESCE(?,apple_artist_id) WHERE label_id=?').bind(spotify, apple, label).run()
   return getProfile(db, label)
 }
 

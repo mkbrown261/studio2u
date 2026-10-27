@@ -161,11 +161,18 @@ mcpRoutes.all('/label-world/mcp',safe(async(c:any)=>{
  if(!grant){c.header('WWW-Authenticate',`Bearer resource_metadata="${own}/.well-known/oauth-protected-resource/label-world/mcp", scope="${[...mcpScopes,'offline_access'].join(' ')}"`);return failure(c,'invalid_token',401)}
  if(!await limited(c,'mcp:'+grant.id,120))return failure(c,'temporarily_unavailable',429)
  const client=await c.env.DB.prepare('SELECT name FROM lw_mcp_clients WHERE id=?').bind(grant.client_id).first()
- const handler=createStudioMcp(c.env.DB,{userId:grant.user_id,grantId:grant.id,labelIds:JSON.parse(grant.labels_json),scopes:JSON.parse(grant.scopes_json),clientName:client?.name},async()=>Boolean(await authenticateMcp(c)))
+ const handler=createStudioMcp(c.env.DB,{userId:grant.user_id,grantId:grant.id,labelIds:JSON.parse(grant.labels_json),scopes:JSON.parse(grant.scopes_json),clientName:client?.name,toolMode:'core'},async()=>Boolean(await authenticateMcp(c)))
  const response=await handler.fetch(c.req.raw);await handler.close();if(response.ok)await c.env.DB.prepare('UPDATE lw_mcp_grants SET last_used_at=? WHERE id=? AND revoked_at IS NULL').bind(date(0),grant.id).run();return response
 }))
 export function installMcpManagement(app:any){
  const path='/api/label-world/ai-connections'
  app.get(path,async(c:any)=>{c.header('Cache-Control','no-store');return c.json({connections:(await c.env.DB.prepare(`SELECT g.id,c.name,g.labels_json,g.scopes_json,g.expires_at,g.revoked_at,g.last_used_at,g.created_at,(SELECT MAX(expires_at) FROM lw_mcp_tokens WHERE grant_id=g.id AND kind='access' AND consumed=0) AS access_expires_at,(SELECT MAX(expires_at) FROM lw_mcp_tokens WHERE grant_id=g.id AND kind='refresh' AND consumed=0) AS refresh_expires_at,(SELECT COUNT(*) FROM lw_memberships WHERE user_id=g.user_id AND label_id IN (SELECT value FROM json_each(g.labels_json))) AS authorized_labels FROM lw_mcp_grants g JOIN lw_mcp_clients c ON c.id=g.client_id WHERE g.user_id=? ORDER BY g.created_at DESC LIMIT 100`).bind(c.get('lwUser').id).all()).results,websiteInference:'NOT_ENABLED_BY_MCP',endpoint:resource(c)})})
+ // Is any agent actually working this label? (login alone is not enough: last_used_at proves real tool calls)
+ app.get('/api/label-world/agent-status',async(c:any)=>{c.header('Cache-Control','no-store');const uid=c.get('lwUser').id,label=c.req.query('labelId')??''
+  const g:any=await c.env.DB.prepare(`SELECT c.name,g.last_used_at,g.created_at FROM lw_mcp_grants g JOIN lw_mcp_clients c ON c.id=g.client_id WHERE g.user_id=? AND g.revoked_at IS NULL AND g.expires_at>? AND (?='' OR EXISTS(SELECT 1 FROM json_each(g.labels_json) WHERE value=?)) ORDER BY COALESCE(g.last_used_at,'') DESC,g.created_at DESC LIMIT 1`).bind(uid,date(0),label,label).first()
+  const p:any=label?await c.env.DB.prepare('SELECT 1 AS ok FROM lw_reasoning_preferences r JOIN lw_provider_connections p ON p.user_id=r.user_id AND p.provider=r.provider WHERE r.label_id=? AND r.user_id=?').bind(label,uid).first().catch(()=>null):null
+  const mins=g?.last_used_at?Math.round((Date.now()-Date.parse(g.last_used_at))/60000):null
+  const state=p?.ok?'MODEL_CONNECTED':!g?'NO_AGENT':!g.last_used_at?'LOGGED_IN_NEVER_USED':mins!<=30?'AGENT_ACTIVE':'AGENT_IDLE'
+  return c.json({state,client:g?.name??null,lastUsedMinutesAgo:mins,endpoint:resource(c)})})
  app.post(path+'/:id/disconnect',async(c:any)=>{if(c.req.header('Origin')!==origin(c))return failure(c,'access_denied',403);await c.env.DB.prepare('UPDATE lw_mcp_grants SET revoked_at=? WHERE id=? AND user_id=?').bind(date(0),c.req.param('id'),c.get('lwUser').id).run();return c.json({status:'DISCONNECTED'})})
 }
