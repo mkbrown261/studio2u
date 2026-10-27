@@ -95,6 +95,15 @@
       "license": "CC0",
       "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
+    },
+    {
+      "asset": "executive.glb",
+      "title": "Businessman (Rigged)",
+      "source": "https://sketchfab.com/3d-models/businessman-rigged-8933d61fcb1e46f3aead661227bb4fed",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "\"Businessman (Rigged)\" via Sketchfab, licensed under CC BY 4.0",
+      "modifications": "Decimated to ~30k faces, textures resized to 1024px, helper mesh removed, procedural idle animation added by Studio2U"
     }
   ],
   "locally_authored": "Rooms, furniture details and hanging foliage; no BagaPie asset used",

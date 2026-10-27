@@ -1,6 +1,6 @@
 import json,struct,pathlib,math
 root=pathlib.Path('public/label-world/assets')
-for name in ['studio','lobby','conference','carla','eric']:
+for name in ['studio','lobby','conference','carla','eric','executive']:
  data=(root/(name+'.glb')).read_bytes();magic,version,length=struct.unpack_from('<4sII',data)
  assert magic==b'glTF' and version==2 and length==len(data)
  assert len(data)<25*1024*1024
@@ -10,8 +10,8 @@ for name in ['studio','lobby','conference','carla','eric']:
  assert not any(n.get('name')=='Icosphere' for n in doc.get('nodes',[])),'bone display helper exported'
  for mesh in doc.get('meshes',[]):
   for prim in mesh['primitives']:assert 'POSITION' in prim['attributes'] and 'NORMAL' in prim['attributes']
- if name in ['carla','eric']:
-  assert len(doc.get('skins',[]))==1 and len(doc['skins'][0]['joints'])==89
+ if name in ['carla','eric','executive']:
+  assert len(doc.get('skins',[]))==1 and len(doc['skins'][0]['joints'])=={'executive':66}.get(name,89)
   assert len(doc.get('animations',[]))==1
   checked=0
   for ch in doc['animations'][0]['channels']:
@@ -25,6 +25,9 @@ for name in ['studio','lobby','conference','carla','eric']:
     assert angle<math.radians(45),'spinning hand or discontinuous wrist'
    checked+=1
   assert checked>0
+  if name=='executive':
+   anim=doc['animations'][0];assert anim['name']=='Animation';assert len(data)<6*1024*1024,'executive too heavy for web'
+   faces=sum(doc['accessors'][p['indices']]['count']//3 for m in doc['meshes'] for p in m['primitives'] if 'indices' in p);assert faces<40000,faces
   if name=='eric':assert any('tablet' in n.get('name','').lower() for n in doc['nodes'])
  print('PASS',name,'embedded GLB',len(data),'bytes',len(doc.get('meshes',[])),'mesh groups',len(doc.get('animations',[])),'clips')
 print('PASS: exported rigs, embedded textures/normals, sampled wrist continuity and Pages asset limits. Visual animation quality remains a browser check.')
