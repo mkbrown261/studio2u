@@ -13,6 +13,7 @@ import {installReviewerRoutes} from '../label-world/reviewer/routes'
 import { installWorkspaceRoutes } from '../label-world/workspace-services'
 import { installProviderRoutes } from '../label-world/providers/routes'
 import { installAutonomyRoutes } from '../label-world/autonomy/routes'
+import { installSignPage } from '../label-world/sign-page'
 import { createRelease, ServiceError } from '../label-world/autonomy/service'
 import { releaseInput } from '../label-world/contracts'
 import { modeInput, organizations, rightsInput, rightsGate, registrationInput, text } from '../label-world/release-operations'
@@ -158,6 +159,7 @@ labelWorldRoutes.get('/api/label-world/labels/:labelId/events', async c => {
 
 installProviderRoutes(labelWorldRoutes)
 installAutonomyRoutes(labelWorldRoutes)
+installSignPage(labelWorldRoutes)
 installResearchSourceRoutes(labelWorldRoutes)
 installWorkspaceRoutes(labelWorldRoutes)
 installReviewerRoutes(labelWorldRoutes)

@@ -4,6 +4,7 @@ import type { AppEnv } from '../types'
 import type { SessionUser } from '../lib/session'
 import { generate, providerId, endpointConfig } from './providers/adapters'
 import { decryptKey, keyContext } from './providers/vault'
+import { spendGuard, recordSpend } from './providers/budget'
 type Env = AppEnv & { Variables: { lwUser: SessionUser; lwRole: string } }
 const agents = ['researcher','reviewer','executive','builder']
 const base = '/api/label-world/labels/:labelId'
@@ -32,17 +33,19 @@ export function installWorkspaceRoutes(app:Hono<Env>){
    const window=new Date().toISOString().slice(0,16)
    const limit=await c.env.DB.prepare('INSERT INTO lw_provider_rate_limits(user_id,window,requests) VALUES (?,?,1) ON CONFLICT(user_id,window) DO UPDATE SET requests=requests+1 WHERE requests<6 RETURNING requests').bind(user,window).first()
    if(!limit)throw new Error('Rate limit')
+   await spendGuard(c.env.DB,user)
    await c.env.DB.prepare("UPDATE lw_employee_messages SET status='GENERATING' WHERE id=?").bind(id).run()
    const context=await loadContext(c.env.DB,{userId:user,labelId:label,employeeId:agent,releaseId,operation:'explain',messageId:id},await history(c))
    await c.env.DB.prepare("INSERT INTO lw_context_traces(message_id,label_id,user_id,trace_json,stage) VALUES (?,?,?,?,'LOADED')").bind(id,label,user,JSON.stringify(context.trace)).run()
    const started=Date.now()
    const provider=providerId(preference.provider),key=await decryptKey(c.env.LLM_KEY_ENCRYPTION_SECRET,conn.encrypted_key,keyContext(user,provider,conn.endpoint_config))
    const result=await generate(provider,key,endpointConfig(provider,JSON.parse(conn.endpoint_config)),preference.model,context.prompt,{instructions:context.instructions})
+   await recordSpend(c.env.DB,user,provider,result.model,result.usage)
    await c.env.DB.prepare('UPDATE lw_context_traces SET usage_json=?,latency_ms=? WHERE message_id=?').bind(JSON.stringify(result.usage),Date.now()-started,id).run()
    const responseText=explanation(result.text,context.trace.evidenceRefs)
    await c.env.DB.batch([c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,release_id,role,content,status,reply_to,provider,model) VALUES (?,?,?,?,?,'assistant',?,'COMPLETED',?,?,?)").bind(crypto.randomUUID(),label,user,agent,releaseId,responseText,id,provider,result.model),c.env.DB.prepare("UPDATE lw_employee_messages SET status='COMPLETED' WHERE id=?").bind(id),c.env.DB.prepare("UPDATE lw_context_traces SET stage='COMPLETED',usage_json=?,latency_ms=? WHERE message_id=?").bind(JSON.stringify(result.usage),Date.now()-started,id)])
    return c.json({messages:await history(c),status:'COMPLETED',executionCapability:'REASONING_ONLY'},201)
-  }catch(error){await c.env.DB.batch([c.env.DB.prepare("UPDATE lw_employee_messages SET status='FAILED' WHERE id=?").bind(id),c.env.DB.prepare("UPDATE lw_context_traces SET stage='FAILED' WHERE message_id=?").bind(id)]);return c.json({messages:await history(c),status:'FAILED',message:error instanceof ContextError?'Message saved. Context or explanation could not be validated; select a release or narrow the request. No action was executed.':'Message saved. Provider response failed; no action was executed.'},201)}
+  }catch(error){await c.env.DB.batch([c.env.DB.prepare("UPDATE lw_employee_messages SET status='FAILED' WHERE id=?").bind(id),c.env.DB.prepare("UPDATE lw_context_traces SET stage='FAILED' WHERE message_id=?").bind(id)]);return c.json({messages:await history(c),status:'FAILED',message:error instanceof ContextError?'Message saved. Context or explanation could not be validated; select a release or narrow the request. No action was executed.':(error as any)?.status===402?`Message saved. ${(error as Error).message}`:'Message saved. Provider response failed; no action was executed.'},201)}
  }))
  app.get(base+'/inbox/:agentId/context-traces',safe(async(c:any)=>{if(!agents.includes(c.req.param('agentId')))return c.json({error:'Employee not found'},404);return c.json({traces:(await c.env.DB.prepare('SELECT t.message_id,t.trace_json,t.stage,t.usage_json,t.latency_ms,t.created_at FROM lw_context_traces t JOIN lw_employee_messages m ON m.id=t.message_id WHERE t.label_id=? AND t.user_id=? AND m.agent_id=? ORDER BY t.created_at DESC LIMIT 30').bind(c.req.param('labelId'),c.get('lwUser').id,c.req.param('agentId')).all()).results})}))
  app.get(base+'/tasks',safe(async(c:any)=>c.json({tasks:(await c.env.DB.prepare('SELECT id,release_id,agent_role,status,attempts,created_at,updated_at FROM lw_tasks WHERE label_id=? ORDER BY created_at DESC LIMIT 100').bind(c.req.param('labelId')).all()).results,workerStatus:'RUNNING_EVERY_5_MINUTES',workerScope:'General orchestration and scheduled retry worker',implementedProcessors:['reviewer_technical','research_youtube','research_csv']})))

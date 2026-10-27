@@ -1,7 +1,8 @@
 import type { Hono } from 'hono'
 import type { AppEnv } from '../../types'
 import type { SessionUser } from '../../lib/session'
-import { providerIds,providerId,endpointConfig,listModels,generate,ProviderError } from './adapters'
+import { providerIds,providerId,endpointConfig,listModels,generate,ProviderError,recommendCheapest } from './adapters'
+import { spendGuard,recordSpend,budgetStatus,setBudget } from './budget'
 import { encryptKey,decryptKey,keyContext } from './vault'
 type Env=AppEnv & {Variables:{lwUser:SessionUser;lwRole:string}}
 export function installProviderRoutes(app:Hono<Env>){
@@ -47,8 +48,10 @@ export function installProviderRoutes(app:Hono<Env>){
     if(c.req.param('provider')==='qwen')throw new ProviderError('Use an exact model ID from your Qwen Model Studio catalog',400)
     await limited(c);const conn=await connection(c,c.req.param('provider'))
     const models=await listModels(conn.provider,conn.key,conn.config)
-    return c.json({provider:conn.provider,models,status:'CATALOG_FETCHED',generationVerified:false})
+    return c.json({provider:conn.provider,models,recommended:recommendCheapest(conn.provider,models),status:'CATALOG_FETCHED',generationVerified:false})
   }))
+  app.get('/api/label-world/providers/budget',safe(async(c:any)=>c.json(await budgetStatus(c.env.DB,c.get('lwUser').id))))
+  app.post('/api/label-world/providers/budget',safe(async(c:any)=>{const b=await c.req.json().catch(()=>null);return c.json(await setBudget(c.env.DB,c.get('lwUser').id,b?.monthlyCapUsd))}))
   app.get('/api/label-world/labels/:labelId/reasoning/settings',safe(async(c:any)=>{
     const preference=await c.env.DB.prepare('SELECT provider,model FROM lw_reasoning_preferences WHERE label_id=? AND user_id=?').bind(c.req.param('labelId'),c.get('lwUser').id).first()
     return c.json({preference,scope:'PERSONAL_WITHIN_LABEL',agentRuntime:'NOT_IMPLEMENTED'})
@@ -81,10 +84,12 @@ export function installProviderRoutes(app:Hono<Env>){
     const preference=await c.env.DB.prepare('SELECT provider,model FROM lw_reasoning_preferences WHERE label_id=? AND user_id=?').bind(label,user).first()
     if(!preference)throw new ProviderError('Save a model selection first',409)
     const conn=await connection(c,preference.provider),id=crypto.randomUUID()
+    await spendGuard(c.env.DB,user)
     await c.env.DB.prepare("INSERT INTO lw_reasoning_runs(id,label_id,user_id,provider,model,status) VALUES (?,?,?,?,?,'RUNNING')").bind(id,label,user,conn.provider,preference.model).run()
     try{
       const result=await generate(conn.provider,conn.key,conn.config,preference.model,body.prompt.trim())
       await c.env.DB.prepare("UPDATE lw_reasoning_runs SET status='COMPLETED',usage_json=? WHERE id=?").bind(JSON.stringify(result.usage),id).run()
+      await recordSpend(c.env.DB,user,conn.provider,result.model,result.usage)
       return c.json({id,provider:conn.provider,requestedModel:preference.model,...result,status:'COMPLETED',agentRuntime:'NOT_IMPLEMENTED'})
     }catch(e){
       await c.env.DB.prepare("UPDATE lw_reasoning_runs SET status='FAILED' WHERE id=?").bind(id).run()

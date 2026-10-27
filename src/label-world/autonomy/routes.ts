@@ -5,6 +5,9 @@ import { runEngine, ROUTINE_URL } from './engine'
 import { encryptKey } from '../providers/vault'
 import { SHIFT_PROMPT } from './mcp-tools'
 import * as cases from './cases'
+import * as office from './office'
+import * as agr from './agreements'
+import * as content from './content'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -39,6 +42,29 @@ export function installAutonomyRoutes(app: any) {
   // Only a signed-in human can approve or reject drafts; MCP clients cannot reach these routes.
   app.post(base + '/drafts/:draftId/decision', wrap(async c => { const b = await body(c); return c.json(await cases.decideDraft(c.env.DB, L(c), U(c), c.req.param('draftId'), b.decision, b)) }))
   app.post(base + '/drafts/:draftId/sent', wrap(async c => c.json(await cases.markSent(c.env.DB, L(c), U(c), c.req.param('draftId'), (await body(c)).note, 'owner'))))
+
+  // ---- Label Office: statements, Monday report, split sheets, content studio ----
+  const origin = (c: any) => new URL(c.req.url).origin
+  app.post(base + '/statements/preview', wrap(async c => c.json(office.previewStatement((await body(c)).csv))))
+  app.post(base + '/statements', wrap(async c => c.json(await office.importStatement(c.env.DB, L(c), U(c), await body(c)), 201)))
+  app.get(base + '/statements', wrap(async c => c.json(await office.listStatements(c.env.DB, L(c), U(c)))))
+  app.post(base + '/statements/:id/delete', wrap(async c => c.json(await office.deleteStatement(c.env.DB, L(c), U(c), c.req.param('id')))))
+  app.get(base + '/reports', wrap(async c => c.json(await office.listReports(c.env.DB, L(c), U(c)))))
+  app.post(base + '/reports/generate', wrap(async c => { await cases.requireEditorFor(c.env.DB, L(c), U(c)); return c.json(await office.generateReport(c.env.DB, L(c), 'MANUAL')) }))
+  app.post(base + '/report-settings', wrap(async c => c.json(await office.saveSettings(c.env.DB, L(c), U(c), await body(c)))))
+  app.get(base + '/agreements', wrap(async c => c.json({ agreements: await agr.listAgreements(c.env.DB, L(c), U(c)) })))
+  app.post(base + '/agreements/precheck', wrap(async c => c.json(agr.attorneyPrecheck(agr.validateTerms(await body(c))))))
+  app.post(base + '/agreements', wrap(async c => c.json(await agr.createAgreement(c.env.DB, L(c), U(c), await body(c), origin(c)), 201)))
+  app.get(base + '/agreements/:id', wrap(async c => c.json(await agr.getAgreement(c.env.DB, L(c), U(c), c.req.param('id')))))
+  app.post(base + '/agreements/:id/revise', wrap(async c => c.json(await agr.reviseAgreement(c.env.DB, L(c), U(c), c.req.param('id'), await body(c), origin(c)))))
+  app.post(base + '/agreements/:id/void', wrap(async c => c.json(await agr.voidAgreement(c.env.DB, L(c), U(c), c.req.param('id'), (await body(c)).reason))))
+  app.post(base + '/agreements/:id/parties/:partyId/link', wrap(async c => c.json(await agr.newLink(c.env.DB, L(c), U(c), c.req.param('id'), c.req.param('partyId'), origin(c)))))
+  app.get(base + '/agreements/:id/copy', wrap(async c => { const f = await agr.signedCopyForLabel(c.env.DB, L(c), U(c), c.req.param('id')); return c.body(f.text, 200, { 'Content-Type': 'text/plain; charset=utf-8', 'Content-Disposition': `attachment; filename="${f.filename}"` }) }))
+  app.get(base + '/campaigns', wrap(async c => c.json({ campaigns: await content.listCampaigns(c.env.DB, L(c), U(c)) })))
+  app.post(base + '/campaigns', wrap(async c => c.json(await content.createCampaign(c.env.DB, L(c), U(c), await body(c)), 201)))
+  app.get(base + '/campaigns/:id', wrap(async c => c.json(await content.getCampaign(c.env.DB, L(c), U(c), c.req.param('id')))))
+  app.post(base + '/campaigns/:id/concepts', wrap(async c => c.json(await content.addConcept(c.env.DB, L(c), U(c), c.req.param('id'), await body(c), 'owner'), 201)))
+  app.post(base + '/concepts/:id/status', wrap(async c => c.json(await content.setConceptStatus(c.env.DB, L(c), U(c), c.req.param('id'), String((await body(c)).status), 'owner'))))
 
   app.get(base + '/releases/:releaseId/intake', wrap(async c => c.json(await getIntake(c.env.DB, c.req.param('labelId'), c.req.param('releaseId')))))
   app.post(base + '/releases/:releaseId/intake/patch', wrap(async c => {

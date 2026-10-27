@@ -208,6 +208,11 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     await db.prepare("UPDATE lw_cases SET next_follow_up_at=? WHERE id=? AND next_follow_up_at<=?").bind(later(7 * 86400000), c.id, started).run()
     if (q) { summary.cases = Number(summary.cases) + 1; labelsWithWork.add(c.label_id) }
   }
+  // Monday Report: one per label per local day, at the label's chosen weekday/hour.
+  const { scheduledReports } = await import('./office')
+  const reports = await scheduledReports(db, opts.labelIds, new Date(started)).catch(() => [] as string[])
+  summary.reports = reports.length
+  for (const label of reports) await notify(db, { label, kind: 'MONDAY_REPORT', title: 'Your weekly label report is ready', body: 'Money on file, deadlines, what the team did, and what needs you this week.', link: '/label-world/money#report', dedupe: `report:${label}:${started.slice(0, 10)}` })
   for (const label of labelsWithWork) if ((await wakeAgents(db, env, label, opts.fetcher)) === 'WOKEN') summary.woken = Number(summary.woken) + 1
   await db.prepare('UPDATE lw_engine_runs SET finished_at=?,summary_json=? WHERE id=?').bind(now(), JSON.stringify(summary), run.id).run()
   return summary

@@ -292,6 +292,125 @@ export const PLAYBOOKS: Playbook[] = [
     contacts: [{ name: 'YouTube Charts', how: 'https://charts.youtube.com', source: 'https://techcrunch.com/2025/07/10/youtube-is-getting-rid-of-its-trending-page-and-trending-now-list/' }],
     facts: ['YouTube replaced Trending with category charts (e.g. trending music videos, weekly top podcast shows) in July 2025.'],
     followUpDays: [7]
+  },
+  {
+    id: 'mlc-mechanicals', version: 1, owner: 'researcher',
+    name: 'Collect my streaming mechanicals (The MLC)',
+    summary: 'Join The MLC (free) or confirm your publishing administrator does it, register or claim your share of each song, and find unmatched money before it is distributed by market share.',
+    triggers: ['mlc', 'mechanical', 'mechanicals', 'the mlc', 'mechanical royalties', 'songtrust', 'publishing admin', 'unmatched', 'unclaimed mechanicals'],
+    needs: [
+      { key: 'hasAdmin', question: 'Do you have a publishing administrator (Songtrust, CD Baby Pro, Sentric, a publisher)? If yes, who?', required: true },
+      { key: 'isMember', question: 'Are you already a member of The MLC (themlc.com)?', required: true },
+      { key: 'ipi', question: 'What is your songwriter IPI number (on your ASCAP/BMI account)?', required: false }
+    ],
+    steps: [
+      'BRANCH FIRST. If a publishing administrator handles the user\'s songs, do NOT register those songs at The MLC yourself: duplicate claims create conflicts and freeze money. Instead, check the admin\'s dashboard (screen, user logged in) that each catalog song is delivered to The MLC, and list gaps for the user to send to the admin.',
+      'If self-administered and not a member: walk the user through joining at portal.themlc.com (free). They enter their own details and accept the terms; you never tick legal boxes.',
+      'For each confirmed catalog song, search The MLC Public Work Search for the title + writer. If the work exists without the user\'s share: use the Claiming Tool. If it does not exist: register it (title, all writers with IPI, each writer\'s share, ISRCs). Shares must match the signed split sheet.',
+      'Open the Matching Tool and look for recordings (by ISRC / title) that are not linked to the work. Propose each match to the user before submitting.',
+      'For 10+ songs, prepare a CWR or bulk spreadsheet per The MLC template instead of one-by-one forms; the user uploads it.',
+      'Record every submission on the case and mark the catalog song. Follow up in 30 days to confirm the work shows as matched.'
+    ],
+    rules: [
+      'The MLC only covers US digital audio mechanicals (streams/downloads). It does NOT collect performance royalties: that\'s the PRO. ASCAP/BMI cannot collect mechanicals.',
+      'Never register shares that conflict with a signed split sheet or with another writer\'s registration; open an unpaid-split case instead.',
+      'Never claim a song the user didn\'t write.'
+    ],
+    contacts: [
+      { name: 'The MLC member portal', how: 'https://portal.themlc.com', source: 'https://www.themlc.com/membership' },
+      { name: 'The MLC Public Work Search', how: 'https://portal.themlc.com/search', source: 'https://www.themlc.com/' }
+    ],
+    facts: [
+      'Membership in The MLC and registering works are free.',
+      'Self-administered songwriters register their own shares; songwriters with a publishing administrator should let the administrator register to avoid duplicates.',
+      'Unmatched / unclaimed royalties for usage from 2021-01-01 on are held at least 3 years before market-share distribution; the first such distributions are expected to begin in 2027 (January 2021 usage). Check themlc.com for the current schedule before telling the user a date.'
+    ],
+    followUpDays: [30, 60]
+  },
+  {
+    id: 'bmi-registration', version: 1, owner: 'reviewer',
+    name: 'Register my songs with BMI correctly',
+    summary: 'Register each work with BMI using BMI\'s 200% system (writer shares + publisher shares), matching the signed split sheet.',
+    triggers: ['bmi', 'register with bmi', 'bmi registration', 'bmi work', 'songview'],
+    needs: [
+      { key: 'songTitle', question: 'Which song(s)?', required: true },
+      { key: 'writers', question: 'Every writer, their PRO, IPI and writer share (from the split sheet)?', required: true },
+      { key: 'publisher', question: 'Do you have a publishing company registered at BMI, or should the publisher share stay unassigned for now?', required: true }
+    ],
+    steps: [
+      'Pull the signed split sheet for the song. If there is none, open a split sheet first (no registration without agreed splits).',
+      'Convert shares with bmi_shares: BMI uses 200% total: writer shares add up to 100% and publisher shares add up to 100%. A writer with no publisher keeps only the writer share; the unpublished publisher share is not added to the writer share in the registration.',
+      'Check the work is eligible: a beat alone (no melody/lyrics) is not a registerable musical work, and fully AI-generated works are not accepted.',
+      'Search BMI Songview for an existing registration with the same title and writers to avoid duplicates; if co-writers already registered it, the user claims their share instead.',
+      'Fill the BMI online work registration on screen with the user logged in. The user reviews and presses Submit.',
+      'Record the BMI work ID on the catalog song; follow up in 21 days to confirm it shows in Songview.'
+    ],
+    rules: ['Shares must match the signed split sheet exactly.', 'Never register a co-writer\'s share as the user\'s.'],
+    contacts: [{ name: 'BMI Online Services', how: 'https://www.bmi.com/login', source: 'https://www.bmi.com/forms/affiliation/bmi_work_registration_terms.pdf' }],
+    facts: [
+      'BMI work registrations total 200%: writer shares up to 100% and publisher shares up to 100% (BMI Work Registration Terms).',
+      'Beats alone are not registerable; fully AI-generated works are not accepted by BMI.'
+    ],
+    followUpDays: [21, 45]
+  },
+  {
+    id: 'split-sheet', version: 1, owner: 'executive',
+    name: 'Get a split sheet signed',
+    summary: 'Write down who owns what on a song (songwriting, master, producer points) and get every collaborator to e-sign it from a link, no account needed.',
+    triggers: ['split sheet', 'splitsheet', 'splits', 'split', 'percentages', 'who owns', 'co-writer', 'cowriter', 'collab', 'feature agreement', 'sign'],
+    needs: [
+      { key: 'songTitle', question: 'Which song?', required: true },
+      { key: 'people', question: 'Everyone who worked on it: legal name, email, role, and what share they get (songwriting %, master %, producer points)?', required: true },
+      { key: 'samples', question: 'Any samples or loops? Cleared?', required: true }
+    ],
+    steps: [
+      'Collect the people and shares. Songwriting shares must total 100%. Master ownership is either not covered or totals 100%. Producer points are separate.',
+      'Run the attorney pre-check (studio2u_run attorney_precheck) and tell the user each flag in plain words.',
+      'Create the agreement (create_agreement). Show the user the sign links; the user sends them (text/DM/email). Never send for them.',
+      'Check status every few days; when someone declines, read their reason to the user and help prepare a revised version.',
+      'When fully signed: tell the user, then use the split for PRO/MLC/BMI registrations.'
+    ],
+    rules: ['Never change percentages the user didn\'t confirm.', 'Any change after someone signed = a new version everyone re-signs.', 'Not legal advice; recommend an attorney or Volunteer Lawyers for the Arts for big money deals.'],
+    contacts: [],
+    facts: ['Electronic signatures are legally valid in the US under the ESIGN Act (15 U.S.C. 7001) when the signer consents and the record is retained.'],
+    followUpDays: [3, 7, 14]
+  },
+  {
+    id: 'attorney-review', version: 1, owner: 'reviewer',
+    name: 'Have the attorney agent review this',
+    summary: 'Plain-English review of a split sheet, beat lease, feature agreement, label/management deal, or a letter before it goes out: red flags, missing terms, questions to ask. Not legal advice.',
+    triggers: ['attorney', 'lawyer', 'legal', 'contract', 'review this', 'cease and desist', 'c&d', 'deal', 'agreement', 'lease', 'terms'],
+    needs: [{ key: 'document', question: 'Paste or upload the document (or name the agreement/draft in Studio2U)?', required: true }, { key: 'goal', question: 'What do you want out of it (protect my masters, get paid, get out of the deal)?', required: false }],
+    steps: [
+      'Start with deterministic checks: attorney_precheck for split sheets; for releases, lint_release.',
+      'Summarize the document in 5 bullets a 15-year-old could follow: who, what rights, how long, what money, how to exit.',
+      'Flag red items: perpetual / worldwide rights grabs, 360 clauses, master ownership transfers, cross-collateralization, no audit right, no reversion, unclear splits, uncleared samples, unlimited term, exclusivity, missing payment timing.',
+      'List questions the user should ask the other side and what a fair counter usually looks like, labelled as general industry practice, not legal advice.',
+      'For letters (C&D, demand): check tone is factual, cites the evidence on the case, contains no threats or admissions, and has a clear ask and deadline. Save edits as a new draft; the user approves.',
+      'Always end with: when real money or rights are at stake, get a licensed entertainment attorney or Volunteer Lawyers for the Arts to review before signing or sending.'
+    ],
+    rules: ['You are an AI review assistant, not a lawyer. Say so once, plainly.', 'Never tell the user a document is "safe to sign".', 'Never invent law, cases or statutes; cite only what you can link.'],
+    contacts: [{ name: 'Volunteer Lawyers for the Arts (find a local program)', how: 'https://vlany.org', source: 'https://vlany.org' }],
+    facts: [],
+    followUpDays: []
+  },
+  {
+    id: 'content-campaign', version: 1, owner: 'builder',
+    name: 'Plan content for my song',
+    summary: 'Turn what is actually working (your own retention curves and current trends) into shootable content ideas with a phone-only and a bigger-budget version.',
+    triggers: ['content', 'content ideas', 'video ideas', 'rollout', 'promo', 'tiktok ideas', 'reels', 'shorts', 'campaign', 'what should i post', 'retention'],
+    needs: [{ key: 'songTitle', question: 'Which song are we promoting?', required: true }, { key: 'goal', question: 'Goal: pre-saves, streams, followers, or a sound people use?', required: true }, { key: 'budget', question: 'Budget: phone only, or some money for a shoot?', required: false }],
+    steps: [
+      'Carla first: read the user\'s own analytics (screen, user logged in, read-only): TikTok Studio, Instagram Insights, YouTube Studio, Spotify for Artists. Capture per-post views, average watch time, and the retention curve (where people drop). Save each as save_social_snapshot (MY_POST) with metrics like avgWatchSec, retention3s, dropAtSec.',
+      'Run trend-scout for the lane if trends are older than a week.',
+      'Create a campaign (create_campaign) for the song.',
+      'Builder writes 5 to 8 concepts (add_concept). Each: a hook that lands in the first 2 seconds, which part of the song (usually the most replayed 15 seconds), shot list, duration, platform, caption, CTA, a phone-only version and a bigger-budget version, rights notes (sample? location? faces?), and evidence pointing at snapshot IDs that justify it.',
+      'Tell the user the ideas are waiting in Content Studio for approval. Never post anything yourself.'
+    ],
+    rules: ['Every concept cites evidence (a snapshot ID or a chart link). No made-up stats.', 'Read-only on socials: never post, like, follow, comment or DM.', 'Only the user approves concepts.'],
+    contacts: [],
+    facts: [],
+    followUpDays: [7]
   }
 ]
 
@@ -328,6 +447,20 @@ export function ascapClaimDeadline(airDate: string, party: 'writer' | 'publisher
   const surveyEnds = mo >= 10 ? y + 1 : y // year whose Sep 30 closes the survey year
   // Official example: performances Oct 1 2024 – Sep 30 2025 → writers until Jan 31 2027, publishers until Dec 31 2026.
   return party === 'writer' ? `${surveyEnds + 2}-01-31` : `${surveyEnds + 1}-12-31`
+}
+
+/**
+ * Split sheet (each writer's share of 100%) -> BMI 200% registration lines.
+ * Writer shares total 100%. Each writer's matching publisher share goes to their
+ * publisher; unpublished writers leave that publisher share unassigned.
+ */
+export function bmiShares(writers: { name: string; share: number; publisher?: string | null }[]) {
+  const total = Math.round(writers.reduce((a, w) => a + w.share, 0) * 100) / 100
+  if (total !== 100) throw new Error(`Writer shares add up to ${total}%; they must total 100%`)
+  const lines = writers.map(w => ({ writer: w.name, writerShare: w.share, publisher: w.publisher || null, publisherShare: w.publisher ? w.share : 0 }))
+  const assigned = lines.reduce((a, l) => a + l.publisherShare, 0)
+  return { lines, writerTotal: 100, publisherTotal: assigned, unassignedPublisher: Math.round((100 - assigned) * 100) / 100, registrationTotal: 100 + assigned,
+    note: 'BMI uses a 200% basis: writers up to 100% plus publishers up to 100%. Unpublished shares are left unassigned, never added to the writer share.' }
 }
 
 export function playbookBrief(p: Playbook) {

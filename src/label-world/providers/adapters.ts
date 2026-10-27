@@ -1,4 +1,4 @@
-export const providerIds = ['openai','anthropic','kimi','qwen','openrouter'] as const
+export const providerIds = ['openai','anthropic','kimi','qwen','openrouter','xai','gemini'] as const
 export type Provider = typeof providerIds[number]
 export type EndpointConfig = { region?: string; workspace?: string }
 export class ProviderError extends Error {
@@ -18,7 +18,7 @@ export function endpointConfig(provider: Provider, value: any = {}): EndpointCon
   return { region, workspace:value.workspace }
 }
 export function baseUrl(provider: Provider, config: EndpointConfig): string {
-  const urls = {openai:'https://api.openai.com/v1',anthropic:'https://api.anthropic.com/v1',kimi:'https://api.moonshot.ai/v1',openrouter:'https://openrouter.ai/api/v1'}
+  const urls = {openai:'https://api.openai.com/v1',anthropic:'https://api.anthropic.com/v1',kimi:'https://api.moonshot.ai/v1',openrouter:'https://openrouter.ai/api/v1',xai:'https://api.x.ai/v1',gemini:'https://generativelanguage.googleapis.com/v1beta/openai'}
   if (provider !== 'qwen') return urls[provider]
   const c=endpointConfig(provider,config)
   if(c.region==='us')return 'https://dashscope-us.aliyuncs.com/compatible-mode/v1'
@@ -46,6 +46,8 @@ export function textModel(provider: Provider,id:string,model:any):boolean {
   if(provider==='anthropic')return id.startsWith('claude-')
   if(provider==='kimi')return /^(kimi-|moonshot-)/.test(id)
   if(provider==='qwen')return id.startsWith('qwen')&&!/(audio|tts|image|embed|rerank|omni)/i.test(id)
+  if(provider==='xai')return /^grok/.test(id)&&!/(image|imagine|video|vision-only|tts|stt)/i.test(id)
+  if(provider==='gemini')return /^(models\/)?gemini/.test(id)&&!/(image|tts|embed|live|audio|veo|imagen)/i.test(id)
   return (!model.architecture?.output_modalities || model.architecture.output_modalities.includes('text')) && !/(embed|rerank)/i.test(id)
 }
 export async function listModels(provider:Provider,key:string,config:EndpointConfig):Promise<Model[]> {
@@ -53,7 +55,7 @@ export async function listModels(provider:Provider,key:string,config:EndpointCon
   for(let page=0;page<20;page++){
     const data=await request(provider,key,config,'/models'+(provider==='anthropic'?'?limit=100'+(after?'&after_id='+encodeURIComponent(after):''):''))
     if(!Array.isArray(data.data))throw new ProviderError('Provider model catalog unavailable')
-    for(const m of data.data){if(typeof m.id==='string'&&m.id.length<=200&&textModel(provider,m.id,m)&&!seen.has(m.id)){seen.add(m.id);models.push({id:m.id,name:m.display_name||m.name||m.id,created:Number(m.created)||Date.parse(m.created_at||'')/1000||0})}}
+    for(const m0 of data.data){const m={...m0,id:typeof m0.id==='string'?m0.id.replace(/^models\//,''):m0.id};if(typeof m.id==='string'&&m.id.length<=200&&textModel(provider,m.id,m)&&!seen.has(m.id)){seen.add(m.id);models.push({id:m.id,name:m.display_name||m.name||m.id,created:Number(m.created)||Date.parse(m.created_at||'')/1000||0})}}
     if(provider!=='anthropic'||!data.has_more)return models.sort((a,b)=>b.created-a.created||a.id.localeCompare(b.id))
     if(typeof data.last_id!=='string'||data.last_id===after)throw new ProviderError('Invalid provider pagination')
     after=data.last_id
@@ -77,4 +79,31 @@ export async function generate(provider:Provider,key:string,config:EndpointConfi
   const usage:Record<string,number>={}
   for(const field of ['input_tokens','output_tokens','prompt_tokens','completion_tokens','total_tokens'])if(Number.isFinite(data.usage?.[field]))usage[field]=data.usage[field]
   return {text:answer.slice(0,64000),usage,model:typeof data.model==='string'?data.model:model}
+}
+
+// Desk work (answering chats, filing data) does not need a frontier model. Prices are
+// the providers' published standard rates per 1M tokens, checked 2026-10-27; used only
+// to estimate spend against the user's cap. Unknown models are estimated conservatively.
+export const PRICES: {provider:Provider;match:RegExp;inUsd:number;outUsd:number;note:string}[] = [
+  {provider:'openai',match:/^gpt-6-luna/,inUsd:0.10,outUsd:0.50,note:'OpenAI pricing page'},
+  {provider:'openai',match:/^gpt-6\.1-terra/,inUsd:1.00,outUsd:5.00,note:'OpenAI pricing page'},
+  {provider:'openai',match:/^gpt-6\.1-sol/,inUsd:2.00,outUsd:10.00,note:'OpenAI pricing page'},
+  {provider:'openai',match:/^gpt-6-astra/,inUsd:10.00,outUsd:50.00,note:'OpenAI pricing page'},
+  {provider:'gemini',match:/flash-lite/,inUsd:0.25,outUsd:1.50,note:'Gemini API pricing page (Flash-Lite tier)'},
+  {provider:'gemini',match:/flash/,inUsd:0.75,outUsd:3.75,note:'Gemini API pricing page (Flash tier, through 2026-12-31)'},
+  {provider:'xai',match:/^grok-4\.7/,inUsd:2.00,outUsd:6.00,note:'xAI models page'}
+]
+const FALLBACK={inUsd:3,outUsd:15}
+export function priceFor(provider:Provider,model:string){const p=PRICES.find(x=>x.provider===provider&&x.match.test(model));return p?{...p,known:true}:{...FALLBACK,known:false,note:'Unknown model: estimated at a high rate so the cap stays safe'}}
+/** Cheapest known text model in the user's catalog, for the "recommended" badge. */
+export function recommendCheapest(provider:Provider,models:{id:string}[]){
+  const priced=models.map(m=>({id:m.id,p:PRICES.find(x=>x.provider===provider&&x.match.test(m.id))})).filter(x=>x.p) as {id:string;p:typeof PRICES[number]}[]
+  priced.sort((a,b)=>(a.p.inUsd+a.p.outUsd*0.3)-(b.p.inUsd+b.p.outUsd*0.3))
+  if(priced[0])return {id:priced[0].id,why:`Cheapest known model ($${priced[0].p.inUsd} in / $${priced[0].p.outUsd} out per 1M tokens). Desk work doesn't need more.`}
+  const guess=models.find(m=>/(mini|nano|lite|haiku|flash|small|luna|fast)/i.test(m.id))
+  return guess?{id:guess.id,why:'Looks like the provider\'s small/fast model. Good for desk work.'}:null
+}
+export function costMicros(provider:Provider,model:string,usage:Record<string,number>){
+  const p=priceFor(provider,model),i=usage.input_tokens??usage.prompt_tokens??0,o=usage.output_tokens??usage.completion_tokens??0
+  return {micros:Math.ceil(i*p.inUsd+o*p.outUsd),input:i,output:o,estimated:!p.known}
 }

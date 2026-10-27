@@ -8,10 +8,13 @@ import { targets } from './packets'
 import * as cases from './cases'
 import { lintRelease } from './lint'
 import { releaseAssets, readIntake } from './engine'
-import { PLAYBOOKS, STANDING_RULES, playbookBrief, playbookById, suggestPlaybooks } from './playbooks'
+import { PLAYBOOKS, STANDING_RULES, playbookBrief, playbookById, suggestPlaybooks, bmiShares } from './playbooks'
+import * as office from './office'
+import * as agr from './agreements'
+import * as content from './content'
 
 export const writeScopes = ['releases:write', 'submissions:write', 'tasks:write'] as const
-type Caller = { userId: number; grantId: string; labelIds: string[]; scopes: string[]; clientName?: string }
+type Caller = { userId: number; grantId: string; labelIds: string[]; scopes: string[]; clientName?: string; origin?: string }
 
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/)
 const out = z.object({ schemaVersion: z.literal(1), trust: z.literal('DATA_ONLY'), data: z.object({}).passthrough(), nextCursor: z.null() }).strict()
@@ -122,8 +125,36 @@ export function registerActionTools(server: any, db: any, caller: Caller, author
     const r: any = await db.prepare('SELECT id,title,artist,release_type,metadata_json FROM lw_releases WHERE label_id=? AND id=?').bind(a.labelId, a.releaseId).first()
     if (!r) throw new ServiceError('Release not found', 404)
     const prof: any = await db.prepare('SELECT spotify_artist_id,apple_artist_id FROM lw_label_identity WHERE label_id=?').bind(a.labelId).first().catch(() => null)
-    return lintRelease(r, readIntake(r.metadata_json), await releaseAssets(db, a.labelId, a.releaseId), { spotifyArtistId: prof?.spotify_artist_id, appleArtistId: prof?.apple_artist_id })
+    const res = lintRelease(r, readIntake(r.metadata_json), await releaseAssets(db, a.labelId, a.releaseId), { spotifyArtistId: prof?.spotify_artist_id, appleArtistId: prof?.apple_artist_id })
+    // Eric's gate: no release goes out while a linked split sheet is unsigned.
+    const g = await agr.releaseAgreementStatus(db, a.labelId, a.releaseId)
+    for (const u of g.unsigned) res.issues.unshift({ severity: 'BLOCKER', field: 'splitSheet', problem: `Split sheet "${u.work}" is ${u.status.toLowerCase().replace(/_/g, ' ')}.`, fix: 'Get every collaborator to sign (or send a revised version) before release.', source: 'Studio2U split sheets' })
+    res.ok = !res.issues.some(i => i.severity !== 'TIP')
+    return res
   }, { readOnly: true })
+
+  // ---- Label Office: Monday report, statements, split sheets, content studio ----
+  const origin = caller.origin ?? 'https://studio2u.pages.dev'
+  tool('get_report', 'tasks:read', 'Latest weekly label report (verified money, deadlines, what the team did, what needs the owner, items unresolved 2+ weeks). generate=true rebuilds it now.', z.object({ labelId: id, generate: z.boolean().optional() }).strict(), async a => {
+    scoped(a.labelId)
+    if (a.generate) { await cases.requireEditorFor(db, a.labelId, caller.userId); return (await office.generateReport(db, a.labelId, 'MANUAL')).report }
+    const r = await office.listReports(db, a.labelId, caller.userId); return r.reports[0]?.report ?? { message: 'No report yet. Call with generate=true.' }
+  }, { readOnly: true })
+  tool('money_summary', 'tasks:read', 'Verified money from imported statements (by source and top songs) and, separately, potential money from open cases. Never add the two together.', z.object({ labelId: id }).strict(), async a => { scoped(a.labelId); return office.moneySummary(db, a.labelId) }, { readOnly: true })
+  tool('list_statements', 'tasks:read', 'Royalty statements the owner imported (UnitedMasters, ASCAP, BMI, MLC, SoundExchange...). Importing is done on the website.', z.object({ labelId: id }).strict(), async a => { scoped(a.labelId); return office.listStatements(db, a.labelId, caller.userId) }, { readOnly: true })
+  const party = z.object({ legalName: z.string().max(120), stageName: z.string().max(120).optional(), email: z.string().max(254), roles: z.array(z.string().max(30)).min(1).max(8), pro: z.string().max(10).optional(), ipi: z.string().max(20).optional(), publisherName: z.string().max(160).optional(), compositionShare: z.number().min(0).max(100), masterShare: z.number().min(0).max(100).default(0), producerPoints: z.number().min(0).max(100).default(0) }).strict()
+  const terms = { workTitle: z.string().max(200), releaseId: id.optional(), isrc: z.string().max(15).optional(), samples: z.enum(['none', 'cleared', 'uncleared', 'unsure']), notes: z.string().max(2000).optional(), parties: z.array(party).min(1).max(20) }
+  tool('attorney_precheck', 'releases:read', 'Attorney agent first pass on split sheet terms: STOP/FIX/ASK flags (samples, missing PRO/IPI, unpaid producer). Free, no save. Not legal advice.', z.object(terms).strict(), async a => agr.attorneyPrecheck(agr.validateTerms(a)), { readOnly: true })
+  tool('bmi_shares', 'releases:read', 'Convert writer shares (total 100) to BMI 200% registration lines (writer + publisher shares).', z.object({ writers: z.array(z.object({ name: z.string().max(120), share: z.number().min(0).max(100), publisher: z.string().max(160).optional() })).min(1).max(20) }).strict(), async a => { try { return bmiShares(a.writers) } catch (e) { throw new ServiceError((e as Error).message) } }, { readOnly: true })
+  tool('create_agreement', 'releases:write', 'Create a split sheet only after the user confirmed every name, email and percentage. Returns one private sign link per person; the user sends them. Songwriting shares total 100; master 0 or 100; producer points separate.', z.object({ labelId: id, ...terms }).strict(), async a => { scoped(a.labelId); const { labelId, ...t } = a; return agr.createAgreement(db, labelId, caller.userId, t, origin, agent) })
+  tool('list_agreements', 'releases:read', 'Split sheets with signing progress.', z.object({ labelId: id }).strict(), async a => { scoped(a.labelId); return { agreements: await agr.listAgreements(db, a.labelId, caller.userId) } }, { readOnly: true })
+  tool('get_agreement', 'releases:read', 'One split sheet: terms, who signed/declined (with reasons), audit events.', z.object({ labelId: id, agreementId: id }).strict(), async a => { scoped(a.labelId); const g = await agr.getAgreement(db, a.labelId, caller.userId, a.agreementId); return { ...g, document: undefined } }, { readOnly: true })
+  tool('revise_agreement', 'releases:write', 'Material change (user confirmed): makes a new version, old one superseded, everyone signs again. Pass only the changed fields.', z.object({ labelId: id, agreementId: id, workTitle: z.string().max(200).optional(), samples: z.enum(['none', 'cleared', 'uncleared', 'unsure']).optional(), notes: z.string().max(2000).optional(), parties: z.array(party).min(1).max(20).optional() }).strict(), async a => { scoped(a.labelId); const { labelId, agreementId, ...b } = a; return agr.reviseAgreement(db, labelId, caller.userId, agreementId, b, origin, agent) })
+  tool('create_campaign', 'tasks:write', 'Start a content campaign for a song (goal like pre-saves, streams, a sound people use).', z.object({ labelId: id, trackTitle: z.string().max(200), objective: z.string().max(500), releaseId: id.optional(), audience: z.string().max(500).optional(), vibe: z.string().max(500).optional(), budget: z.string().max(200).optional(), deadline: z.string().max(40).optional() }).strict(), async a => { scoped(a.labelId); return content.createCampaign(db, a.labelId, caller.userId, a) })
+  tool('list_campaigns', 'tasks:read', 'Content campaigns and how many concepts await approval.', z.object({ labelId: id }).strict(), async a => { scoped(a.labelId); return { campaigns: await content.listCampaigns(db, a.labelId, caller.userId) } }, { readOnly: true })
+  tool('get_campaign', 'tasks:read', 'One campaign with its concepts and statuses.', z.object({ labelId: id, campaignId: id }).strict(), async a => { scoped(a.labelId); return content.getCampaign(db, a.labelId, caller.userId, a.campaignId) }, { readOnly: true })
+  tool('add_concept', 'tasks:write', 'Add a content idea (saved as DRAFT for the owner). Hook in first 2s, song section, shots, phone-only and bigger-budget versions, rights notes, evidence = snapshot IDs or chart links.', z.object({ labelId: id, campaignId: id, title: z.string().max(160), hook: z.string().max(400), treatment: z.string().max(3000), songSection: z.string().max(120).optional(), shots: z.array(z.string().max(400)).max(20).optional(), durationSec: z.number().int().min(3).max(600).optional(), platform: z.enum(['tiktok', 'instagram', 'youtube_shorts', 'youtube', 'snapchat', 'other']).optional(), caption: z.string().max(2200).optional(), cta: z.string().max(300).optional(), lowBudget: z.string().max(1500).optional(), highBudget: z.string().max(1500).optional(), rightsNotes: z.string().max(1000).optional(), evidence: z.array(z.object({ snapshotId: z.string().max(60).optional(), url: z.string().max(500).optional(), why: z.string().max(400) })).max(10).optional() }).strict(), async a => { scoped(a.labelId); const { labelId, campaignId, ...b } = a; return content.addConcept(db, labelId, caller.userId, campaignId, b, agent) })
+  tool('mark_concept', 'tasks:write', 'Record that an APPROVED concept was SHOT, or a SHOT one POSTED (the user posts it). Only the owner approves/rejects.', z.object({ labelId: id, conceptId: id, status: z.enum(['SHOT', 'POSTED']) }).strict(), async a => { scoped(a.labelId); return content.setConceptStatus(db, a.labelId, caller.userId, a.conceptId, a.status, 'agent') })
   const platform = z.enum(['instagram', 'tiktok', 'youtube', 'youtube_charts', 'spotify', 'apple_music', 'other'])
   tool('save_social_snapshot', 'tasks:write', 'Save numbers you READ from the user\'s own analytics or a public chart (read-only screen use). One item per post/chart entry; numbers in metrics (e.g. views, avgWatchSec, skipRate, retention3s, shares, saves, rank). No screenshots or DMs.', z.object({ labelId: id, items: z.array(z.object({ platform, kind: z.enum(['MY_POST', 'MY_ACCOUNT', 'TREND', 'CHART']), title: z.string().min(1).max(300), url: z.string().max(500).optional(), postedAt: z.string().max(30).optional(), metrics: z.record(z.string(), z.union([z.number(), z.string().max(200)])).optional(), notes: z.string().max(500).optional() }).strict()).min(1).max(50) }).strict(), async a => {
     scoped(a.labelId)

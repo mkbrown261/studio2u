@@ -14,6 +14,7 @@ const clean = (v: unknown, field: string, max = 200, required = true): string | 
 }
 const event = (db: any, label: string, caseId: string, actor: string, kind: string, body: string) =>
   db.prepare('INSERT INTO lw_case_events(label_id,case_id,actor,kind,body) VALUES (?,?,?,?,?)').bind(label, caseId, actor.slice(0, 100), kind, body.slice(0, 4000))
+export const requireEditorFor = (db: any, label: string, user: number) => requireEditor(db, label, user)
 async function requireMember(db: any, label: string, user: number) { if (!await memberRole(db, label, user)) throw new ServiceError('Label not found', 404) }
 
 // ---------------- artist profile ----------------

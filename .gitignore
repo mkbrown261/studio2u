@@ -38,3 +38,4 @@ public/label-world/app/
 # Large editable sources are preserved locally and privately archived in R2.
 assets/blender/**/*.blend
 assets/blender/**/*.blend1
+.shots/

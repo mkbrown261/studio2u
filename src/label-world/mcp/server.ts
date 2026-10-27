@@ -6,7 +6,7 @@ import {registry} from '../context/registry'
 import {registerActionTools,writeScopes} from '../autonomy/mcp-tools'
 import {exposeTools,INSTRUCTIONS,TOPICS} from './toolsets'
 import {STANDING_RULES} from '../autonomy/playbooks'
-export type McpCaller={userId:number;grantId:string;labelIds:string[];scopes:string[];clientName?:string;toolMode?:'core'|'all'}
+export type McpCaller={userId:number;grantId:string;labelIds:string[];scopes:string[];clientName?:string;toolMode?:'core'|'all';origin?:string}
 const id=z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/)
 const page={cursor:id.optional(),limit:z.number().int().min(1).max(20).default(10)}
 const labelSchema=z.object({labelId:id,...page}).strict()

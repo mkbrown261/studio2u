@@ -161,7 +161,7 @@ mcpRoutes.all('/label-world/mcp',safe(async(c:any)=>{
  if(!grant){c.header('WWW-Authenticate',`Bearer resource_metadata="${own}/.well-known/oauth-protected-resource/label-world/mcp", scope="${[...mcpScopes,'offline_access'].join(' ')}"`);return failure(c,'invalid_token',401)}
  if(!await limited(c,'mcp:'+grant.id,120))return failure(c,'temporarily_unavailable',429)
  const client=await c.env.DB.prepare('SELECT name FROM lw_mcp_clients WHERE id=?').bind(grant.client_id).first()
- const handler=createStudioMcp(c.env.DB,{userId:grant.user_id,grantId:grant.id,labelIds:JSON.parse(grant.labels_json),scopes:JSON.parse(grant.scopes_json),clientName:client?.name,toolMode:'core'},async()=>Boolean(await authenticateMcp(c)))
+ const handler=createStudioMcp(c.env.DB,{userId:grant.user_id,grantId:grant.id,labelIds:JSON.parse(grant.labels_json),scopes:JSON.parse(grant.scopes_json),clientName:client?.name,toolMode:'core',origin:new URL(c.req.url).origin},async()=>Boolean(await authenticateMcp(c)))
  const response=await handler.fetch(c.req.raw);await handler.close();if(response.ok)await c.env.DB.prepare('UPDATE lw_mcp_grants SET last_used_at=? WHERE id=? AND revoked_at IS NULL').bind(date(0),grant.id).run();return response
 }))
 export function installMcpManagement(app:any){

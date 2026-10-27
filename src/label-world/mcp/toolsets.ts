@@ -18,6 +18,9 @@ export const TOPICS: Record<string, { about: string; tools: string[] }> = {
   submissions: { about: 'UnitedMasters / ASCAP / SoundExchange packets, pre-flight lint, reporting submissions.', tools: ['lint_release', 'get_submission_packet', 'list_submissions', 'report_submission'] },
   queue: { about: 'Always-on task queue the engine fills every 5 minutes.', tools: ['claim_next_task', 'complete_task', 'queue_status', 'get_task_status', 'list_notifications'] },
   research: { about: 'Read-only social and trend intel captured from the user\'s screen; saved research.', tools: ['save_social_snapshot', 'list_social_snapshots', 'list_research_reports', 'list_research_observations'] },
+  office: { about: 'Weekly report, verified money from statements.', tools: ['get_report', 'money_summary', 'list_statements'] },
+  agreements: { about: 'Split sheets with e-sign links; attorney pre-check; BMI 200% shares.', tools: ['attorney_precheck', 'bmi_shares', 'create_agreement', 'list_agreements', 'get_agreement', 'revise_agreement'] },
+  content: { about: 'Content Studio: campaigns and concepts the owner approves.', tools: ['create_campaign', 'list_campaigns', 'get_campaign', 'add_concept', 'mark_concept'] },
   account: { about: 'Who is connected and which labels are authorized.', tools: ['whoami', 'list_labels'] }
 }
 
