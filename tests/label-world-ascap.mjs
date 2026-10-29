@@ -49,7 +49,7 @@ const writers = [
 form = ascap.ascapForm({ title: '22', artistCredit: 'Aviator Keys', releaseDate: '2019-05-01', durationSec: 196, intake: { writers }, released: true })
 assert.equal(form.status, 'READY', JSON.stringify(form.asks)); assert.match(form.say, /press Submit|stop on Submit/)
 assert.equal(get(form, 'Writer 1: Mason Brown · Share').value, '30'); assert.equal(get(form, 'Writer 2: Jay Producer · Share').value, '20')
-assert.equal(get(form, 'Writer 1: Mason Brown · Role').value, 'Composer/Author')
+assert.equal(get(form, 'Writer 1: Mason Brown · Role').value, 'Composer / Author')
 assert.equal(get(form, 'Writer 1: Mason Brown · Search by Writer').value, '00123456789')
 assert.ok(get(form, 'Writer 1: Mason Brown · [x] This writer has no Publisher'))
 assert.equal(get(form, 'Writer 2: Jay Producer · Publisher Share').value, '20'); assert.equal(get(form, 'Writer 2: Jay Producer · Territory').value, 'WORLD')

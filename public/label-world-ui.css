@@ -80,3 +80,6 @@ body:has(.lw-app){margin:0;background:#070c10}.lw-research-charts .lw-trend-char
 .lw-register .lw-fill{display:grid;gap:6px;padding-left:20px;font-size:13px}.lw-register .lw-fill small{display:block;color:#91a0b2}.lw-register code{background:#0b1015;border:1px solid #263039;border-radius:6px;padding:1px 6px;word-break:break-all}
 .lw-check-row{display:flex!important;flex-direction:row!important;align-items:center;gap:8px}.lw-check-row input{width:auto!important}
 .lw-mf-table .lw-link-btn{display:block;margin:4px 0 0;padding:0}
+.lw-mf-contacts{display:grid;gap:6px}.lw-mf-contact{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #1d262e}.lw-mf-contact small{display:block;color:#91a0b2}.lw-mf-contact a{font-size:12px;color:#f4cd74}.lw-mf-contact .lw-badge{margin-left:6px}
+.lw-mf-seq ol{display:grid;gap:8px;padding-left:20px}.lw-mf-seq li.done{opacity:.55}.lw-mf-seq pre{white-space:pre-wrap;font-size:12px;margin:4px 0}
+.lw-needs-list{display:grid;gap:6px;padding-left:20px;font-size:14px}

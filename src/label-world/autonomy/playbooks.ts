@@ -38,7 +38,7 @@ const ASCAP_MSG = 'ASCAP Member Access > Messages > New message > category "Perf
 
 export const PLAYBOOKS: Playbook[] = [
   {
-    id: 'tv-cue-sheet', version: 1, owner: 'executive',
+    id: 'tv-cue-sheet', version: 2, owner: 'executive',
     name: 'My song was on TV and I never got paid (missing cue sheet)',
     summary: 'Get the production company to file the cue sheet, then claim the missed performance royalties from your PRO before the retro deadline.',
     triggers: ['tv', 'tv show', 'on a show', 'episode', 'cue sheet', 'cuesheet', 'sync', 'placement', 'baddies', 'network', 'netflix', 'film', 'movie', 'aired'],
@@ -55,15 +55,16 @@ export const PLAYBOOKS: Playbook[] = [
     steps: [
       'Collect the facts above by asking in plain language. Reuse the catalog and saved writers first.',
       'Make sure the song itself is registered with the writer\'s PRO. If not, open a "Register my songs" case first; an unregistered work cannot be matched to a cue sheet.',
-      'Find who made the show: search the show\'s end credits, IMDb/IMDbPro company credits, and the network press site for the production company and its music supervisor / music department. Save each source link on the case.',
+      'Build the contact ladder (save_case_contact, sourceUrl on every one, never invent an email). Who makes the show is often NOT the network: e.g. a show streaming on Zeus is usually made by an outside production company. Search in this order: the episode end credits (Production Company, Music Supervisor, Music Coordinator, Post-Production Supervisor, Clearances); IMDb / IMDbPro company and crew credits for the exact season; the network/streamer press and corporate pages; the production company website "contact" page; LinkedIn for "music supervisor" / "post production" + the company; trade press (Variety, Deadline) announcements. Priority 1 = music supervisor/music clearance, 2 = post-production supervisor, 3 = production company general/legal, 4 = network business affairs/music department, 5 = network general.',
       'Calculate the ASCAP retro-claim deadline from the air date (studio2u_open_case does this) and tell the user plainly how much time is left.',
       'Draft a short, polite email to the production company\'s music department asking them to file (or correct) the cue sheet for the episode, listing song title, writers, publishers, shares, PRO and IPI, and attaching the blank ASCAP cue sheet template link. Ask them to copy tvcuesheet@ascap.com.',
       'Draft the PRO claim message (' + ASCAP_MSG + ') with program, episode, network, air date, work title and your writer info, asking ASCAP to research missed royalties.',
-      'Show both drafts to the user. Send only after they approve. Log who it went to and when.',
+      'Write the first email to the priority-1 contact WITH followUps (days 5, 12, 21, 35): polite, shorter each time, each with a new angle (resend the info, offer a filled cue sheet, ask who the right person is, final note copying the network contact). Show the user once; they approve the email and the follow-ups together.',
+      'Send from the user\'s own email. Every day the engine checks: if they replied, record_reply and act on it; if not, the next approved follow-up goes out on schedule in the same thread. A bounce or "wrong person" = update_case_contact and move to the next contact with a new sequence for approval. Never stop until resolved or the owner closes the case; never more than one message every 3 days to the same person.',
       'Follow up on the schedule below. When the production company replies with a cue sheet, forward it to ASCAP (ASCAP accepts member-forwarded cue sheets when the production company\'s email is included).',
       'Resolve when the cue sheet shows in ASCAP Member Access > Works > Cue sheets, or ASCAP confirms the claim.'
     ],
-    rules: ['Do not tell the user money is "lost" unless the deadline has truly passed; explain the exact window.', 'BMI/SESAC writers follow their own PRO\'s claim process; check that PRO\'s official page before quoting a deadline.'],
+    rules: ['Relentless but professional: never threatening, never more than one message per 3 days to the same person, always easy to answer in one line.', 'Do not tell the user money is "lost" unless the deadline has truly passed; explain the exact window.', 'BMI/SESAC writers follow their own PRO\'s claim process; check that PRO\'s official page before quoting a deadline.'],
     contacts: [
       { name: 'ASCAP cue sheets', how: 'tvcuesheet@ascap.com (from the production company or with them copied)', source: 'https://www.ascap.com/help/royalties-and-payment/cue-sheets' },
       { name: 'ASCAP performance claims', how: ASCAP_MSG + ', or 1-800-952-7227 (9am–6pm ET, Mon–Fri)', source: 'https://www.ascap.com/help/royalties-and-payment/cue-sheets' },

@@ -29,7 +29,10 @@ export type WorkInput = {
   title: string; artistCredit?: string | null; releaseDate?: string | null; isrc?: string | null; durationSec?: number | null
   intake: Intake; released: boolean; featuredOnly?: boolean
 }
-const ROLE: Record<string, string> = { writer: 'Composer/Author', writer_producer: 'Composer/Author', composer: 'Composer', lyricist: 'Author' }
+// ASCAP "Role" dropdown, exactly as shown in Member Access (confirmed by the user 2026-10-28):
+// Composer / Author, Composer, Author, Arranger, Adapter, Translator.
+export const ASCAP_ROLES = ['Composer / Author', 'Composer', 'Author', 'Arranger', 'Adapter', 'Translator'] as const
+const ROLE: Record<string, string> = { writer: 'Composer / Author', writer_producer: 'Composer / Author', composer: 'Composer', lyricist: 'Author', arranger: 'Arranger', adapter: 'Adapter', translator: 'Translator' }
 const mdy = (d?: string | null) => d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d.slice(5, 7)}/${d.slice(8, 10)}/${d.slice(0, 4)}` : null
 
 /** Splits of 100 -> ASCAP shares of 50, rounded to 2 decimals so they always total exactly 50.00. */
@@ -63,7 +66,7 @@ export function ascapForm(w: WorkInput) {
     writers.forEach((x, n) => {
       const who = `Writer ${n + 1}: ${x.legalName}`
       add(S, `${who} · Search by Writer IPI or Name*`, x.ipi ?? x.legalName, x.ipi ? 'FILL' : 'ASK', x.ipi ? 'Type the IPI and pick the matching name from the list.' : `What is ${x.legalName}'s IPI number? (Searching by name works but risks picking the wrong person.)`, 'writers')
-      add(S, `${who} · Role*`, ROLE[x.role] ?? 'Composer/Author', 'FILL', 'Pick this option in the Role dropdown.')
+      add(S, `${who} · Role*`, ROLE[x.role] ?? 'Composer / Author', 'FILL', 'Pick this in the Role dropdown. Composer = music only, Author = lyrics only, Composer / Author = both.')
       add(S, `${who} · Share %*`, String(shares[n]), 'FILL', `${x.split}% of the song = ${shares[n]}% on ASCAP's 50% writer side.`)
       if (x.pro && x.pro !== 'ASCAP') add(S, `${who} · PRO`, x.pro, 'FILL', `Still list ${x.legalName} with their share. ASCAP matches them to ${x.pro} by IPI.`)
       if (x.publisherName) {
@@ -95,7 +98,7 @@ export function ascapForm(w: WorkInput) {
 
   // Commercial / film / product
   if (i.commercialUse) {
-    add('Commercial, film or other Product?', 'Product Type*', i.commercialUse.productType, 'FILL', 'Choose the closest option in the dropdown.')
+    add('Commercial, film or other Product?', 'Product Type*', i.commercialUse.productType, 'FILL', 'Options: Commercial, Film, General Usage, Library, Multimedia, Radio, Television, Theater, Video.')
     add('Commercial, film or other Product?', 'Commercial/Product/Production Name*', i.commercialUse.productionName, 'FILL')
   } else add('Commercial, film or other Product?', 'Whole section', null, 'SKIP', 'Skip unless the song was written for an ad, film, TV show or product. (TV placements of a released song go through cue sheets instead.)')
 

@@ -78,6 +78,8 @@ function CaseCard({row, expanded, onToggle, labelId, editable, notify, reload}: 
   async function decide(id: string, decision: 'APPROVED' | 'REJECTED', body?: string, subject?: string) {
     try { await api(`/labels/${labelId}/drafts/${id}/decision`, {decision, ...(body != null ? {body} : {}), ...(subject != null ? {subject} : {})}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); reload(); notify(decision === 'APPROVED' ? 'Approved. Your agent will send it from your email (or send it yourself and tap "I sent it").' : 'Rejected.') } catch (e) { notify((e as Error).message) }
   }
+  async function contactStatus(id: string, status: string) { try { await api(`/labels/${labelId}/contacts/${id}`, {status}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); notify('Updated. Follow-ups to them are stopped.') } catch (e) { notify((e as Error).message) } }
+  async function reply(id: string) { const summary = prompt('What did they say? (a sentence is fine)'); if (!summary) return; try { await api(`/labels/${labelId}/drafts/${id}/reply`, {summary}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); reload(); notify('Logged. Follow-ups stopped; your team will answer.') } catch (e) { notify((e as Error).message) } }
   async function sent(id: string) { try { await api(`/labels/${labelId}/drafts/${id}/sent`, {note: 'Sent by owner'}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); reload(); notify('Logged. Follow-up scheduled.') } catch (e) { notify((e as Error).message) } }
   return <article className={`lw-mf-case ${expanded ? 'open' : ''}`}>
     <button className="lw-mf-case-head" onClick={onToggle} aria-expanded={expanded}>
@@ -90,7 +92,8 @@ function CaseCard({row, expanded, onToggle, labelId, editable, notify, reload}: 
     </button>
     {expanded && detail && <div className="lw-mf-case-body">
       {detail.case.deadlineNote && <p className="lw-mf-note"><Icon name="calendar" size={15}/> {detail.case.deadlineNote}</p>}
-      {detail.drafts.filter((d: any) => d.status !== 'REJECTED').map((d: any) => <Draft key={d.id} d={d} editable={editable} onDecide={decide} onSent={sent}/>)}
+      {detail.contacts?.length > 0 && <section className="lw-mf-contacts"><h4>Who your team is contacting</h4>{detail.contacts.map((k: any) => <div key={k.id} className="lw-mf-contact"><div><b>{k.name ?? k.role}</b><small>{k.name ? `${k.role} · ` : ''}{k.company}{k.email ? ` · ${k.email}` : ''}</small>{k.source_url && <a href={k.source_url} target="_blank" rel="noopener noreferrer">where we found them</a>}</div><div><Badge tone={k.confidence === 'VERIFIED' ? 'green' : k.confidence === 'LIKELY' ? 'gold' : 'muted'}>{k.confidence.toLowerCase()}</Badge><Badge tone={k.status === 'REPLIED' ? 'green' : ['BOUNCED', 'WRONG_PERSON', 'DO_NOT_CONTACT'].includes(k.status) ? 'red' : k.status === 'CONTACTED' ? 'cyan' : 'muted'}>{k.status.toLowerCase().replace(/_/g, ' ')}</Badge>{editable && k.status !== 'DO_NOT_CONTACT' && <button className="lw-link-btn" onClick={() => contactStatus(k.id, 'DO_NOT_CONTACT')}>don't contact</button>}</div></div>)}</section>}
+      {detail.drafts.filter((d: any) => d.status !== 'REJECTED').map((d: any) => <Draft key={d.id} d={d} editable={editable} onDecide={decide} onSent={sent} onReply={reply}/>)}
       {editable && detail.stillNeeded.length > 0 && <section className="lw-mf-needs"><h4>Your team needs</h4>{detail.stillNeeded.map((n: any) => <label key={n.key}>{n.question}{n.required && <em> required</em>}<input value={answers[n.key] ?? ''} onChange={e => setAnswers({...answers, [n.key]: e.target.value})} maxLength={2000}/></label>)}<Button gold onClick={saveFacts}>Save answers</Button></section>}
       <details className="lw-mf-steps"><summary>The playbook your team follows ({detail.playbook.steps.length} steps)</summary><ol>{detail.playbook.steps.map((s: string, i: number) => <li key={i} className={i < detail.case.step ? 'done' : ''}>{s}</li>)}</ol>
         {detail.playbook.facts?.length > 0 && <><h5>Verified facts</h5><ul>{detail.playbook.facts.map((f: string) => <li key={f}>{f}</li>)}</ul></>}
@@ -101,7 +104,7 @@ function CaseCard({row, expanded, onToggle, labelId, editable, notify, reload}: 
   </article>
 }
 
-function Draft({d, editable, onDecide, onSent}: {d: any, editable: boolean, onDecide: (id: string, dec: 'APPROVED' | 'REJECTED', body?: string, subject?: string) => void, onSent: (id: string) => void}) {
+function Draft({d, editable, onDecide, onSent, onReply}: {d: any, editable: boolean, onDecide: (id: string, dec: 'APPROVED' | 'REJECTED', body?: string, subject?: string) => void, onSent: (id: string) => void, onReply: (id: string) => void}) {
   const [body, setBody] = useState(d.body), [subject, setSubject] = useState(d.subject ?? '')
   const changed = body !== d.body || subject !== (d.subject ?? '')
   return <div className={`lw-mf-draft ${d.status.toLowerCase()}`}>
@@ -109,6 +112,9 @@ function Draft({d, editable, onDecide, onSent}: {d: any, editable: boolean, onDe
     {d.status === 'DRAFT' && editable ? <><input aria-label="Subject" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject"/><textarea aria-label="Draft body" rows={8} value={body} onChange={e => setBody(e.target.value)}/>
       <div className="lw-mf-draft-actions"><Button onClick={() => onDecide(d.id, 'REJECTED')}>Reject</Button><button className="lw-mf-approve" onClick={() => onDecide(d.id, 'APPROVED', changed ? body : undefined, changed ? subject : undefined)}>{changed ? 'Approve with my edits' : 'Approve, send it'}</button></div></>
       : <>{d.subject && <b className="lw-mf-subject">{d.subject}</b>}<pre>{d.body}</pre>{d.status === 'APPROVED' && editable && <div className="lw-mf-draft-actions"><button className="lw-mf-copy" onClick={() => navigator.clipboard?.writeText((d.subject ? 'Subject: ' + d.subject + '\n\n' : '') + d.body)}>Copy</button><Button onClick={() => onSent(d.id)}>I sent it myself</Button></div>}{d.sent_at && <small>Sent {new Date(d.sent_at + 'Z').toLocaleString()} {d.sent_note ? '· ' + d.sent_note : ''}</small>}</>}
+    {d.followUps?.length > 0 && <details className="lw-mf-seq" open={d.status === 'DRAFT'}><summary>{d.status === 'DRAFT' ? `Approving also approves ${d.followUps.length} follow-up(s) if they don't reply` : d.replied_at ? `Follow-ups stopped: they replied` : `${d.followups_sent ?? 0} of ${d.followUps.length} follow-ups sent`}</summary><ol>{d.followUps.map((f: any, i: number) => <li key={i} className={i < (d.followups_sent ?? 0) ? 'done' : ''}><b>Day {f.afterDays}{f.subject ? ` · ${f.subject}` : ''}</b><pre>{f.body}</pre></li>)}</ol></details>}
+    {d.reply_summary && <p className="lw-mf-note"><b>Reply:</b> {d.reply_summary}</p>}
+    {d.status === 'SENT' && !d.replied_at && editable && <div className="lw-mf-draft-actions"><Button onClick={() => onReply(d.id)}>They replied</Button></div>}
   </div>
 }
 

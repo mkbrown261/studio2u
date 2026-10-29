@@ -9,6 +9,7 @@ import * as office from './office'
 import * as agr from './agreements'
 import * as content from './content'
 import * as ascap from './ascap'
+import * as outreach from './outreach'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -46,6 +47,10 @@ export function installAutonomyRoutes(app: any) {
   app.post(base + '/cases/:caseId', wrap(async c => c.json(await cases.updateCase(c.env.DB, L(c), U(c), c.req.param('caseId'), await body(c), 'owner'))))
   // Only a signed-in human can approve or reject drafts; MCP clients cannot reach these routes.
   app.post(base + '/drafts/:draftId/decision', wrap(async c => { const b = await body(c); return c.json(await cases.decideDraft(c.env.DB, L(c), U(c), c.req.param('draftId'), b.decision, b)) }))
+  app.get(base + '/cases/:caseId/contacts', wrap(async c => c.json({ contacts: await outreach.listContacts(c.env.DB, L(c), U(c), c.req.param('caseId')) })))
+  app.post(base + '/cases/:caseId/contacts', wrap(async c => c.json(await outreach.saveContact(c.env.DB, L(c), U(c), c.req.param('caseId'), await body(c), 'owner'), 201)))
+  app.post(base + '/contacts/:contactId', wrap(async c => c.json(await outreach.updateContact(c.env.DB, L(c), U(c), c.req.param('contactId'), await body(c), 'owner'))))
+  app.post(base + '/drafts/:draftId/reply', wrap(async c => c.json(await outreach.recordReply(c.env.DB, L(c), U(c), c.req.param('draftId'), (await body(c)).summary, 'owner'))))
   app.post(base + '/drafts/:draftId/sent', wrap(async c => c.json(await cases.markSent(c.env.DB, L(c), U(c), c.req.param('draftId'), (await body(c)).note, 'owner'))))
 
   // ---- Label Office: statements, Monday report, split sheets, content studio ----

@@ -62,6 +62,7 @@ export function createStudioMcp(db:any,caller:McpCaller,validateGrant:()=>Promis
     out.push({labelId:l.id,name:l.name,role:l.role,
      unansweredMessages:await q("SELECT COUNT(*) n FROM lw_employee_messages WHERE label_id=? AND user_id=? AND role='user' AND status IN ('WAITING_FOR_PROVIDER','FAILED')",caller.userId),
      approvedDraftsToSend:await q("SELECT COUNT(*) n FROM lw_case_drafts WHERE label_id=? AND status='APPROVED'"),
+     followUpsDue:(await (await import('../autonomy/outreach')).dueFollowups(db,[l.id]).catch(()=>[])).length,
      queuedTasks:await q("SELECT COUNT(*) n FROM lw_tasks WHERE label_id=? AND status='QUEUED' AND (run_after IS NULL OR run_after<=datetime('now'))"),
      openCases:await q("SELECT COUNT(*) n FROM lw_cases WHERE label_id=? AND status NOT IN ('RESOLVED','CLOSED')"),
      songs:await q("SELECT COUNT(*) n FROM lw_catalog_tracks WHERE label_id=?")})
@@ -70,6 +71,7 @@ export function createStudioMcp(db:any,caller:McpCaller,validateGrant:()=>Promis
    const next:string[]=[]
    if(out.some(l=>l.unansweredMessages))next.push('guide inbox → answer each message as that employee (if it describes a money/rights problem, guide cases → open_case)')
    if(out.some(l=>l.approvedDraftsToSend))next.push('guide cases → list_approved_drafts → send from the user\'s email if you can, then mark_draft_sent')
+   if(out.some(l=>l.followUpsDue))next.push('guide outreach → list_due_followups → check the inbox thread for a reply first (record_reply), otherwise send the approved follow-up and mark_followup_sent')
    if(out.some(l=>l.queuedTasks))next.push('guide queue → claim_next_task (canControlScreen=true only if you can see/click the user\'s browser)')
    if(out.some(l=>!l.songs))next.push('guide catalog → ask the artist name, search_public_catalog, confirm "is this you?", import_catalog')
    if(!next.length)next.push('Nothing waiting. Ask the user what they want handled; match it to a playbook with guide cases → list_playbooks(match).')

@@ -5,7 +5,7 @@
 export type Writer = {
   partyId?: string
   legalName: string
-  role: 'writer' | 'composer' | 'lyricist' | 'writer_producer'
+  role: 'writer' | 'composer' | 'lyricist' | 'writer_producer' | 'arranger' | 'adapter' | 'translator'
   split: number // percent of the composition, all writers sum to 100
   pro?: string
   ipi?: string
@@ -51,6 +51,9 @@ export type Intake = {
   publicDomain?: 'music' | 'lyrics' | 'both' // ASCAP: arranged public-domain music/lyrics
 }
 
+export const WRITER_ROLES = ['writer', 'composer', 'lyricist', 'writer_producer', 'arranger', 'adapter', 'translator']
+// ASCAP "Product Type" dropdown, exactly as shown in Member Access (confirmed by the user 2026-10-28).
+export const PRODUCT_TYPES = ['Commercial', 'Film', 'General Usage', 'Library', 'Multimedia', 'Radio', 'Television', 'Theater', 'Video'] as const
 export const PROS = ['ASCAP', 'BMI', 'SESAC', 'GMR', 'SOCAN', 'PRS', 'OTHER', 'NONE'] as const
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -124,14 +127,14 @@ export function intakePatch(value: unknown): Record<string, unknown> {
       case 'featuredArtists': case 'producers': case 'alternateTitles': case 'performers': out[k] = list(v, k); break
       case 'recordingTitle': out[k] = str(v, k, 200); break
       case 'durationSec': { const n = typeof v === 'string' ? parseDuration(v) : v; if (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || n > 43200) throw new Error('durationSec must be 1 second to 12 hours (seconds or HH:MM:SS)'); out[k] = n; break }
-      case 'commercialUse': { const c = v as any; if (!c || typeof c !== 'object') throw new Error('commercialUse must be an object'); out[k] = { productType: str(c.productType, 'commercialUse.productType', 100), productionName: str(c.productionName, 'commercialUse.productionName', 200) }; break }
+      case 'commercialUse': { const c = v as any; if (!c || typeof c !== 'object') throw new Error('commercialUse must be an object'); const pt = PRODUCT_TYPES.find(x => x.toLowerCase() === str(c.productType, 'commercialUse.productType', 100).toLowerCase()); if (!pt) throw new Error(`commercialUse.productType must be one of ${PRODUCT_TYPES.join(', ')}`); out[k] = { productType: pt, productionName: str(c.productionName, 'commercialUse.productionName', 200) }; break }
       case 'publicDomain': if (!['music', 'lyrics', 'both'].includes(v as string)) throw new Error('publicDomain must be music, lyrics or both'); out[k] = v; break
       case 'writers': {
         if (!Array.isArray(v) || v.length < 1 || v.length > 20) throw new Error('writers must list 1 to 20 people')
         out[k] = v.map((w: any, i: number) => {
           if (!w || typeof w !== 'object') throw new Error(`writers[${i}] must be an object`)
           const role = w.role ?? 'writer'
-          if (!['writer', 'composer', 'lyricist', 'writer_producer'].includes(role)) throw new Error(`writers[${i}].role invalid`)
+          if (!WRITER_ROLES.includes(role)) throw new Error(`writers[${i}].role must be one of ${WRITER_ROLES.join(', ')}`)
           const writer: Writer = { legalName: str(w.legalName, `writers[${i}].legalName`, 120), role, split: percent(w.split, `writers[${i}].split`) }
           if (w.partyId != null) writer.partyId = str(w.partyId, `writers[${i}].partyId`, 100)
           if (w.pro != null) { if (!PROS.includes(w.pro)) throw new Error(`writers[${i}].pro must be one of ${PROS.join(', ')}`); writer.pro = w.pro }

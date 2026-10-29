@@ -204,13 +204,15 @@ export async function getCase(db: any, label: string, actor: number, id: string)
   const facts = JSON.parse(c.facts_json)
   const [events, drafts] = await Promise.all([
     db.prepare('SELECT actor,kind,body,created_at FROM lw_case_events WHERE case_id=? ORDER BY cursor DESC LIMIT 60').bind(id).all(),
-    db.prepare('SELECT id,kind,recipient,recipient_email,subject,body,status,written_by,approved_at,sent_at,sent_note,created_at FROM lw_case_drafts WHERE case_id=? ORDER BY created_at DESC LIMIT 30').bind(id).all()
+    db.prepare('SELECT id,kind,recipient,recipient_email,subject,body,status,written_by,approved_at,sent_at,sent_note,created_at,contact_id,sequence_json,sequence_approved_at,followups_sent,last_sent_at,replied_at,reply_summary FROM lw_case_drafts WHERE case_id=? ORDER BY created_at DESC LIMIT 30').bind(id).all()
   ])
+  const contacts = (await db.prepare('SELECT id,name,role,company,email,phone,source_url,confidence,status,priority,notes FROM lw_case_contacts WHERE case_id=? ORDER BY priority,created_at LIMIT 50').bind(id).all()).results
   return {
     case: { id: c.id, playbook: c.playbook, title: c.title, status: c.status, step: c.step, deadline: c.deadline, deadlineNote: c.deadline_note, moneyEstimate: c.money_estimate, nextFollowUpAt: c.next_follow_up_at, createdAt: c.created_at, updatedAt: c.updated_at, facts },
     playbook: { ...pb, standingRules: STANDING_RULES },
     stillNeeded: pb.needs.filter(n => facts[n.key] == null).map(n => ({ ...n })),
-    events: events.results, drafts: drafts.results
+    events: events.results, contacts,
+    drafts: drafts.results.map((d: any) => ({ ...d, followUps: JSON.parse(d.sequence_json || '[]'), sequence_json: undefined }))
   }
 }
 
@@ -224,26 +226,38 @@ export async function saveDraft(db: any, label: string, actor: number, caseId: s
   const email = clean(b?.recipientEmail, 'recipientEmail', 200, false)
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ServiceError('recipientEmail invalid')
   const body = clean(b?.body, 'body', 20000)!
+  const { sequenceInput } = await import('./outreach')
+  const followUps = sequenceInput(b?.followUps)
+  if (followUps.length && kind !== 'EMAIL') throw new ServiceError('Follow-up sequences are for emails only')
+  let contactId: string | null = null, toEmail = email, toName = clean(b?.recipient, 'recipient', 200, false)
+  if (b?.contactId) {
+    const k: any = await db.prepare('SELECT id,name,role,company,email,status FROM lw_case_contacts WHERE label_id=? AND case_id=? AND id=?').bind(label, caseId, String(b.contactId)).first()
+    if (!k) throw new ServiceError('Contact not found on this case', 404)
+    if (k.status === 'DO_NOT_CONTACT') throw new ServiceError('The owner marked this contact do-not-contact', 409)
+    contactId = k.id; toEmail = toEmail ?? k.email; toName = toName ?? [k.name, k.role && `${k.role}, ${k.company}`].filter(Boolean).join(' · ')
+  }
   const id = crypto.randomUUID()
   await db.batch([
-    db.prepare('INSERT INTO lw_case_drafts(id,label_id,case_id,kind,recipient,recipient_email,subject,body,written_by) VALUES (?,?,?,?,?,?,?,?,?)')
-      .bind(id, label, caseId, kind, clean(b?.recipient, 'recipient', 200, false), email, clean(b?.subject, 'subject', 300, false), body, by.slice(0, 100)),
+    db.prepare('INSERT INTO lw_case_drafts(id,label_id,case_id,kind,recipient,recipient_email,subject,body,written_by,contact_id,sequence_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(id, label, caseId, kind, toName, toEmail, clean(b?.subject, 'subject', 300, false), body, by.slice(0, 100), contactId, JSON.stringify(followUps)),
     db.prepare("UPDATE lw_cases SET status=CASE WHEN status IN ('RESOLVED','CLOSED') THEN status ELSE 'WAITING_ON_YOU' END,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(caseId),
-    event(db, label, caseId, by, 'DRAFT', `Drafted ${kind.toLowerCase()}${b?.recipient ? ' to ' + b.recipient : ''} for your approval.`)
+    event(db, label, caseId, by, 'DRAFT', `Drafted ${kind.toLowerCase()}${toName ? ' to ' + toName : ''}${followUps.length ? ` with ${followUps.length} follow-up(s) (days ${followUps.map(f => f.afterDays).join(', ')})` : ''} for your approval.`)
   ])
-  return { draftId: id, status: 'DRAFT', note: 'Waiting for the owner to approve on the Money Found board. Do not send until status is APPROVED.' }
+  return { draftId: id, status: 'DRAFT', followUps: followUps.length, note: 'Waiting for the owner to approve on the Money Found board (approving also approves the follow-ups). Do not send until status is APPROVED.' }
 }
 
 /** Only a human session (website) can approve or reject. */
-export async function decideDraft(db: any, label: string, actor: number, draftId: string, decision: string, edits?: { subject?: string; body?: string }) {
+export async function decideDraft(db: any, label: string, actor: number, draftId: string, decision: string, edits?: { subject?: string; body?: string; followUps?: unknown }) {
   await requireEditor(db, label, actor)
   const d: any = await db.prepare('SELECT * FROM lw_case_drafts WHERE label_id=? AND id=?').bind(label, draftId).first()
   if (!d) throw new ServiceError('Draft not found', 404)
   if (d.status !== 'DRAFT') throw new ServiceError(`Draft is already ${d.status}`, 409)
   if (!['APPROVED', 'REJECTED'].includes(decision)) throw new ServiceError('decision must be APPROVED or REJECTED')
   const body = edits?.body != null ? clean(edits.body, 'body', 20000)! : d.body, subject = edits?.subject != null ? clean(edits.subject, 'subject', 300, false) : d.subject
+  const seq = edits?.followUps !== undefined ? JSON.stringify((await import('./outreach')).sequenceInput(edits.followUps)) : (d.sequence_json ?? '[]')
   await db.batch([
-    db.prepare('UPDATE lw_case_drafts SET status=?,body=?,subject=?,approved_by=?,approved_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(decision, body, subject, actor, draftId),
+    db.prepare(`UPDATE lw_case_drafts SET status=?,body=?,subject=?,approved_by=?,approved_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP,
+      sequence_json=?,sequence_approved_at=CASE WHEN ?='APPROVED' AND ?<>'[]' THEN CURRENT_TIMESTAMP ELSE NULL END WHERE id=?`).bind(decision, body, subject, actor, seq, decision, seq, draftId),
     event(db, label, d.case_id, 'owner', decision === 'APPROVED' ? 'APPROVED' : 'REJECTED', decision === 'APPROVED' ? `Owner approved the ${d.kind.toLowerCase()}${d.recipient ? ' to ' + d.recipient : ''}. Agent may send it.` : 'Owner rejected the draft.'),
     db.prepare("UPDATE lw_cases SET status=CASE WHEN status='WAITING_ON_YOU' THEN 'OPEN' ELSE status END,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(d.case_id)
   ])
@@ -256,11 +270,13 @@ export async function markSent(db: any, label: string, actor: number, draftId: s
   if (!d) throw new ServiceError('Draft not found', 404)
   if (d.status !== 'APPROVED') throw new ServiceError('Only owner-approved drafts can be sent. Ask the owner to approve it on the Money Found board first.', 409)
   const pb = playbookById((await db.prepare('SELECT playbook FROM lw_cases WHERE id=?').bind(d.case_id).first())?.playbook)
-  const followDays = pb?.followUpDays?.[0] ?? 14
+  const seq = JSON.parse(d.sequence_json || '[]')
+  const followDays = d.sequence_approved_at && seq[0] ? seq[0].afterDays : pb?.followUpDays?.[0] ?? 14
   await db.batch([
-    db.prepare("UPDATE lw_case_drafts SET status='SENT',sent_at=CURRENT_TIMESTAMP,sent_note=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(clean(note, 'note', 500, false), draftId),
+    db.prepare("UPDATE lw_case_drafts SET status='SENT',sent_at=CURRENT_TIMESTAMP,last_sent_at=CURRENT_TIMESTAMP,sent_note=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(clean(note, 'note', 500, false), draftId),
+    db.prepare("UPDATE lw_case_contacts SET status=CASE WHEN status='NOT_CONTACTED' THEN 'CONTACTED' ELSE status END,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(d.contact_id ?? ''),
     db.prepare("UPDATE lw_cases SET status=CASE WHEN status IN ('RESOLVED','CLOSED') THEN status ELSE 'WAITING_ON_THEM' END,next_follow_up_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(iso(followDays * day), d.case_id),
-    event(db, label, d.case_id, by, 'SENT', `Sent ${d.kind.toLowerCase()}${d.recipient ? ' to ' + d.recipient : ''}${note ? ' (' + note + ')' : ''}. Follow-up in ${followDays} days.`)
+    event(db, label, d.case_id, by, 'SENT', `Sent ${d.kind.toLowerCase()}${d.recipient ? ' to ' + d.recipient : ''}${note ? ' (' + note + ')' : ''}. ${d.sequence_approved_at && seq.length ? `${seq.length} approved follow-up(s) will go out automatically unless they reply.` : `Follow-up in ${followDays} days.`}`)
   ])
   return { draftId, status: 'SENT', followUpInDays: followDays }
 }

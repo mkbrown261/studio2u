@@ -208,6 +208,13 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     await db.prepare("UPDATE lw_cases SET next_follow_up_at=? WHERE id=? AND next_follow_up_at<=?").bind(later(7 * 86400000), c.id, started).run()
     if (q) { summary.cases = Number(summary.cases) + 1; labelsWithWork.add(c.label_id) }
   }
+  // Outreach: approved follow-ups that are due (nobody replied) become one agent task per case per day.
+  const { dueFollowups } = await import('./outreach')
+  summary.followUpsDue = 0
+  for (const f of await dueFollowups(db, opts.labelIds).catch(() => [] as any[])) {
+    const q = await enqueue(db, { label: f.labelId, kind: 'CASE_STEP', role: 'case_manager', title: `Send follow-up ${f.number} of ${f.of}: ${f.caseTitle}`, input: { caseId: f.caseId, followUpDraftId: f.draftId, followUpNumber: f.number }, dedupe: `fu:${f.draftId}:${f.number}` })
+    if (q) { summary.followUpsDue = Number(summary.followUpsDue) + 1; labelsWithWork.add(f.labelId) }
+  }
   // ASCAP: songs with complete writer info become "fill the form" screen tasks (owner presses Submit).
   const { queueRegistrations } = await import('./ascap')
   summary.registrations = await queueRegistrations(db, (t: any) => enqueue(db, t), opts.labelIds).catch(() => 0)
