@@ -53,9 +53,9 @@
     "approxTokens": 2014,
     "warnings": [],
     "evidenceRefs": [
-      "9a791127-0bd0-434e-a5dd-1a4e22da2a26",
-      "ffe29e95-ddb5-44f0-9fe3-52e33a7dbc46",
-      "17249ce7-ca1f-438d-9c44-51cdbb19441e"
+      "ae2b63e5-dad3-48eb-b740-d42bedbf88ad",
+      "19d71601-a921-48a7-814b-666887d2b34d",
+      "a6e3f684-0fb6-4975-a6a3-896ac5450749"
     ],
     "releaseVersion": 1
   },
@@ -104,7 +104,7 @@
   "mockExplanation": {
     "summary": "Artwork is too small according to the stored artwork.technical FAIL. Rights remain unverified; package integrity is NOT_TESTED.",
     "evidenceRefs": [
-      "ffe29e95-ddb5-44f0-9fe3-52e33a7dbc46"
+      "19d71601-a921-48a7-814b-666887d2b34d"
     ],
     "limitations": [
       "Owner attestations are not independent clearance."

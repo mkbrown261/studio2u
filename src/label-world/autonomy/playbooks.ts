@@ -416,6 +416,42 @@ export const PLAYBOOKS: Playbook[] = [
     followUpDays: []
   },
   {
+    id: 'merch-drop', version: 1, owner: 'builder',
+    name: 'Sell merch with my brand (no inventory)',
+    summary: 'Design shirts/hoodies from your brand and music, show them on mockups, and sell them on your own site and Spotify/YouTube with a print-on-demand partner that prints and ships each order, so you never hold inventory. Or pay upfront for a bulk run when you want bigger margins.',
+    triggers: ['merch', 't-shirt', 'tshirt', 't shirt', 'shirts', 'shirt', 'hoodie', 'hoodies', 'print on demand', 'printful', 'fourthwall', 'printify', 'mockup', 'mock-up', 'mock up', 'sell clothes', 'clothing line', 'apparel'],
+    needs: [
+      { key: 'idea', question: 'What do you want on it: your logo, a lyric, cover art, a song title? Any vibe or colors?', required: true },
+      { key: 'budget', question: 'Zero upfront (they print each order after it sells), or put your own money into a bulk run for bigger profit per shirt?', required: false },
+      { key: 'where', question: 'Where do you want to sell: your own site, your Spotify profile, YouTube, Instagram link?', required: false },
+      { key: 'artOwnership', question: 'Do you own the art/logo (you made it or paid someone with rights transferred)?', required: true }
+    ],
+    steps: [
+      'Read the artist brief (Know me): look, colors, genre, top songs, brand words. Merch has to look like THEM.',
+      'Builder drafts 3 design concepts (front, back, colors, which song/lyric) and one bold option. Never use someone else\'s logo, likeness, characters or lyrics the artist did not write. Save them as content concepts for the owner to approve.',
+      'After approval: make the print files (high-resolution PNG with transparent background; the vendor\'s file guide lists exact sizes). If the owner\'s AI connection can make images, use it; otherwise the owner uploads their own art.',
+      'Mockups: use the vendor\'s free mockup generator (models wearing the shirt) so the owner sees it before anything goes on sale.',
+      'Pick the route with the owner. ZERO UPFRONT: Fourthwall (free creator site + print on demand) or Printful (connects to a store); the customer pays you, the vendor charges you the base cost only when an order comes in, prints and ships it. OWN MONEY: a bulk run from a printer for better margin, but you hold the inventory and ship it.',
+      'The OWNER creates the vendor account and enters payment/payout info themselves. Agents never handle card, bank or tax details.',
+      'Set prices: show base cost + shipping vs. sale price and profit per item before publishing. The owner presses Publish.',
+      'Connect where fans already are: link from the artist website and Linktree; Spotify for Artists merch needs a connected Shopify store; YouTube merch shelf through an eligible partner. Check current eligibility before promising it.',
+      'After launch: Content Studio makes 3 posts (try-on, behind the scenes, song + shirt). Track orders and refunds in the weekly report.'
+    ],
+    rules: ['Only art the artist owns or licensed. No other brands, celebrity faces or cartoon characters.', 'Show the real base cost and profit before anything goes live; never promise income.', 'The owner signs up, pays and presses Publish; agents never touch payment details.', 'Recheck vendor fees and features on their site before quoting; they change.'],
+    contacts: [
+      { name: 'Fourthwall', how: 'fourthwall.com: free plan, no upfront cost, prints on demand, includes a creator website (Pro plan is optional and paid)', source: 'https://fourthwall.com/print-on-demand' },
+      { name: 'Printful', how: 'printful.com: free to start, no order minimums, you pay per product when a customer orders; connects to Shopify/Etsy/Wix stores', source: 'https://www.printful.com/pricing' },
+      { name: 'Spotify merch', how: 'Spotify for Artists > Merch: connect a Shopify store to show up to 3 items on your profile', source: 'https://artists.spotify.com/en/merch' }
+    ],
+    facts: [
+      'Print on demand: nothing is printed until a fan buys; the vendor charges its base price + shipping per order and you keep the difference (checked on vendor sites 2026-10-29).',
+      'Fourthwall: no monthly fees, no upfront costs, no contracts on the free plan (fourthwall.com/print-on-demand).',
+      'Printful: free sign-up, no order minimums, pay per product only when an order comes in; optional paid plan for discounts (printful.com/pricing).',
+      'Spotify merch on your artist profile requires a connected Shopify store (artists.spotify.com/en/merch).'
+    ],
+    followUpDays: [3, 7, 14]
+  },
+  {
     id: 'content-campaign', version: 1, owner: 'builder',
     name: 'Plan content for my song',
     summary: 'Turn what is actually working (your own retention curves and current trends) into shootable content ideas with a phone-only and a bigger-budget version.',
@@ -448,6 +484,12 @@ export const SCREEN_POLICY = [
 export const playbookById = (id: string) => PLAYBOOKS.find(p => p.id === id)
 
 /** Pick likely playbooks from plain-language text. */
+/** How strongly a message points at one playbook (2 per long trigger word, 1 per short one). */
+export function playbookScore(text: string, id: string) {
+  const p = playbookById(id); if (!p) return 0
+  const t = ' ' + text.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ') + ' '
+  return p.triggers.reduce((n, k) => n + ((k.length <= 4 ? t.includes(' ' + k + ' ') : t.includes(k)) ? (k.length > 5 ? 2 : 1) : 0), 0)
+}
 export function suggestPlaybooks(text: string, limit = 3) {
   const t = ' ' + text.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ') + ' '
   const hit = (k: string) => k.length <= 4 ? t.includes(' ' + k + ' ') : t.includes(k)

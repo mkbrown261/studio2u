@@ -12,7 +12,7 @@ export const INSTRUCTIONS = 'Studio2U Label World. Call studio2u_start first. Lo
 
 export const TOPICS: Record<string, { about: string; tools: string[] }> = {
   inbox: { about: 'Answer what the owner typed to an employee on the website.', tools: ['list_unanswered_messages', 'reply_to_message', 'list_agent_messages'] },
-  cases: { about: 'Money Found: playbooks, cases, drafts the owner approves, follow-ups.', tools: ['list_playbooks', 'get_playbook', 'list_cases', 'get_case', 'open_case', 'update_case', 'draft_case_message', 'list_approved_drafts', 'mark_draft_sent'] },
+  cases: { about: 'Money Found: playbooks, cases, drafts the owner approves, follow-ups.', tools: ['tell_case', 'list_playbooks', 'get_playbook', 'list_cases', 'get_case', 'open_case', 'update_case', 'draft_case_message', 'list_approved_drafts', 'mark_draft_sent'] },
   outreach: { about: 'Find who to contact, approved email sequences, replies. Relentless but polite.', tools: ['save_case_contact', 'list_case_contacts', 'update_case_contact', 'draft_case_message', 'list_approved_drafts', 'mark_draft_sent', 'list_due_followups', 'mark_followup_sent', 'record_reply'] },
   know_me: { about: 'Know the artist first: dossier, public lookup, profiles they confirm, facts, read-only analytics and last 10 posts.', tools: ['know_me', 'discover_artist', 'save_artist_facts', 'add_artist_link', 'confirm_artist_link', 'save_social_snapshot', 'list_social_snapshots'] },
   catalog: { about: 'Artist identity and the song catalog (PRO / SoundExchange status per song).', tools: ['get_artist_profile', 'save_artist_profile', 'search_public_catalog', 'import_catalog', 'list_catalog', 'update_catalog_track'] },

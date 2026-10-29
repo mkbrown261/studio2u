@@ -68,11 +68,11 @@ export function songFrom(text: string, titles: string[]) {
   const hits = titles.filter(Boolean).map(t => ({ t, n: t.toLowerCase().replace(/\s*\((feat|ft|with)[^)]*\)/, '').trim() })).filter(x => x.n.length >= 1).filter(x => {
     const esc = x.n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`, 'i')
     if (!re.test(lower)) return false
-    if (x.n.length <= 3 || /^\d+$/.test(x.n)) return new RegExp(`(song|track|record|single|called|titled)\\s+["“]?${esc}\\b`, 'i').test(text) || (q != null && norm(q) === norm(x.n))
+    if (x.n.length <= 3 || /^\d+$/.test(x.n)) return new RegExp(`(song|track|record|single|called|titled|named)\\s+(?:(?:was|is|it'?s|called|titled|named)\\s+)?["“]?${esc}\\b`, 'i').test(text) || (q != null && norm(q) === norm(x.n))
     return true
   }).sort((a, b) => b.n.length - a.n.length)
   if (hits[0]) return { title: hits[0].t, inCatalog: true }
-  const named = /\b(?:song|track|record|single)\s+(?:called|titled|named)?\s*["“]?([A-Za-z0-9][^,.;!?"”\n]{0,40}?)["”]?(?=\s+(?:was|got|is|on|in|played|aired|used)\b|[,.;!?]|$)/i.exec(text)
+  const named = /\b(?:song|track|record|single)\s+(?:(?:was|is|it'?s)\s+)?(?:called|titled|named)?\s*["“]?([A-Za-z0-9][^,.;!?"”\n]{0,40}?)["”]?(?=\s+(?:was|got|is|on|in|played|aired|used)\b|[,.;!?]|$)/i.exec(text)
   if (q && !showCandidates(text).some(s => norm(s) === norm(q))) return { title: q.trim(), inCatalog: false }
   if (named && !/^(of mine|i made|i wrote|was|is|got)$/i.test(named[1].trim())) return { title: named[1].trim(), inCatalog: false }
   return null
@@ -80,11 +80,16 @@ export function songFrom(text: string, titles: string[]) {
 
 type TvPick = { show: any; network: string | null; episode: any | null; alternatives: any[]; showOptions: string[]; networkGuess: string | null }
 /** Resolve show + episode with TVmaze (free, no key). */
-export async function resolveTv(text: string, fetcher: Fetcher, known: { showId?: number | null; exclude?: string[] } = {}): Promise<TvPick | null> {
+export async function resolveTv(text: string, fetcher: Fetcher, known: { showId?: number | null; exclude?: string[]; leading?: boolean } = {}): Promise<TvPick | null> {
   const ep = episodeHints(text), hint = networkHint(text)
   let shows: any[] = []
   if (known.showId) { const s = await fetcher(`https://api.tvmaze.com/shows/${known.showId}`).catch(() => null); if (s) shows = [s] }
-  else for (const cand of showCandidates(text, known.exclude ?? [])) {
+  else for (const cand of (() => {
+    const c = showCandidates(text, known.exclude ?? [])
+    // Answering "what show?" in a case: the first words usually ARE the show ("Baddies, the Hawaii episode").
+    if (known.leading) { const lead = text.split(/[,.;!?\n]|\s+(?:the|an?|when|where|episode|season)\s+/i)[0].replace(/^(?:it was|it's|its|on|the show)\s+/i, '').trim(); const ex = (known.exclude ?? []).map(norm); if (lead && lead.split(/\s+/).length <= 5 && !ex.includes(norm(lead)) && !c.some(x => norm(x) === norm(lead))) c.unshift(lead) }
+    return c.slice(0, 3)
+  })()) {
     const res = await fetcher(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(cand)}`).catch(() => [])
     const c = norm(cand)
     shows = (res ?? []).filter((r: any) => r?.show && r.score > 0.25 && (norm(r.show.name).includes(c) || c.includes(norm(r.show.name)))).map((r: any) => r.show).slice(0, 7)
@@ -138,7 +143,7 @@ export async function understand(text: string, ctx: { playbook?: string | null; 
   if (playbook === 'tv-cue-sheet') {
     const reResolve = !have.show || Boolean(episodeHints(text).words.length || episodeHints(text).season) && Boolean(have.tvmazeShowId)
     if (reResolve) {
-      const tv = await resolveTv(text, fetcher, { showId: have.tvmazeShowId ?? null, exclude: [song?.title ?? '', ...(ctx.titles ?? [])] }).catch(() => null)
+      const tv = await resolveTv(text, fetcher, { showId: have.tvmazeShowId ?? null, exclude: [song?.title ?? '', ...(ctx.titles ?? [])], leading: Boolean(ctx.facts) && !have.show }).catch(() => null)
       if (tv?.show) {
         if (!have.show) set('show', 'Show', tv.show.name, 'TVmaze', tv.show.url)
         facts.tvmazeShowId = tv.show.id
@@ -160,6 +165,13 @@ export async function understand(text: string, ctx: { playbook?: string | null; 
     if (!facts.airDate && !have.airDate) set('airDate', 'First aired', monthYear(text), 'from what you said')
     if (!have.howUsed) set('howUsed', 'How it was used', howUsed(text), 'from what you said')
     if (!have.license) set('license', 'License / upfront fee', licenseNote(text), 'from what you said')
+  }
+  if (playbook === 'merch-drop') {
+    if (!have.idea && !ctx.facts) set('idea', 'What goes on it', text.trim().slice(0, 600), 'from what you said')
+    const t = text.toLowerCase()
+    if (!have.budget) set('budget', 'Route', /(no money|zero upfront|no upfront|don'?t want to pay|free|print on demand|no inventory|don'?t (want to )?(hold|carry|keep) (any )?inventory)/.test(t) ? 'Zero upfront: print on demand' : /(my own money|invest|bulk|pay upfront|buy (them|inventory))/.test(t) ? 'Own money: bulk run for bigger margins' : null, 'from what you said')
+    if (!have.where) { const w = ['website', 'site', 'spotify', 'youtube', 'instagram', 'tiktok', 'shows', 'linktree'].filter(k => t.includes(k)); if (w.length) set('where', 'Where to sell', w.join(', '), 'from what you said') }
+    if (!have.artOwnership && /(i (made|drew|designed|own) (it|the (logo|art))|my (own )?(logo|art|cover)|i paid (someone|a designer))/.test(t)) set('artOwnership', 'Art ownership', 'Owner says they own the art', 'from what you said')
   }
   const songTitle = facts.songTitle ?? have.songTitle
   if (pb?.needs.some(n => n.key === 'writers') && !have.writers) {

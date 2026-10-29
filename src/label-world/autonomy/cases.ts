@@ -142,6 +142,18 @@ export async function openCase(db: any, label: string, actor: number, b: any, by
   if (!pb) throw new ServiceError(`playbook must be one of ${PLAYBOOKS.map(p => p.id).join(', ')}`)
   const title = clean(b?.title ?? pb.name, 'title', 200)!
   const facts = sanitizeFacts(b?.facts)
+  // Tapping "Open case" again (or retelling the same problem) must not create duplicates:
+  // an open case with the same playbook from the last 30 minutes is reused and filled in.
+  const recent: any = await db.prepare(`SELECT id,facts_json FROM lw_cases WHERE label_id=? AND playbook=? AND status NOT IN ('RESOLVED','CLOSED') AND created_at>=datetime('now','-30 minutes') ORDER BY created_at DESC LIMIT 1`).bind(label, pb.id).first()
+  if (recent) {
+    const cur = JSON.parse(recent.facts_json || '{}')
+    const sameStory = !facts.songTitle || !cur.songTitle || String(facts.songTitle).toLowerCase() === String(cur.songTitle).toLowerCase()
+    if (sameStory) {
+      const add = Object.fromEntries(Object.entries(facts).filter(([k]) => cur[k] == null))
+      if (Object.keys(add).length) await updateCase(db, label, actor, recent.id, { facts: add, note: 'Owner added details.' }, by)
+      return { ...(await getCase(db, label, actor, recent.id)), reused: true }
+    }
+  }
   const { deadline, note } = computeDeadline(pb.id, facts)
   const id = crypto.randomUUID(), missing = pb.needs.filter(n => n.required && facts[n.key] == null)
   await db.batch([

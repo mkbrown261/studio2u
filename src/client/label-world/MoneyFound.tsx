@@ -28,12 +28,23 @@ export function MoneyFound({labelId, role, notify, onAskAgent}: {labelId: string
   }
   useEffect(() => { setRows([]); setOpen(null); load().catch(e => notify(e.message)) }, [labelId])
   useEffect(() => { if (problem.trim().length < 8) { setSuggested([]); return } const t = setTimeout(() => api(`/labels/${labelId}/playbooks?match=${encodeURIComponent(problem)}`).then(d => setSuggested(d.suggested)).catch(() => {}), 350); return () => clearTimeout(t) }, [problem, labelId])
-  async function start(playbook: string) {
+  const [busy, setBusy] = useState(false), [reply, setReply] = useState<{caseId: string, text: string} | null>(null), [flash, setFlash] = useState<string | null>(null)
+  function focusCase(id: string) { setOpen(id); setFlash(id); setTimeout(() => document.getElementById('case-' + id)?.scrollIntoView({behavior: 'smooth', block: 'start'}), 120); setTimeout(() => setFlash(null), 2600) }
+  useEffect(() => { const on = (e: any) => { load().then(() => { if (e.detail?.caseId) focusCase(e.detail.caseId) }).catch(() => {}) }; window.addEventListener('lw-case-updated', on); return () => window.removeEventListener('lw-case-updated', on) }, [labelId])
+  /** Talk instead of forms: whatever the owner types fills the case and the answer shows right here. */
+  async function tell(playbook?: string) {
+    const text = problem.trim() || (playbook ? (playbooks.find(p => p.id === playbook)?.name ?? '') : '')
+    if (!text || busy) return
+    setBusy(true)
     try {
-      const d = await api(`/labels/${labelId}/cases`, {playbook, facts: problem.trim() ? {story: problem.trim().slice(0, 2000)} : {}})
-      setProblem(''); setSuggested([]); await load(); setOpen(d.case.id); notify('Case opened. Your team will pick it up on the next shift.')
-    } catch (e) { notify((e as Error).message) }
+      const t = await api(`/labels/${labelId}/talk`, {text, ...(playbook ? {playbook} : {})})
+      if (!t.handled) { notify(t.suggested?.length ? 'Pick the closest problem below, or say a bit more.' : 'Say a bit more about what happened.'); return }
+      setProblem(''); setSuggested([]); setReply({caseId: t.caseId, text: t.reply}); chime()
+      await load(); focusCase(t.caseId)
+      notify(t.reused ? 'Added to the case you already opened.' : 'Case opened. Answer right in the case, in your own words.')
+    } catch (e) { notify((e as Error).message) } finally { setBusy(false) }
   }
+  const start = (playbook: string) => tell(playbook)
   if (!labelId) return <div className="lw-mf-empty">Pick or create a label first.</div>
   const needsYou = rows.filter(r => r.status === 'WAITING_ON_YOU' || r.drafts_waiting > 0).length
   return <div className="lw-mf">
@@ -49,15 +60,16 @@ export function MoneyFound({labelId, role, notify, onAskAgent}: {labelId: string
     <nav className="lw-mf-tabs" role="tablist">{([['knowme', 'Know me'], ['report', 'This week'], ['cases', 'Cases'], ['agreements', 'Split sheets'], ['statements', 'Statements'], ['soundexchange', 'SoundExchange'], ['content', 'Content'], ['catalog', `My songs (${summary?.songs ?? 0})`], ['identity', 'Who I am']] as const).map(([k, t]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{t}</button>)}</nav>
     {tab === 'cases' && <>
       {editable && <section className="lw-mf-tell">
-        <label htmlFor="mf-problem"><b>What's going on?</b> Talk like you'd talk to your manager.</label>
-        <textarea id="mf-problem" rows={3} maxLength={2000} value={problem} onChange={e => setProblem(e.target.value)} placeholder="e.g. My song was on Baddies and I never got paid. I never did a cue sheet…"/>
-        <div className="lw-mf-pick">{(suggested.length ? suggested : []).map(s => <button key={s.id} className="primary" onClick={() => start(s.id)}><Icon name="flag" size={15}/> Open case: {s.name}</button>)}
-          {problem.trim().length >= 8 && !suggested.length && <span className="lw-muted">Pick the closest problem below.</span>}
+        <label htmlFor="mf-problem"><b>What's going on?</b> Say it like you'd tell your manager. Your team fills in the details and only asks what it can't figure out.</label>
+        <textarea id="mf-problem" rows={3} maxLength={4000} value={problem} onChange={e => setProblem(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && problem.trim()) { e.preventDefault(); tell(suggested[0]?.id) } }} placeholder='e.g. My song 22 was on Baddies, the episode they went to Hawaii. Nobody asked me and I never got paid.'/>
+        <div className="lw-mf-pick"><Button gold disabled={busy || problem.trim().length < 4} onClick={() => tell(suggested[0]?.id)}>{busy ? 'Working on it…' : 'Tell my team'}</Button>
+          {(suggested.length ? suggested : []).map(s => <button key={s.id} className="primary" disabled={busy} onClick={() => tell(s.id)}><Icon name="flag" size={15}/> {s.name}</button>)}
         </div>
+        {reply && <div className="lw-mf-reply" role="status" aria-live="polite"><pre>{reply.text}</pre><button className="lw-link-btn" onClick={() => focusCase(reply.caseId)}>Open the case</button></div>}
         <details><summary>All playbooks your team knows</summary><div className="lw-mf-playbooks">{playbooks.map(p => <button key={p.id} onClick={() => start(p.id)}><b>{p.name}</b><small>{p.summary}</small></button>)}</div></details>
       </section>}
       {!rows.length ? <div className="lw-mf-empty"><Icon name="wallet" size={34}/><p>No cases yet. Describe a problem above, or import your songs so your team can find what's unregistered.</p></div> :
-        <div className="lw-mf-list">{rows.map(r => <CaseCard key={r.id} row={r} expanded={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} labelId={labelId} editable={editable} notify={notify} reload={load}/>)}</div>}
+        <div className="lw-mf-list">{rows.map(r => <CaseCard key={r.id} row={r} flash={flash === r.id} expanded={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} labelId={labelId} editable={editable} notify={notify} reload={load}/>)}</div>}
     </>}
     {tab === 'knowme' && <KnowMe labelId={labelId} editable={editable} notify={notify} onAsk={q => onAskAgent('researcher', q)}/>}
     {tab === 'report' && <Report labelId={labelId} editable={editable} notify={notify}/>}
@@ -70,8 +82,13 @@ export function MoneyFound({labelId, role, notify, onAskAgent}: {labelId: string
   </div>
 }
 
-function CaseCard({row, expanded, onToggle, labelId, editable, notify, reload}: {row: CaseRow, expanded: boolean, onToggle: () => void, labelId: string, editable: boolean, notify: (s: string) => void, reload: () => void}) {
-  const [detail, setDetail] = useState<any>(null), [answers, setAnswers] = useState<Record<string, string>>({})
+function CaseCard({row, flash, expanded, onToggle, labelId, editable, notify, reload}: {row: CaseRow, flash?: boolean, expanded: boolean, onToggle: () => void, labelId: string, editable: boolean, notify: (s: string) => void, reload: () => void}) {
+  const [detail, setDetail] = useState<any>(null), [answers, setAnswers] = useState<Record<string, string>>({}), [say, setSay] = useState(''), [talking, setTalking] = useState(false), [last, setLast] = useState<string | null>(null)
+  async function answer() {
+    if (!say.trim() || talking) return
+    setTalking(true)
+    try { const t = await api(`/labels/${labelId}/talk`, {text: say.trim(), caseId: row.id}); setSay(''); setLast(t.reply); chime(); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); reload() } catch (e) { notify((e as Error).message) } finally { setTalking(false) }
+  }
   useEffect(() => { if (expanded) api(`/labels/${labelId}/cases/${row.id}`).then(setDetail).catch(e => notify(e.message)) }, [expanded, row.id])
   const [label, tone] = STATUS[row.status] ?? [row.status, 'muted']
   async function saveFacts() {
@@ -85,7 +102,7 @@ function CaseCard({row, expanded, onToggle, labelId, editable, notify, reload}: 
   async function contactStatus(id: string, status: string) { try { await api(`/labels/${labelId}/contacts/${id}`, {status}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); notify('Updated. Follow-ups to them are stopped.') } catch (e) { notify((e as Error).message) } }
   async function reply(id: string) { const summary = prompt('What did they say? (a sentence is fine)'); if (!summary) return; try { await api(`/labels/${labelId}/drafts/${id}/reply`, {summary}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); reload(); notify('Logged. Follow-ups stopped; your team will answer.') } catch (e) { notify((e as Error).message) } }
   async function sent(id: string) { try { await api(`/labels/${labelId}/drafts/${id}/sent`, {note: 'Sent by owner'}); setDetail(await api(`/labels/${labelId}/cases/${row.id}`)); reload(); notify('Logged. Follow-up scheduled.') } catch (e) { notify((e as Error).message) } }
-  return <article className={`lw-mf-case ${expanded ? 'open' : ''}`}>
+  return <article id={'case-' + row.id} className={`lw-mf-case ${expanded ? 'open' : ''} ${flash ? 'flash' : ''}`}>
     <button className="lw-mf-case-head" onClick={onToggle} aria-expanded={expanded}>
       <div><strong>{row.title}</strong><small>{row.playbookName}</small></div>
       <div className="lw-mf-case-meta">
@@ -98,7 +115,13 @@ function CaseCard({row, expanded, onToggle, labelId, editable, notify, reload}: 
       {detail.case.deadlineNote && <p className="lw-mf-note"><Icon name="calendar" size={15}/> {detail.case.deadlineNote}</p>}
       {detail.contacts?.length > 0 && <section className="lw-mf-contacts"><h4>Who your team is contacting</h4>{detail.contacts.map((k: any) => <div key={k.id} className="lw-mf-contact"><div><b>{k.name ?? k.role}</b><small>{k.name ? `${k.role} · ` : ''}{k.company}{k.email ? ` · ${k.email}` : ''}</small>{k.source_url && <a href={k.source_url} target="_blank" rel="noopener noreferrer">where we found them</a>}</div><div><Badge tone={k.confidence === 'VERIFIED' ? 'green' : k.confidence === 'LIKELY' ? 'gold' : 'muted'}>{k.confidence.toLowerCase()}</Badge><Badge tone={k.status === 'REPLIED' ? 'green' : ['BOUNCED', 'WRONG_PERSON', 'DO_NOT_CONTACT'].includes(k.status) ? 'red' : k.status === 'CONTACTED' ? 'cyan' : 'muted'}>{k.status.toLowerCase().replace(/_/g, ' ')}</Badge>{editable && k.status !== 'DO_NOT_CONTACT' && <button className="lw-link-btn" onClick={() => contactStatus(k.id, 'DO_NOT_CONTACT')}>don't contact</button>}</div></div>)}</section>}
       {detail.drafts.filter((d: any) => d.status !== 'REJECTED').map((d: any) => <Draft key={d.id} d={d} editable={editable} onDecide={decide} onSent={sent} onReply={reply}/>)}
-      {editable && detail.stillNeeded.length > 0 && <section className="lw-mf-needs"><h4>Your team needs</h4>{detail.stillNeeded.map((n: any) => <label key={n.key}>{n.question}{n.required && <em> required</em>}<input value={answers[n.key] ?? ''} onChange={e => setAnswers({...answers, [n.key]: e.target.value})} maxLength={2000}/></label>)}<Button gold onClick={saveFacts}>Save answers</Button></section>}
+      {Object.keys(detail.case.facts ?? {}).filter(k => !['story', 'tvmazeShowId', 'episodeConfirmed'].includes(k)).length > 0 && <section className="lw-mf-known"><h4>What your team knows</h4><dl>{detail.playbook.needs.filter((n: any) => detail.case.facts[n.key] != null).map((n: any) => <React.Fragment key={n.key}><dt>{n.question.replace(/\?.*$/, '').replace(/^(What|Which|Who|Roughly|How|Did|Do|Is|Where) /, '')}</dt><dd>{String(detail.case.facts[n.key])}</dd></React.Fragment>)}</dl></section>}
+      {editable && <section className="lw-mf-talk"><h4>{detail.stillNeeded.some((n: any) => n.required) ? 'Your team still needs a little more' : 'Tell your team anything else'}</h4>
+        {last && <pre className="lw-mf-reply-text">{last}</pre>}
+        {!last && detail.stillNeeded.filter((n: any) => n.required).length > 0 && <ul className="lw-mf-asks">{detail.stillNeeded.filter((n: any) => n.required).map((n: any) => <li key={n.key}>{n.question}</li>)}</ul>}
+        <div className="lw-mf-row"><textarea rows={2} maxLength={4000} value={say} onChange={e => setSay(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); answer() } }} placeholder="Answer in your own words, e.g. 'the Hawaii episode, I wrote it myself'"/><Button gold disabled={talking || !say.trim()} onClick={answer}>{talking ? '…' : 'Send'}</Button></div>
+        {detail.stillNeeded.length > 0 && <details className="lw-mf-form-fallback"><summary>Prefer boxes? Fill them in</summary>{detail.stillNeeded.map((n: any) => <label key={n.key}>{n.question}{n.required && <em> required</em>}<input value={answers[n.key] ?? ''} onChange={e => setAnswers({...answers, [n.key]: e.target.value})} maxLength={2000}/></label>)}<Button onClick={saveFacts}>Save answers</Button></details>}
+      </section>}
       <details className="lw-mf-steps"><summary>The playbook your team follows ({detail.playbook.steps.length} steps)</summary><ol>{detail.playbook.steps.map((s: string, i: number) => <li key={i} className={i < detail.case.step ? 'done' : ''}>{s}</li>)}</ol>
         {detail.playbook.facts?.length > 0 && <><h5>Verified facts</h5><ul>{detail.playbook.facts.map((f: string) => <li key={f}>{f}</li>)}</ul></>}
         {detail.playbook.contacts?.length > 0 && <><h5>Who to contact</h5><ul>{detail.playbook.contacts.map((c: any) => <li key={c.name}><b>{c.name}:</b> {c.how}</li>)}</ul></>}

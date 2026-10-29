@@ -35,6 +35,7 @@ export const FACTS: { key: string; kind: Kind; q: string | null; weight: number 
   { key: 'similarArtists', kind: 'list', weight: 1, q: null },
   { key: 'topTracks', kind: 'list', weight: 0, q: null },
   { key: 'publicFans', kind: 'num', weight: 0, q: null },
+  { key: 'monthlyListeners', kind: 'num', weight: 0, q: null },
   { key: 'ipiPublic', kind: 'list', weight: 0, q: null },
   { key: 'artistType', kind: 'text', weight: 0, q: null },
   { key: 'press', kind: 'list', weight: 1, q: null }
@@ -47,6 +48,7 @@ const str = (v: unknown, f: string, max: number) => { if (v == null || v === '')
 const norm = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
 export type Lookup = (url: string) => Promise<any>
 const UA = 'Studio2U-LabelWorld/1.0 (https://studio2u.pages.dev)'
+const defaultSpotify = async (url: string) => { const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Studio2U/1.0)', Accept: 'text/html' } }); if (!r.ok) throw new Error('spotify ' + r.status); return (await r.text()).slice(0, 300000) }
 const defaultLookup: Lookup = async url => { const r = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': UA } }); if (!r.ok) throw new Error('lookup ' + r.status); return r.json() }
 
 // ---------------- facts ----------------
@@ -142,7 +144,8 @@ export async function decideLink(db: any, label: string, actor: number, id: stri
 const MB_PLATFORM: Record<string, string> = { 'official homepage': 'website', 'free streaming': '', 'streaming': '', 'social network': '', 'youtube': 'youtube', 'soundcloud': 'soundcloud', 'bandcamp': 'bandcamp', 'discogs': 'discogs', 'wikidata': 'other', 'wikipedia': 'wikipedia', 'lyrics': 'genius', 'video channel': 'youtube' }
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms))
 /** Searches public music databases for the artist's exact name (and aliases). Saves links as suggestions and facts as unconfirmed PUBLIC facts. */
-export async function discoverPublic(db: any, label: string, actor: number, lookup: Lookup = defaultLookup) {
+export async function discoverPublic(db: any, label: string, actor: number, lookup: Lookup = defaultLookup, spotifyPage?: (url: string) => Promise<string>) {
+  const readSpotify = spotifyPage ?? (lookup === defaultLookup ? defaultSpotify : async () => '')
   await requireEditor(db, label, actor)
   const id: any = await db.prepare('SELECT artist_name,aliases_json,spotify_artist_id,apple_artist_id FROM lw_label_identity WHERE label_id=?').bind(label).first()
   if (!id) throw new ServiceError('Tell us your artist name first (Who I am).', 409)
@@ -203,11 +206,26 @@ export async function discoverPublic(db: any, label: string, actor: number, look
     if (!facts.genres && exact.length === 1 && exact[0].primaryGenreName) facts.genres = [exact[0].primaryGenreName]
   } catch { notes.push('Apple Music did not answer.') }
 
+  // Spotify public page: monthly listeners (only the number Spotify shows to everyone).
+  const spId = id.spotify_artist_id ?? found.map(f => /open\.spotify\.com\/artist\/([A-Za-z0-9]{22})/.exec(f.url)?.[1]).find(Boolean) ?? null
+  if (spId) {
+    try {
+      const html: string = await readSpotify(`https://open.spotify.com/artist/${spId}`)
+      const m = /og:description" content="[^"]*?([\d.,]+)\s*([KMB]?)\s*monthly listeners/i.exec(html)
+      if (m) { const mult: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9 }; facts.monthlyListeners = Math.round(parseFloat(m[1].replace(/,/g, '')) * (mult[m[2].toUpperCase()] ?? 1)) }
+    } catch { notes.push('Spotify page did not answer.') }
+  }
   let links = 0
   for (const f of found) { const r = await addLink(db, label, actor, f, f.source, 'public-lookup'); if (!r.duplicate) links++ }
+  // Carla's watchlist fills itself: similar artists (Deezer related), once each, with the source.
+  let watch = 0
+  for (const name of ((facts.similarArtists as string[] | undefined) ?? []).slice(0, 6)) {
+    if (await db.prepare("SELECT 1 FROM lw_research_records WHERE label_id=? AND kind='watchlist' AND lower(title)=lower(?)").bind(label, name).first()) continue
+    await db.prepare("INSERT INTO lw_research_records(id,label_id,kind,title,content,source_url,created_by) VALUES (?,?,'watchlist',?,?,?,?)").bind(crypto.randomUUID(), label, name, `Similar to ${names[0]} (Deezer related artists, read ${new Date().toISOString().slice(0, 10)}). Added by Carla.`, `https://www.deezer.com/search/${encodeURIComponent(name)}`, actor).run(); watch++
+  }
   const saved = Object.keys(facts).length ? await saveFacts(db, label, actor, facts, 'PUBLIC', 'public-lookup', 'MusicBrainz / Deezer / Apple Music public data') : { saved: [], keptOwnerAnswers: [] }
   await db.prepare('UPDATE lw_label_identity SET discovered_at=CURRENT_TIMESTAMP WHERE label_id=?').bind(label).run()
-  return { searched: names, newLinks: links, facts: saved.saved, notes, say: links ? `I found ${links} possible profile${links === 1 ? '' : 's'}. Tap "That's me" on the ones that are you.` : `I couldn't find "${names[0]}" in public music databases yet. Your agent will search the web and your socials next.` }
+  return { searched: names, newLinks: links, watchlistAdded: watch, facts: saved.saved, notes, say: links ? `I found ${links} possible profile${links === 1 ? '' : 's'}. Tap "That's me" on the ones that are you.` : `I couldn't find "${names[0]}" in public music databases yet. Your agent will search the web and your socials next.` }
 }
 
 // ---------------- dossier + brief ----------------
