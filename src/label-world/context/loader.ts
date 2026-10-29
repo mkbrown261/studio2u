@@ -32,6 +32,7 @@ export async function loadContext(db:any,request:ContextRequest,history:any[]=[]
   data.registrations=(await db.prepare('SELECT id,organization,status,applicability FROM lw_registration_tasks WHERE label_id=? AND release_id=? LIMIT 6').bind(label,release.id).all()).results
   data.approvals=(await db.prepare('SELECT id,release_version,action,status FROM lw_approvals WHERE label_id=? AND release_id=? ORDER BY created_at DESC LIMIT 4').bind(label,release.id).all()).results
  }
+ try{const {artistBrief}=await import('../autonomy/discovery');data.artist=await artistBrief(db,label)}catch{data.artist=null}
  if(request.employeeId==='researcher'){
   const now=new Date().toISOString()
   data.sourceObservations=(await db.prepare('SELECT o.id,o.report_id,o.source,o.creator,o.artist,o.track,o.source_url,o.observed_at,o.period,o.status,o.metrics_json FROM lw_source_observations o JOIN lw_research_reports r ON r.id=o.report_id WHERE o.label_id=? AND r.user_id=? AND (r.expires_at IS NULL OR r.expires_at>?) ORDER BY o.observed_at DESC LIMIT 12').bind(label,user,now).all()).results

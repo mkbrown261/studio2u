@@ -49,13 +49,13 @@
         "hash": "1e3b4db1140231c79603f720c91b7b85afa7963f7b44720059c3eb9b2b82783e"
       }
     ],
-    "chars": 7919,
-    "approxTokens": 1980,
+    "chars": 8054,
+    "approxTokens": 2014,
     "warnings": [],
     "evidenceRefs": [
-      "a430baa9-f6a6-4301-86d3-9f7e39804c6d",
-      "f5bbaa18-d172-4480-9e1f-49356f68b217",
-      "ba2958df-5cc2-49d4-8fe3-f520005ba8d1"
+      "9a791127-0bd0-434e-a5dd-1a4e22da2a26",
+      "ffe29e95-ddb5-44f0-9fe3-52e33a7dbc46",
+      "17249ce7-ca1f-438d-9c44-51cdbb19441e"
     ],
     "releaseVersion": 1
   },
@@ -104,7 +104,7 @@
   "mockExplanation": {
     "summary": "Artwork is too small according to the stored artwork.technical FAIL. Rights remain unverified; package integrity is NOT_TESTED.",
     "evidenceRefs": [
-      "f5bbaa18-d172-4480-9e1f-49356f68b217"
+      "ffe29e95-ddb5-44f0-9fe3-52e33a7dbc46"
     ],
     "limitations": [
       "Owner attestations are not independent clearance."

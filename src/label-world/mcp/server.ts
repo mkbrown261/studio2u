@@ -65,11 +65,13 @@ export function createStudioMcp(db:any,caller:McpCaller,validateGrant:()=>Promis
      followUpsDue:(await (await import('../autonomy/outreach')).dueFollowups(db,[l.id]).catch(()=>[])).length,
      queuedTasks:await q("SELECT COUNT(*) n FROM lw_tasks WHERE label_id=? AND status='QUEUED' AND (run_after IS NULL OR run_after<=datetime('now'))"),
      openCases:await q("SELECT COUNT(*) n FROM lw_cases WHERE label_id=? AND status NOT IN ('RESOLVED','CLOSED')"),
-     songs:await q("SELECT COUNT(*) n FROM lw_catalog_tracks WHERE label_id=?")})
+     songs:await q("SELECT COUNT(*) n FROM lw_catalog_tracks WHERE label_id=?"),
+     knownPct:(await (await import('../autonomy/discovery')).getDossier(db,l.id,caller.userId).catch(()=>({completeness:0}))).completeness})
    }
    const write=caller.scopes.some(s=>s.endsWith(':write'))
    const next:string[]=[]
    if(out.some(l=>l.unansweredMessages))next.push('guide inbox → answer each message as that employee (if it describes a money/rights problem, guide cases → open_case)')
+   if(out.some(l=>l.knownPct<60))next.push('guide know_me → know_me → get to know the artist first (confirm profiles, ask 2-3 questions, read analytics read-only). Tailor everything to them.')
    if(out.some(l=>l.approvedDraftsToSend))next.push('guide cases → list_approved_drafts → send from the user\'s email if you can, then mark_draft_sent')
    if(out.some(l=>l.followUpsDue))next.push('guide outreach → list_due_followups → check the inbox thread for a reply first (record_reply), otherwise send the approved follow-up and mark_followup_sent')
    if(out.some(l=>l.queuedTasks))next.push('guide queue → claim_next_task (canControlScreen=true only if you can see/click the user\'s browser)')

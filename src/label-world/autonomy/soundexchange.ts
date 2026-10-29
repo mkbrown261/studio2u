@@ -41,7 +41,9 @@ export async function getSxAccount(db: any, label: string, actor: number) {
   if (!await memberRole(db, label, actor)) throw new ServiceError('Label not found', 404)
   const row: any = await db.prepare('SELECT artist_name,legal_name,aliases_json,sx_json FROM lw_label_identity WHERE label_id=?').bind(label).first()
   const acct = readSx(row)
-  return { account: acct, checklist: accountChecklist(acct, row ? { artistName: row.artist_name, legalName: row.legal_name, aliases: JSON.parse(row.aliases_json || '[]') } : null) }
+  const f: any = await db.prepare("SELECT value_json FROM lw_artist_facts WHERE label_id=? AND key='ownsMasters' AND confirmed=1").bind(label).first().catch(() => null)
+  const owns = f ? JSON.parse(f.value_json) === true : null
+  return { account: acct, ownsMasters: owns, checklist: accountChecklist(acct, row ? { artistName: row.artist_name, legalName: row.legal_name, aliases: JSON.parse(row.aliases_json || '[]') } : null, owns) }
 }
 export async function saveSxAccount(db: any, label: string, actor: number, b: any) {
   await requireEditor(db, label, actor)
@@ -73,14 +75,14 @@ export function roleAdvice(ownsMasters: boolean | null, signedToLabel: boolean |
   return { roles: null, why: 'Do you own your masters (self-released through UnitedMasters, DistroKid etc.), or does a label own them?' }
 }
 
-export function accountChecklist(a: SxAccount, me: { artistName: string; legalName: string | null; aliases: string[] } | null) {
+export function accountChecklist(a: SxAccount, me: { artistName: string; legalName: string | null; aliases: string[] } | null, ownsFact: boolean | null = null) {
   const items: Item[] = [], S = 'Account'
   const add = (label: string, value: string | null, action: Item['action'], note?: string) => items.push({ section: S, label, value, action, ...(note ? { note } : {}) })
   if (a.status === 'LOCKED_OUT') add('Reset your password', SX.login, 'HUMAN', `Open ${SX.login}, click "Forgot password" and enter ${a.loginEmail ?? 'the email you signed up with'}. Reset it from that email yourself. If you no longer have that email, call SoundExchange at ${SX.phone} (9am-6pm ET, Mon-Fri). Your agent can open the page; it never sees or types your password.`)
   else if (a.status === 'NOT_REGISTERED') add('Register (free)', SX.register, 'HUMAN', 'You enter your legal name, artist name, contact info, tax form (W-9 in the US) and direct deposit yourself.')
   else if (a.status === 'UNKNOWN') add('Account', null, 'ASK', 'Do you already have a SoundExchange account? If yes, can you log in, or did you forget the password?')
-  const ownsMasters = a.registeredAs.includes('SRCO') || Boolean(a.srcoEntity)
-  const advice = roleAdvice(a.registeredAs.length || a.srcoEntity ? ownsMasters : null, a.signedToLabel)
+  const ownsMasters = ownsFact ?? (a.registeredAs.includes('SRCO') || Boolean(a.srcoEntity))
+  const advice = roleAdvice(ownsFact != null || a.registeredAs.length || a.srcoEntity ? ownsMasters : null, a.signedToLabel)
   if (!advice.roles) add('Roles', null, 'ASK', advice.why)
   else {
     const missing = advice.roles.filter(r => !a.registeredAs.includes(r))

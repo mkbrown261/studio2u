@@ -11,6 +11,7 @@ import * as content from './content'
 import * as ascap from './ascap'
 import * as outreach from './outreach'
 import * as sx from './soundexchange'
+import * as know from './discovery'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -36,6 +37,13 @@ export function installAutonomyRoutes(app: any) {
     return c.json(await cases.importTracks(c.env.DB, L(c), U(c), all.slice(0, 400)))
   }))
   app.get(base + '/catalog', wrap(async c => c.json({ summary: await cases.catalogSummary(c.env.DB, L(c)), tracks: await cases.listCatalog(c.env.DB, L(c)) })))
+  // ---- Know me ----
+  app.get(base + '/know-me', wrap(async c => c.json(await know.getDossier(c.env.DB, L(c), U(c)))))
+  app.post(base + '/know-me/discover', wrap(async c => c.json(await know.discoverPublic(c.env.DB, L(c), U(c)))))
+  app.post(base + '/know-me/facts', wrap(async c => c.json(await know.saveFacts(c.env.DB, L(c), U(c), (await body(c)).facts, 'OWNER', 'owner'))))
+  app.post(base + '/know-me/facts/:key/confirm', wrap(async c => c.json(await know.confirmFact(c.env.DB, L(c), U(c), c.req.param('key'), Boolean((await body(c)).confirm)))))
+  app.post(base + '/know-me/links', wrap(async c => c.json(await know.addLink(c.env.DB, L(c), U(c), await body(c), 'OWNER', 'owner'))))
+  app.post(base + '/know-me/links/:id', wrap(async c => c.json(await know.decideLink(c.env.DB, L(c), U(c), c.req.param('id'), String((await body(c)).decision ?? '')))))
   app.get(base + '/soundexchange', wrap(async c => c.json({ ...(await sx.getSxAccount(c.env.DB, L(c), U(c))), queue: await sx.sxQueue(c.env.DB, L(c), U(c), 60) })))
   app.post(base + '/soundexchange/account', wrap(async c => c.json(await sx.saveSxAccount(c.env.DB, L(c), U(c), await body(c)))))
   app.post(base + '/soundexchange/contact-update', wrap(async c => c.json(await sx.prepareContactUpdate(c.env.DB, L(c), U(c), await body(c)))))

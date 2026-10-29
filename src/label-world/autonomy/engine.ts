@@ -14,7 +14,7 @@ import { buildPacket, derivedStatus, targets, type Target, type ReleaseRow, type
 import type { Intake } from './intake'
 import { decryptKey } from '../providers/vault'
 
-export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING'] as const
+export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST'] as const
 export type TaskKind = typeof taskKinds[number]
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
@@ -174,7 +174,7 @@ export async function wakeAgents(db: any, env: any, label: string, fetcher: type
 }
 
 /** One full engine pass. Safe to run every few minutes; every step is idempotent. */
-export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxReleases?: number; labelIds?: string[] } = {}) {
+export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxReleases?: number; labelIds?: string[]; lookup?: (url: string) => Promise<any> } = {}) {
   const db = env.DB, started = now()
   const run = await db.prepare('INSERT INTO lw_engine_runs(started_at) VALUES (?) RETURNING id').bind(started).first()
   const summary: Record<string, number | string> = { releases: 0, refreshed: 0, queued: 0, notified: 0, requeued: 0, failed: 0, followUps: 0, woken: 0 }
@@ -221,6 +221,10 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
   // SoundExchange: only for labels whose owner can log in. Ready songs -> submit/claim screen tasks.
   const { queueSx } = await import('./soundexchange')
   summary.soundexchange = await queueSx(db, (t: any) => enqueue(db, t), opts.labelIds).catch(() => 0)
+  // Know me: public lookup for new artists, then a monthly "get to know them" agent task while the dossier is thin.
+  const { queueDiscovery } = await import('./discovery')
+  const disc = await queueDiscovery(db, (t: any) => enqueue(db, t), opts.labelIds, opts.lookup).catch(() => ({ lookedUp: 0, queued: 0 }))
+  summary.discovered = disc.lookedUp; summary.knowArtist = disc.queued
   // Monday Report: one per label per local day, at the label's chosen weekday/hour.
   const { scheduledReports } = await import('./office')
   const reports = await scheduledReports(db, opts.labelIds, new Date(started)).catch(() => [] as string[])
