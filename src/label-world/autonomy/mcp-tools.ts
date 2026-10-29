@@ -12,6 +12,7 @@ import { PLAYBOOKS, STANDING_RULES, playbookBrief, playbookById, suggestPlaybook
 import * as office from './office'
 import * as agr from './agreements'
 import * as content from './content'
+import * as ascap from './ascap'
 
 export const writeScopes = ['releases:write', 'submissions:write', 'tasks:write'] as const
 type Caller = { userId: number; grantId: string; labelIds: string[]; scopes: string[]; clientName?: string; origin?: string }
@@ -132,6 +133,20 @@ export function registerActionTools(server: any, db: any, caller: Caller, author
     res.ok = !res.issues.some(i => i.severity !== 'TIP')
     return res
   }, { readOnly: true })
+
+  // ---- ASCAP work registration for catalog songs ----
+  const workPatch = z.object({
+    writers: z.array(z.object({ legalName: z.string().max(120), role: z.enum(['writer', 'composer', 'lyricist', 'writer_producer']).default('writer'), split: z.number().gt(0).max(100), pro: z.string().max(10).optional(), ipi: z.string().max(20).optional(), publisherName: z.string().max(120).optional(), publisherIpi: z.string().max(20).optional(), noPublisher: z.boolean().optional() }).strict()).min(1).max(20).optional(),
+    alternateTitles: z.array(z.string().max(200)).max(20).optional(), performers: z.array(z.string().max(200)).max(20).optional(),
+    durationSec: z.union([z.number().int(), z.string().max(8)]).optional(), recordingTitle: z.string().max(200).optional(), isrc: z.string().max(20).optional(), releaseDate: z.string().max(10).optional(),
+    commercialUse: z.object({ productType: z.string().max(100), productionName: z.string().max(200) }).strict().optional(), publicDomain: z.enum(['music', 'lyrics', 'both']).optional(),
+    samples: z.array(z.object({ description: z.string().max(500).optional(), workTitle: z.string().max(200).optional(), cleared: z.boolean(), writers: z.array(z.object({ name: z.string().max(120), ipi: z.string().max(20).optional() })).max(10).optional() }).strict()).max(20).optional(),
+    containsThirdPartyAudio: z.boolean().optional()
+  }).strict()
+  tool('registration_queue', 'releases:read', 'Songs to register at ASCAP next ("X of Y registered"), each with READY / NEEDS_INFO / BLOCKED and exactly what is missing. Start here for "register my songs".', z.object({ labelId: id, limit: z.number().int().min(1).max(60).default(25) }).strict(), async a => { scoped(a.labelId); return ascap.registrationQueue(db, a.labelId, caller.userId, a.limit) }, { readOnly: true })
+  tool('prepare_song_registration', 'releases:read', 'The ASCAP Register-a-Work form for one catalog song, in form order: FILL (type it), SKIP (leave section closed), ASK (question for the owner), STOP (blocker), HUMAN (Submit). verify=true cross-checks title, artist, ISRC, length and date on Deezer/Apple.', z.object({ labelId: id, trackId: id, verify: z.boolean().default(true) }).strict(), async a => { scoped(a.labelId); return ascap.prepareTrack(db, a.labelId, caller.userId, a.trackId, { verify: a.verify }) }, { readOnly: true })
+  tool('save_song_work', 'releases:write', 'Save what the owner confirmed for a catalog song: writers (legal name, split of 100, PRO, IPI, publisher or noPublisher), alternate titles, performers, duration (seconds or HH:MM:SS), samples, commercial use. Never guess splits or IPIs.', z.object({ labelId: id, trackId: id, work: workPatch }).strict(), async a => { scoped(a.labelId); return ascap.saveTrackWork(db, a.labelId, caller.userId, a.trackId, a.work) })
+  tool('report_song_registration', 'releases:write', 'After the owner pressed Submit: SUBMITTED + the confirmation text. After seeing it in ASCAP Works: REGISTERED + work ID. ALREADY_REGISTERED if it was there already. Evidence required.', z.object({ labelId: id, trackId: id, outcome: z.enum(['SUBMITTED', 'REGISTERED', 'ALREADY_REGISTERED', 'NOT_MINE']), evidence: z.string().max(1000).optional(), workId: z.string().max(40).optional() }).strict(), async a => { scoped(a.labelId); return ascap.reportTrack(db, a.labelId, caller.userId, a.trackId, a) })
 
   // ---- Label Office: Monday report, statements, split sheets, content studio ----
   const origin = caller.origin ?? 'https://studio2u.pages.dev'

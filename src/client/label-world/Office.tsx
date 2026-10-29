@@ -165,3 +165,46 @@ export function ContentStudio({labelId, editable, notify, onAsk}: {labelId: stri
     </section>}
   </div>
 }
+
+// ---------------- ASCAP: register one catalog song ----------------
+// Shows exactly what the agent will type, what it will skip, and what it still needs from you.
+const blankWriter = () => ({legalName: '', split: '', pro: 'ASCAP', ipi: '', publisherName: '', noPublisher: false})
+export function RegisterSong({labelId, trackId, editable, notify, onClose, onAsk}: {labelId: string, trackId: string, editable: boolean, notify: N, onClose: () => void, onAsk: (q: string) => void}) {
+  const [d, setD] = useState<any>(null), [ws, setWs] = useState<any[]>([blankWriter()]), [dur, setDur] = useState(''), [busy, setBusy] = useState(false)
+  const load = (verify = false) => api(`/labels/${labelId}/catalog/${trackId}/ascap${verify ? '?verify=1' : ''}`).then(x => { setD(x); const wr = x.items.filter((i: any) => /Search by Writer/.test(i.label)); if (!wr.length) return }).catch(e => notify(e.message))
+  useEffect(() => { setD(null); load(true) }, [trackId])
+  async function save() {
+    setBusy(true)
+    try {
+      const writers = ws.filter(w => w.legalName.trim()).map(w => ({legalName: w.legalName.trim(), split: Number(w.split), role: 'writer', ...(w.pro ? {pro: w.pro} : {}), ...(w.ipi ? {ipi: w.ipi} : {}), ...(w.noPublisher ? {noPublisher: true} : w.publisherName ? {publisherName: w.publisherName} : {})}))
+      const work: any = {}; if (writers.length) work.writers = writers; if (dur.trim()) work.durationSec = dur.trim()
+      setD(await api(`/labels/${labelId}/catalog/${trackId}/work`, {work})); notify('Saved. Your team will fill ASCAP when it is ready.')
+    } catch (e) { notify((e as Error).message) } finally { setBusy(false) }
+  }
+  const total = ws.reduce((a, w) => a + (Number(w.split) || 0), 0)
+  if (!d) return <section className="lw-report-card"><p className="lw-muted">Checking ASCAP details…</p></section>
+  const tone = d.status === 'READY' ? 'green' : d.status === 'BLOCKED' ? 'red' : 'gold'
+  const fills = d.items.filter((i: any) => i.action === 'FILL'), skips = d.items.filter((i: any) => i.action === 'SKIP')
+  return <section className="lw-report-card lw-register">
+    <div className="lw-office-head"><h4>Register "{d.song.title}" with ASCAP <Badge tone={tone}>{d.status === 'READY' ? 'ready' : d.status === 'BLOCKED' ? 'blocked' : 'needs info'}</Badge></h4><button className="lw-link-btn" onClick={onClose}>close</button></div>
+    <p>{d.say}</p>
+    {d.metadata && <p className="lw-muted small">{d.metadata.sources.length ? `Checked on ${d.metadata.sources.join(' and ')}. ` : 'Could not reach Deezer/Apple to double-check. '}{d.metadata.conflicts.length ? <b className="lw-warn">Fix first: {d.metadata.conflicts.join(' ')}</b> : d.metadata.sources.length ? 'Title, artist, length and date match.' : ''}</p>}
+    {d.stops.length > 0 && <ul>{d.stops.map((s: any, i: number) => <li key={i} className="lw-warn">{s.note}</li>)}</ul>}
+    {editable && d.status !== 'READY' && <div className="lw-stacked-form">
+      <p className="lw-muted small">Who wrote it? Splits are out of 100% (we convert to ASCAP's 50% writer / 50% publisher automatically). Producers only if they helped write.</p>
+      {ws.map((w, i) => <fieldset key={i} className="lw-party"><legend>Writer {i + 1}{ws.length > 1 && <button type="button" className="lw-link-btn" onClick={() => setWs(ws.filter((_, j) => j !== i))}>remove</button>}</legend>
+        <div className="lw-form-two"><label>Legal name<input value={w.legalName} onChange={e => setWs(ws.map((x, j) => j === i ? {...x, legalName: e.target.value} : x))} maxLength={120}/></label><label>Split %<input type="number" min={0} max={100} step={0.01} value={w.split} onChange={e => setWs(ws.map((x, j) => j === i ? {...x, split: e.target.value} : x))}/></label></div>
+        <div className="lw-form-two"><label>PRO<select value={w.pro} onChange={e => setWs(ws.map((x, j) => j === i ? {...x, pro: e.target.value} : x))}>{['ASCAP', 'BMI', 'SESAC', 'GMR', 'SOCAN', 'PRS', 'OTHER', ''].map(p => <option key={p} value={p}>{p || 'Not sure'}</option>)}</select></label><label>IPI<input value={w.ipi} onChange={e => setWs(ws.map((x, j) => j === i ? {...x, ipi: e.target.value} : x))} maxLength={20} placeholder="leave blank if you're not sure"/></label></div>
+        <label className="lw-check-row"><input type="checkbox" checked={w.noPublisher} onChange={e => setWs(ws.map((x, j) => j === i ? {...x, noPublisher: e.target.checked} : x))}/> No publisher on this song</label>
+        {!w.noPublisher && <label>Publisher (if any)<input value={w.publisherName} onChange={e => setWs(ws.map((x, j) => j === i ? {...x, publisherName: e.target.value} : x))} maxLength={120}/></label>}
+      </fieldset>)}
+      <Button onClick={() => setWs([...ws, blankWriter()])}>+ Add writer</Button>
+      <p className={total === 100 ? 'lw-ok' : 'lw-warn'}>Total: {total}% {total === 100 ? '✓' : '(must be 100%)'}</p>
+      <label>Song length (optional, e.g. 3:16)<input value={dur} onChange={e => setDur(e.target.value)} maxLength={8}/></label>
+      <div className="lw-action-row"><Button gold disabled={busy || (ws.some(w => w.legalName.trim()) && total !== 100)} onClick={save}>{busy ? 'Saving…' : 'Save'}</Button><Button onClick={() => onAsk(`Get me ready to register "${d.song.title}" with ASCAP. Ask me only what's missing.`)}>Ask my team instead</Button></div>
+    </div>}
+    <details open={d.status === 'READY'}><summary>What your agent will type ({fills.length} fields)</summary><ol className="lw-fill">{fills.map((i: any, n: number) => <li key={n}><b>{i.label}</b>{i.value ? <> → <code>{i.value}</code></> : null}{i.note && <small>{i.note}</small>}</li>)}</ol></details>
+    <details><summary>Sections it will skip ({skips.length})</summary><ul className="lw-fill">{skips.map((i: any, n: number) => <li key={n}><b>{i.section}</b>{i.note && <small>{i.note}</small>}</li>)}</ul></details>
+    {d.status === 'READY' && <p className="lw-muted small">Next time Claude or Codex runs your shift (with screen control), they'll search ASCAP so nothing is registered twice, fill this in, press Save, and stop. You log in and press Submit.</p>}
+  </section>
+}

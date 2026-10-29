@@ -14,7 +14,7 @@ import { buildPacket, derivedStatus, targets, type Target, type ReleaseRow, type
 import type { Intake } from './intake'
 import { decryptKey } from '../providers/vault'
 
-export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP'] as const
+export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK'] as const
 export type TaskKind = typeof taskKinds[number]
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
@@ -208,6 +208,9 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     await db.prepare("UPDATE lw_cases SET next_follow_up_at=? WHERE id=? AND next_follow_up_at<=?").bind(later(7 * 86400000), c.id, started).run()
     if (q) { summary.cases = Number(summary.cases) + 1; labelsWithWork.add(c.label_id) }
   }
+  // ASCAP: songs with complete writer info become "fill the form" screen tasks (owner presses Submit).
+  const { queueRegistrations } = await import('./ascap')
+  summary.registrations = await queueRegistrations(db, (t: any) => enqueue(db, t), opts.labelIds).catch(() => 0)
   // Monday Report: one per label per local day, at the label's chosen weekday/hour.
   const { scheduledReports } = await import('./office')
   const reports = await scheduledReports(db, opts.labelIds, new Date(started)).catch(() => [] as string[])

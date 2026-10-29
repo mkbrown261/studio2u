@@ -8,6 +8,7 @@ import * as cases from './cases'
 import * as office from './office'
 import * as agr from './agreements'
 import * as content from './content'
+import * as ascap from './ascap'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -33,6 +34,10 @@ export function installAutonomyRoutes(app: any) {
     return c.json(await cases.importTracks(c.env.DB, L(c), U(c), all.slice(0, 400)))
   }))
   app.get(base + '/catalog', wrap(async c => c.json({ summary: await cases.catalogSummary(c.env.DB, L(c)), tracks: await cases.listCatalog(c.env.DB, L(c)) })))
+  app.get(base + '/registrations/ascap', wrap(async c => c.json(await ascap.registrationQueue(c.env.DB, L(c), U(c), 60))))
+  app.get(base + '/catalog/:trackId/ascap', wrap(async c => c.json(await ascap.prepareTrack(c.env.DB, L(c), U(c), c.req.param('trackId'), { verify: c.req.query('verify') === '1' }))))
+  app.post(base + '/catalog/:trackId/work', wrap(async c => c.json(await ascap.saveTrackWork(c.env.DB, L(c), U(c), c.req.param('trackId'), (await body(c)).work))))
+  app.post(base + '/catalog/:trackId/ascap/report', wrap(async c => c.json(await ascap.reportTrack(c.env.DB, L(c), U(c), c.req.param('trackId'), await body(c)))))
   app.post(base + '/catalog/:trackId', wrap(async c => c.json(await cases.updateTrack(c.env.DB, L(c), U(c), c.req.param('trackId'), await body(c)))))
   app.get(base + '/playbooks', wrap(async c => c.json({ standingRules: cases.STANDING_RULES, playbooks: cases.PLAYBOOKS.map(p => ({ id: p.id, name: p.name, owner: p.owner, summary: p.summary, needs: p.needs })), suggested: c.req.query('match') ? cases.suggestPlaybooks(c.req.query('match')!) : [] })))
   app.get(base + '/cases', wrap(async c => c.json({ cases: await cases.listCases(c.env.DB, L(c), U(c)) })))

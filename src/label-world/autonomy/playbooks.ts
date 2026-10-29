@@ -78,26 +78,38 @@ export const PLAYBOOKS: Playbook[] = [
     followUpDays: [7, 14, 30]
   },
   {
-    id: 'register-songs', version: 1, owner: 'reviewer',
+    id: 'register-songs', version: 2, owner: 'reviewer',
     name: 'Register my songs (only some of my releases are registered)',
-    summary: 'Find every released song, compare it to what your PRO has, and register the missing works with the correct writers and splits.',
+    summary: 'Work through the catalog song by song: confirm nothing is registered twice, collect the few facts ASCAP needs, check the metadata, fill the Register a Work form, and let the owner press Submit.',
     triggers: ['register', 'registered', 'registration', 'ascap', 'bmi', 'sesac', 'pro', 'publishing', 'songwriter', 'not registered', 'works'],
     needs: [
       { key: 'pro', question: 'Which PRO are you with (ASCAP, BMI, SESAC…)? Do you have your IPI number?', required: true },
-      { key: 'publisher', question: 'Do you have your own publishing company registered, or a publisher/admin (like Songtrust)?', required: false }
+      { key: 'publisher', question: 'Do you have your own publishing company at ASCAP, a publisher, or an admin like Songtrust? (An admin usually registers for you, so we check with them first.)', required: false }
     ],
     steps: [
-      'Pull the full catalog (studio2u_list_catalog). If it is empty, run the catalog import ("Is this you?") first.',
-      'With the user logged in to their PRO, open the works list (ASCAP: Member Access > Works) and mark each catalog track REGISTERED or NOT_REGISTERED (studio2u_update_catalog_track). Use the PRO repertory search for co-writer works.',
-      'For each unregistered song, collect writers, splits, publishers and IPIs. Reuse saved parties. If a split was never agreed, open a "Split sheet" case instead of guessing.',
-      'Fill the PRO work-registration form for one song at a time from the packet; the user reviews and presses Submit.',
-      'Mark the track REGISTERED once the PRO shows it. Also note MLC (mechanicals) and SoundExchange (recordings) gaps on the case.',
-      'Report progress as "X of Y songs registered" on the case after every session.'
+      'Run registration_queue. If the catalog is empty, run the "Is this you?" catalog import first. Say progress as "X of Y registered".',
+      'BEFORE each song: search ASCAP Member Access > Works (and ascap.com/repertory) for the title. Already there with the owner on it = report ALREADY_REGISTERED with the work ID. A co-writer registered it without the owner = do NOT register again; draft a "My Catalog > Work Record Update" message for the owner. If an admin handles registrations, only list the gaps for them.',
+      'prepare_song_registration (verify=true). It already pulls title, artist, ISRC, release date and length from Deezer/Apple. Resolve any metadata conflict with the owner before filling anything.',
+      'Ask ONLY the ASK items, in one short message for several songs at once: who wrote it and the split (of 100%), each writer\'s IPI and PRO, and whether each writer has a publisher. Reuse saved parties and the owner\'s own IPI. Save answers with save_song_work.',
+      'When READY: the owner logs in. Open Works > Register a Work. Type each FILL item exactly in order (writer shares are already converted to ASCAP\'s 50% scale). Leave every SKIP section closed: recorded/performed only if released, product only for ads/film/TV-made songs, concert work never for hip-hop/R&B/pop, sample only if cleared, public domain only if an old song was arranged, time is optional. Press SAVE, then tell the owner "Ready for you to press Submit".',
+      'After the owner submits, report_song_registration SUBMITTED with the confirmation text. The engine re-checks Works after 10 days; report REGISTERED with the work ID once it shows.',
+      'Batch: line up several READY songs per session, one form at a time. Never leave the browser on a loop.'
     ],
-    rules: ['Register the exact title as released, plus alternate titles if the song was retitled.', 'Splits must total 100% across writers; never split it evenly by default.'],
-    contacts: [{ name: 'ASCAP Member Access', how: 'https://members.ascap.com (Works > Register a work)', source: 'https://www.ascap.com/help' }],
-    facts: ['A performance cannot be paid to a work the PRO cannot match. Registering first is what makes cue sheets and radio/streaming performances pay.'],
-    followUpDays: [14, 30]
+    rules: [
+      'ASCAP writer shares total 50% and publisher shares total 50%. Convert from the agreed split of 100%; never split evenly by default.',
+      'Producers are writers only if they helped write the composition (lyrics/melody/music), per the agreement.',
+      'Only completed songs. Never register a beat by itself, sound effects or comedy.',
+      'Uncleared sample = STOP. Filling the sample section confirms permission.',
+      'Register the exact title as released; add alternate titles instead of registering versions separately unless writers or shares differ.',
+      'Never tick "This writer has no Publisher" unless the owner confirmed it. Never press Submit.'
+    ],
+    contacts: [{ name: 'ASCAP Member Access', how: 'https://members.ascap.com (Works > Register a Work)', source: 'https://www.ascap.com/help/registering-your-music' }],
+    facts: [
+      'ASCAP divides performance royalties evenly: writers 50%, publishers 50%. Self-publishers get both shares.',
+      'If a co-writer already registered the work at ASCAP, it does not need registering again; check it is right. A co-writer at another PRO does not register it for ASCAP writers.',
+      'A performance cannot be paid to a work ASCAP cannot match. Registering first is what makes cue sheets and radio/streaming performances pay.'
+    ],
+    followUpDays: [10, 30]
   },
   {
     id: 'soundexchange-money', version: 1, owner: 'researcher',

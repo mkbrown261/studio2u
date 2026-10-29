@@ -11,6 +11,7 @@ export type Writer = {
   ipi?: string
   publisherName?: string
   publisherIpi?: string
+  noPublisher?: boolean // confirmed: no publisher on this work (ASCAP checkbox)
 }
 export type MasterOwner = {
   entityName: string
@@ -41,8 +42,13 @@ export type Intake = {
   alternateTitles?: string[]
   writers?: Writer[]
   masterOwner?: MasterOwner
-  samples?: { description: string; cleared: boolean }[]
+  samples?: { description: string; cleared: boolean; workTitle?: string; writers?: { name: string; ipi?: string }[] }[]
   performedPublicly?: boolean
+  durationSec?: number // performance time (ASCAP HH:MM:SS)
+  performers?: string[] // who has performed it (ASCAP "performed" section)
+  recordingTitle?: string // only if the recording's title differs from the work title
+  commercialUse?: { productType: string; productionName: string } // ASCAP: commercial, film or other product
+  publicDomain?: 'music' | 'lyrics' | 'both' // ASCAP: arranged public-domain music/lyrics
 }
 
 export const PROS = ['ASCAP', 'BMI', 'SESAC', 'GMR', 'SOCAN', 'PRS', 'OTHER', 'NONE'] as const
@@ -70,6 +76,14 @@ function percent(v: unknown, field: string): number {
   return Math.round(v * 100) / 100
 }
 
+/** "3:25", "00:03:25" or "205" -> seconds. */
+export function parseDuration(v: string): number | null {
+  const t = v.trim(); if (/^\d+$/.test(t)) return Number(t)
+  const m = /^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})$/.exec(t); if (!m || Number(m[3]) > 59) return null
+  return Number(m[1] ?? 0) * 3600 + Number(m[2]) * 60 + Number(m[3])
+}
+export const hms = (sec: number) => [Math.floor(sec / 3600), Math.floor(sec % 3600 / 60), sec % 60].map(n => String(n).padStart(2, '0')).join(':')
+
 /** Normalize an ISRC: 12 chars CCXXXYYNNNNN, dashes/spaces removed, uppercase. */
 export function normalizeIsrc(v: string): string {
   const s = v.replace(/[-\s]/g, '').toUpperCase()
@@ -88,7 +102,7 @@ export function normalizeIpi(v: string): string {
   return s
 }
 
-const keys = new Set(['genre', 'language', 'releaseDate', 'recordLabel', 'isRerelease', 'existingUpc', 'originalReleaseDate', 'explicit', 'radioEdit', 'instrumental', 'containsThirdPartyAudio', 'thirdPartyAudioLicense', 'coverArtThirdParty', 'coverArtLicense', 'isrc', 'upc', 'featuredArtists', 'producers', 'alternateTitles', 'writers', 'masterOwner', 'samples', 'performedPublicly'])
+const keys = new Set(['genre', 'language', 'releaseDate', 'recordLabel', 'isRerelease', 'existingUpc', 'originalReleaseDate', 'explicit', 'radioEdit', 'instrumental', 'containsThirdPartyAudio', 'thirdPartyAudioLicense', 'coverArtThirdParty', 'coverArtLicense', 'isrc', 'upc', 'featuredArtists', 'producers', 'alternateTitles', 'writers', 'masterOwner', 'samples', 'performedPublicly', 'durationSec', 'performers', 'recordingTitle', 'commercialUse', 'publicDomain'])
 
 /**
  * Validate a partial intake patch. `null` clears a field. Unknown keys are rejected
@@ -107,7 +121,11 @@ export function intakePatch(value: unknown): Record<string, unknown> {
       case 'isRerelease': case 'explicit': case 'radioEdit': case 'instrumental': case 'containsThirdPartyAudio': case 'coverArtThirdParty': case 'performedPublicly': out[k] = bool(v, k); break
       case 'isrc': out[k] = normalizeIsrc(str(v, k, 20)); break
       case 'upc': case 'existingUpc': out[k] = normalizeUpc(str(v, k, 20)); break
-      case 'featuredArtists': case 'producers': case 'alternateTitles': out[k] = list(v, k); break
+      case 'featuredArtists': case 'producers': case 'alternateTitles': case 'performers': out[k] = list(v, k); break
+      case 'recordingTitle': out[k] = str(v, k, 200); break
+      case 'durationSec': { const n = typeof v === 'string' ? parseDuration(v) : v; if (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || n > 43200) throw new Error('durationSec must be 1 second to 12 hours (seconds or HH:MM:SS)'); out[k] = n; break }
+      case 'commercialUse': { const c = v as any; if (!c || typeof c !== 'object') throw new Error('commercialUse must be an object'); out[k] = { productType: str(c.productType, 'commercialUse.productType', 100), productionName: str(c.productionName, 'commercialUse.productionName', 200) }; break }
+      case 'publicDomain': if (!['music', 'lyrics', 'both'].includes(v as string)) throw new Error('publicDomain must be music, lyrics or both'); out[k] = v; break
       case 'writers': {
         if (!Array.isArray(v) || v.length < 1 || v.length > 20) throw new Error('writers must list 1 to 20 people')
         out[k] = v.map((w: any, i: number) => {
@@ -120,6 +138,7 @@ export function intakePatch(value: unknown): Record<string, unknown> {
           if (w.ipi != null) writer.ipi = normalizeIpi(str(w.ipi, `writers[${i}].ipi`, 20))
           if (w.publisherName != null) writer.publisherName = str(w.publisherName, `writers[${i}].publisherName`, 120)
           if (w.publisherIpi != null) writer.publisherIpi = normalizeIpi(str(w.publisherIpi, `writers[${i}].publisherIpi`, 20))
+          if (w.noPublisher != null) { writer.noPublisher = bool(w.noPublisher, `writers[${i}].noPublisher`); if (writer.noPublisher && writer.publisherName) throw new Error(`writers[${i}] has a publisher and noPublisher`) }
           return writer
         })
         break
@@ -140,7 +159,15 @@ export function intakePatch(value: unknown): Record<string, unknown> {
       }
       case 'samples': {
         if (!Array.isArray(v) || v.length > 20) throw new Error('samples must be a list (max 20)')
-        out[k] = v.map((s: any, i: number) => ({ description: str(s?.description, `samples[${i}].description`, 500), cleared: bool(s?.cleared, `samples[${i}].cleared`) }))
+        out[k] = v.map((s: any, i: number) => {
+          const o: any = { description: str(s?.description ?? s?.workTitle, `samples[${i}].description`, 500), cleared: bool(s?.cleared, `samples[${i}].cleared`) }
+          if (s?.workTitle != null) o.workTitle = str(s.workTitle, `samples[${i}].workTitle`, 200)
+          if (s?.writers != null) {
+            if (!Array.isArray(s.writers) || s.writers.length > 10) throw new Error(`samples[${i}].writers must be a list (max 10)`)
+            o.writers = s.writers.map((x: any, j: number) => ({ name: str(x?.name, `samples[${i}].writers[${j}].name`, 120), ...(x?.ipi ? { ipi: normalizeIpi(str(x.ipi, `samples[${i}].writers[${j}].ipi`, 20)) } : {}) }))
+          }
+          return o
+        })
         break
       }
     }
