@@ -168,13 +168,15 @@ export async function checkMetadata(t: { title: string; artistCredit?: string | 
 }
 
 // ---------------- catalog songs (most of the 60 songs are not Studio2U releases) ----------------
-const WORK_KEYS = new Set(['writers', 'alternateTitles', 'performers', 'durationSec', 'recordingTitle', 'commercialUse', 'publicDomain', 'samples', 'isrc', 'releaseDate', 'containsThirdPartyAudio'])
-async function trackRow(db: any, label: string, id: string) {
+const WORK_KEYS = new Set(['writers', 'alternateTitles', 'performers', 'durationSec', 'recordingTitle', 'commercialUse', 'publicDomain', 'samples', 'isrc', 'releaseDate', 'containsThirdPartyAudio',
+  // SoundExchange (recording side)
+  'masterOwner', 'upc', 'featuredArtists', 'recordLabel', 'albumTitle'])
+export async function trackRow(db: any, label: string, id: string) {
   const t: any = await db.prepare('SELECT * FROM lw_catalog_tracks WHERE label_id=? AND id=?').bind(label, id).first()
   if (!t) throw new ServiceError('Song not found in catalog', 404)
   return t
 }
-const workOf = (t: any): Intake => { try { return JSON.parse(t.work_json || '{}') } catch { return {} } }
+export const workOf = (t: any): Intake => { try { return JSON.parse(t.work_json || '{}') } catch { return {} } }
 async function identity(db: any, label: string) { return db.prepare('SELECT artist_name,legal_name,aliases_json,pro,ipi FROM lw_label_identity WHERE label_id=?').bind(label).first() as Promise<any> }
 function isFeaturedOnly(t: any, id: any) {
   if (!id) return false

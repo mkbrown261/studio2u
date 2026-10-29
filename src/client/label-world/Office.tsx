@@ -208,3 +208,59 @@ export function RegisterSong({labelId, trackId, editable, notify, onClose, onAsk
     {d.status === 'READY' && <p className="lw-muted small">Next time Claude or Codex runs your shift (with screen control), they'll search ASCAP so nothing is registered twice, fill this in, press Save, and stop. You log in and press Submit.</p>}
   </section>
 }
+
+// ---------------- SoundExchange ----------------
+// Account status + roles (no passwords/tax data), what to fix first, and per-song submit/claim steps.
+export function SoundExchange({labelId, editable, notify, onAsk}: {labelId: string, editable: boolean, notify: N, onAsk: (q: string) => void}) {
+  const [d, setD] = useState<any>(null), [song, setSong] = useState<any>(null), [busy, setBusy] = useState(false)
+  const load = () => api(`/labels/${labelId}/soundexchange`).then(setD).catch(e => notify(e.message))
+  useEffect(() => { setD(null); setSong(null); load() }, [labelId])
+  async function save(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault(); const f = new FormData(e.currentTarget); setBusy(true)
+    const roles = ['FEATURED_ARTIST', 'SRCO'].filter(r => f.get(r))
+    try { await api(`/labels/${labelId}/soundexchange/account`, {status: f.get('status'), registeredAs: roles, srcoEntity: f.get('srcoEntity') || null, loginEmail: f.get('loginEmail') || null, signedToLabel: f.get('owns') === 'label' ? true : f.get('owns') === 'me' ? false : null}); await load(); notify('Saved') } catch (er) { notify((er as Error).message) } finally { setBusy(false) }
+  }
+  async function open(id: string) { try { setSong(await api(`/labels/${labelId}/catalog/${id}/soundexchange`)) } catch (e) { notify((e as Error).message) } }
+  async function saveSong(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault(); const f = new FormData(e.currentTarget), work: any = {}
+    for (const k of ['isrc', 'upc', 'albumTitle', 'recordLabel']) { const v = String(f.get(k) || '').trim(); if (v) work[k] = v }
+    const owner = String(f.get('owner') || '').trim(); if (owner) work.masterOwner = {entityName: owner, percent: Number(f.get('percent') || 100)}
+    try { setSong(await api(`/labels/${labelId}/catalog/${song.song.id}/soundexchange`, {work})); load(); notify('Saved') } catch (er) { notify((er as Error).message) }
+  }
+  if (!d) return <p className="lw-muted">Loading…</p>
+  const a = d.account, q = d.queue
+  const tone = (s: string) => s === 'READY' ? 'green' : s === 'BLOCKED' || s === 'FIX' ? 'red' : 'gold'
+  return <div className="lw-office">
+    <div className="lw-office-head"><div><h3>SoundExchange</h3><p className="lw-muted">Digital radio money (SiriusXM, Pandora, iHeart): 45% to the featured artist, 50% to whoever owns the master. If you're self-released, both halves are yours, but only if you hold both roles.</p></div></div>
+    <section className="lw-report-card"><h4>{q.progress}</h4>
+      <ul className="lw-fill">{d.checklist.items.map((i: any, n: number) => <li key={n}><b>{i.label}</b>{i.value ? <> · <code>{i.value}</code></> : null} <Badge tone={i.action === 'STOP' ? 'red' : i.action === 'ASK' ? 'gold' : i.action === 'HUMAN' ? 'cyan' : 'green'}>{i.action === 'HUMAN' ? 'you' : i.action === 'FILL' ? 'ok' : i.action.toLowerCase()}</Badge>{i.note && <small>{i.note}</small>}</li>)}</ul>
+      {a.status === 'LOCKED_OUT' && <p><a className="lw-button gold" href="https://sxdirect.soundexchange.com" target="_blank" rel="noopener noreferrer">Open SoundExchange · click "Forgot password"</a></p>}
+    </section>
+    {editable && <details className="lw-report-card" open={a.status === 'UNKNOWN'}><summary>Your SoundExchange account</summary><form className="lw-stacked-form" onSubmit={save}>
+      <label>Status<select name="status" defaultValue={a.status}><option value="UNKNOWN">Not sure</option><option value="LOCKED_OUT">I have an account but forgot the password</option><option value="ACTIVE">I can log in</option><option value="NOT_REGISTERED">I never signed up</option></select></label>
+      <label>Who owns your masters?<select name="owns" defaultValue={a.signedToLabel === true ? 'label' : a.signedToLabel === false ? 'me' : ''}><option value="">Not sure</option><option value="me">Me (self-released: UnitedMasters, DistroKid…)</option><option value="label">A record label</option></select></label>
+      <div className="lw-chips"><label className={a.registeredAs.includes('FEATURED_ARTIST') ? 'on' : ''}><input type="checkbox" name="FEATURED_ARTIST" defaultChecked={a.registeredAs.includes('FEATURED_ARTIST')}/>Featured Artist role</label><label className={a.registeredAs.includes('SRCO') ? 'on' : ''}><input type="checkbox" name="SRCO" defaultChecked={a.registeredAs.includes('SRCO')}/>Rights Owner (SRCO) role</label></div>
+      <div className="lw-form-two"><label>Master owner name (you or your company)<input name="srcoEntity" defaultValue={a.srcoEntity ?? ''} maxLength={160}/></label><label>Email on the account<input name="loginEmail" type="email" defaultValue={a.loginEmail ?? ''} maxLength={254}/></label></div>
+      <p className="lw-muted small">Never type passwords, tax IDs or bank info here. You enter those yourself on SoundExchange.</p>
+      <Button type="submit" gold disabled={busy}>Save</Button></form></details>}
+    <section className="lw-report-card"><h4>Songs</h4>{!q.songs.length && <p className="lw-muted">Import your catalog in "My songs" first.</p>}
+      {q.songs.map((s: any) => <button key={s.trackId} className={`lw-agreement-row ${song?.song.id === s.trackId ? 'active' : ''}`} onClick={() => open(s.trackId)}><span><b>{s.title}</b>{s.isrc ? ` · ${s.isrc}` : ''}</span><span>{s.submittedAt ? <Badge tone="cyan">submitted, claim next</Badge> : <Badge tone={tone(s.status)}>{s.status === 'READY' ? 'ready' : s.status === 'BLOCKED' ? 'log in first' : 'needs info'}</Badge>}</span></button>)}
+    </section>
+    {song && <section className="lw-report-card lw-register"><div className="lw-office-head"><h4>"{song.song.title}"</h4><button className="lw-link-btn" onClick={() => setSong(null)}>close</button></div>
+      <p>{song.say}</p>
+      {editable && song.status !== 'READY' && <form className="lw-stacked-form" onSubmit={saveSong}>
+        <div className="lw-form-two"><label>ISRC<input name="isrc" defaultValue={song.song.isrc ?? ''} maxLength={20}/></label><label>UPC<input name="upc" maxLength={20}/></label></div>
+        <div className="lw-form-two"><label>Release / album title<input name="albumTitle" maxLength={200}/></label><label>Release label (self-released = your owner name)<input name="recordLabel" maxLength={100}/></label></div>
+        <div className="lw-form-two"><label>Master owner (if you own it)<input name="owner" defaultValue={a.srcoEntity ?? ''} maxLength={120}/></label><label>% of the master you own<input name="percent" type="number" min={1} max={100} defaultValue={100}/></label></div>
+        <div className="lw-action-row"><Button type="submit" gold>Save</Button><Button onClick={() => onAsk(`Get "${song.song.title}" ready for SoundExchange. Pull the ISRC and UPC from my distributor and ask me only what's missing.`)}>Ask my team instead</Button></div>
+      </form>}
+      <details open={song.status === 'READY'}><summary>What your agent will do</summary><ol className="lw-fill">{song.items.filter((i: any) => i.action !== 'SKIP').map((i: any, n: number) => <li key={n}><b>{i.section} · {i.label}</b>{i.value ? <> → <code>{i.value}</code></> : null}{i.note && <small>{i.note}</small>}</li>)}</ol></details>
+    </section>}
+    <details className="lw-report-card"><summary>Paperwork SoundExchange may ask for</summary><ul className="lw-fill">
+      <li><b>Contact Information Update Form</b><small>Update it online in SoundExchange instead (no tax digits in email). If they asked for the form back, your agent fills it, you add the last 4 of your tax ID and sign, and it replies in their email thread after you approve.</small></li>
+      <li><b>Letter of Direction</b><small>Pays a producer, mixer or engineer part of your artist share. Every performer signs SoundExchange's own form; e-signatures need the signing certificate.</small></li>
+      <li><b>ISRC Ingest Form</b><small>For 10+ songs you own: your agent prepares the rows; you upload it in My Catalog &gt; Submit Recordings.</small></li>
+      <li><b>W-9 / W-8</b><small>You upload these yourself in SoundExchange &gt; Contact &gt; Upload a Document. Never by email.</small></li>
+    </ul><Button onClick={() => onAsk('SoundExchange emailed me asking for paperwork. Read their email thread and get it ready for me to approve.')}>Have my team handle a SoundExchange email</Button></details>
+  </div>
+}

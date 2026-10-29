@@ -3,10 +3,10 @@
 // approval, and the "Is this you?" catalog that powers it all.
 import React, {useEffect, useState} from 'react'
 import {api, Badge, Button, Icon} from './ui'
-import {Report, Statements, Agreements, ContentStudio, RegisterSong} from './Office'
+import {Report, Statements, Agreements, ContentStudio, RegisterSong, SoundExchange} from './Office'
 
-type Tab = 'report' | 'cases' | 'agreements' | 'statements' | 'content' | 'catalog' | 'identity'
-const TABS: Tab[] = ['report', 'cases', 'agreements', 'statements', 'content', 'catalog', 'identity']
+type Tab = 'report' | 'cases' | 'agreements' | 'statements' | 'soundexchange' | 'content' | 'catalog' | 'identity'
+const TABS: Tab[] = ['report', 'cases', 'agreements', 'statements', 'soundexchange', 'content', 'catalog', 'identity']
 const hashTab = (): Tab | null => { const h = (typeof location !== 'undefined' ? location.hash.slice(1) : '') as Tab; return TABS.includes(h) ? h : null }
 
 type CaseRow = {id: string, playbook: string, playbookName: string, title: string, status: string, step: number, deadline: string | null, deadline_note: string | null, money_estimate: string | null, next_follow_up_at: string | null, drafts_waiting: number}
@@ -44,7 +44,7 @@ export function MoneyFound({labelId, role, notify, onAskAgent}: {labelId: string
         <div className={needsYou ? 'alert' : ''}><strong>{needsYou}</strong><span>need you</span></div>
       </div>
     </div>
-    <nav className="lw-mf-tabs" role="tablist">{([['report', 'This week'], ['cases', 'Cases'], ['agreements', 'Split sheets'], ['statements', 'Statements'], ['content', 'Content'], ['catalog', `My songs (${summary?.songs ?? 0})`], ['identity', 'Who I am']] as const).map(([k, t]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{t}</button>)}</nav>
+    <nav className="lw-mf-tabs" role="tablist">{([['report', 'This week'], ['cases', 'Cases'], ['agreements', 'Split sheets'], ['statements', 'Statements'], ['soundexchange', 'SoundExchange'], ['content', 'Content'], ['catalog', `My songs (${summary?.songs ?? 0})`], ['identity', 'Who I am']] as const).map(([k, t]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{t}</button>)}</nav>
     {tab === 'cases' && <>
       {editable && <section className="lw-mf-tell">
         <label htmlFor="mf-problem"><b>What's going on?</b> Talk like you'd talk to your manager.</label>
@@ -60,6 +60,7 @@ export function MoneyFound({labelId, role, notify, onAskAgent}: {labelId: string
     {tab === 'report' && <Report labelId={labelId} editable={editable} notify={notify}/>}
     {tab === 'agreements' && <Agreements labelId={labelId} editable={editable} notify={notify}/>}
     {tab === 'statements' && <Statements labelId={labelId} editable={editable} notify={notify}/>}
+    {tab === 'soundexchange' && <SoundExchange labelId={labelId} editable={editable} notify={notify} onAsk={q => onAskAgent('researcher', q)}/>}
     {tab === 'content' && <ContentStudio labelId={labelId} editable={editable} notify={notify} onAsk={q => onAskAgent('builder', q)}/>}
     {tab === 'catalog' && <Catalog labelId={labelId} editable={editable} notify={notify} profile={profile} onChange={load} onAsk={q => onAskAgent('reviewer', q)}/>}
     {tab === 'identity' && <Identity labelId={labelId} editable={editable} notify={notify} profile={profile} onSaved={p => { setProfile(p); setTab('catalog') }}/>}

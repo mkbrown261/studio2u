@@ -204,7 +204,7 @@ export async function getCase(db: any, label: string, actor: number, id: string)
   const facts = JSON.parse(c.facts_json)
   const [events, drafts] = await Promise.all([
     db.prepare('SELECT actor,kind,body,created_at FROM lw_case_events WHERE case_id=? ORDER BY cursor DESC LIMIT 60').bind(id).all(),
-    db.prepare('SELECT id,kind,recipient,recipient_email,subject,body,status,written_by,approved_at,sent_at,sent_note,created_at,contact_id,sequence_json,sequence_approved_at,followups_sent,last_sent_at,replied_at,reply_summary FROM lw_case_drafts WHERE case_id=? ORDER BY created_at DESC LIMIT 30').bind(id).all()
+    db.prepare('SELECT id,kind,recipient,recipient_email,subject,body,status,written_by,approved_at,sent_at,sent_note,created_at,contact_id,sequence_json,sequence_approved_at,followups_sent,last_sent_at,replied_at,reply_summary,attachments_json FROM lw_case_drafts WHERE case_id=? ORDER BY created_at DESC LIMIT 30').bind(id).all()
   ])
   const contacts = (await db.prepare('SELECT id,name,role,company,email,phone,source_url,confidence,status,priority,notes FROM lw_case_contacts WHERE case_id=? ORDER BY priority,created_at LIMIT 50').bind(id).all()).results
   return {
@@ -212,7 +212,7 @@ export async function getCase(db: any, label: string, actor: number, id: string)
     playbook: { ...pb, standingRules: STANDING_RULES },
     stillNeeded: pb.needs.filter(n => facts[n.key] == null).map(n => ({ ...n })),
     events: events.results, contacts,
-    drafts: drafts.results.map((d: any) => ({ ...d, followUps: JSON.parse(d.sequence_json || '[]'), sequence_json: undefined }))
+    drafts: drafts.results.map((d: any) => ({ ...d, followUps: JSON.parse(d.sequence_json || '[]'), attachments: JSON.parse(d.attachments_json || '[]'), sequence_json: undefined, attachments_json: undefined }))
   }
 }
 
@@ -229,6 +229,9 @@ export async function saveDraft(db: any, label: string, actor: number, caseId: s
   const { sequenceInput } = await import('./outreach')
   const followUps = sequenceInput(b?.followUps)
   if (followUps.length && kind !== 'EMAIL') throw new ServiceError('Follow-up sequences are for emails only')
+  const attachments = Array.isArray(b?.attachments) ? b.attachments.slice(0, 5).map((x: any, i: number) => ({ name: clean(x?.name, `attachments[${i}].name`, 200)!, ...(x?.note ? { note: clean(x.note, `attachments[${i}].note`, 300) } : {}) })) : []
+  if (attachments.some((x: any) => /\b(w-?9|w-?8|tax|ssn|bank)\b/i.test(x.name))) throw new ServiceError('Never email tax forms or bank details. Upload them yourself inside the official portal.')
+  const thread = clean(b?.replyToThread, 'replyToThread', 300, false)
   let contactId: string | null = null, toEmail = email, toName = clean(b?.recipient, 'recipient', 200, false)
   if (b?.contactId) {
     const k: any = await db.prepare('SELECT id,name,role,company,email,status FROM lw_case_contacts WHERE label_id=? AND case_id=? AND id=?').bind(label, caseId, String(b.contactId)).first()
@@ -238,8 +241,8 @@ export async function saveDraft(db: any, label: string, actor: number, caseId: s
   }
   const id = crypto.randomUUID()
   await db.batch([
-    db.prepare('INSERT INTO lw_case_drafts(id,label_id,case_id,kind,recipient,recipient_email,subject,body,written_by,contact_id,sequence_json) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-      .bind(id, label, caseId, kind, toName, toEmail, clean(b?.subject, 'subject', 300, false), body, by.slice(0, 100), contactId, JSON.stringify(followUps)),
+    db.prepare('INSERT INTO lw_case_drafts(id,label_id,case_id,kind,recipient,recipient_email,subject,body,written_by,contact_id,sequence_json,attachments_json,sent_note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(id, label, caseId, kind, toName, toEmail, clean(b?.subject, 'subject', 300, false), body, by.slice(0, 100), contactId, JSON.stringify(followUps), JSON.stringify(attachments), thread ? `Reply in thread: ${thread}` : null),
     db.prepare("UPDATE lw_cases SET status=CASE WHEN status IN ('RESOLVED','CLOSED') THEN status ELSE 'WAITING_ON_YOU' END,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(caseId),
     event(db, label, caseId, by, 'DRAFT', `Drafted ${kind.toLowerCase()}${toName ? ' to ' + toName : ''}${followUps.length ? ` with ${followUps.length} follow-up(s) (days ${followUps.map(f => f.afterDays).join(', ')})` : ''} for your approval.`)
   ])

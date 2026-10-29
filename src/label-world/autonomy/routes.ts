@@ -10,6 +10,7 @@ import * as agr from './agreements'
 import * as content from './content'
 import * as ascap from './ascap'
 import * as outreach from './outreach'
+import * as sx from './soundexchange'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -35,6 +36,12 @@ export function installAutonomyRoutes(app: any) {
     return c.json(await cases.importTracks(c.env.DB, L(c), U(c), all.slice(0, 400)))
   }))
   app.get(base + '/catalog', wrap(async c => c.json({ summary: await cases.catalogSummary(c.env.DB, L(c)), tracks: await cases.listCatalog(c.env.DB, L(c)) })))
+  app.get(base + '/soundexchange', wrap(async c => c.json({ ...(await sx.getSxAccount(c.env.DB, L(c), U(c))), queue: await sx.sxQueue(c.env.DB, L(c), U(c), 60) })))
+  app.post(base + '/soundexchange/account', wrap(async c => c.json(await sx.saveSxAccount(c.env.DB, L(c), U(c), await body(c)))))
+  app.post(base + '/soundexchange/contact-update', wrap(async c => c.json(await sx.prepareContactUpdate(c.env.DB, L(c), U(c), await body(c)))))
+  app.get(base + '/catalog/:trackId/soundexchange', wrap(async c => c.json(await sx.prepareSx(c.env.DB, L(c), U(c), c.req.param('trackId')))))
+  app.post(base + '/catalog/:trackId/soundexchange', wrap(async c => c.json(await sx.saveSxWork(c.env.DB, L(c), U(c), c.req.param('trackId'), (await body(c)).work))))
+  app.post(base + '/catalog/:trackId/soundexchange/report', wrap(async c => c.json(await sx.reportSx(c.env.DB, L(c), U(c), c.req.param('trackId'), await body(c)))))
   app.get(base + '/registrations/ascap', wrap(async c => c.json(await ascap.registrationQueue(c.env.DB, L(c), U(c), 60))))
   app.get(base + '/catalog/:trackId/ascap', wrap(async c => c.json(await ascap.prepareTrack(c.env.DB, L(c), U(c), c.req.param('trackId'), { verify: c.req.query('verify') === '1' }))))
   app.post(base + '/catalog/:trackId/work', wrap(async c => c.json(await ascap.saveTrackWork(c.env.DB, L(c), U(c), c.req.param('trackId'), (await body(c)).work))))

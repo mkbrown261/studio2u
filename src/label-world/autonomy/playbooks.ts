@@ -113,34 +113,42 @@ export const PLAYBOOKS: Playbook[] = [
     followUpDays: [10, 30]
   },
   {
-    id: 'soundexchange-money', version: 1, owner: 'researcher',
+    id: 'soundexchange-money', version: 2, owner: 'researcher',
     name: 'Find and claim my SoundExchange money',
-    summary: 'Check whether SoundExchange is holding digital radio royalties for you (artist and/or master owner), register, and claim your recordings before money ages out.',
-    triggers: ['soundexchange', 'sound exchange', 'digital royalties', 'pandora', 'siriusxm', 'iheart', 'unclaimed', 'neighboring'],
+    summary: 'Get the SoundExchange account working (log in, right roles), submit every recording you own, claim every recording you perform on, and handle the paperwork (contact updates, Letters of Direction).',
+    triggers: ['soundexchange', 'sound exchange', 'digital royalties', 'pandora', 'siriusxm', 'iheart', 'unclaimed', 'neighboring', 'letter of direction', 'lod', 'isrc ingest', 'repertoire sheet'],
     needs: [
-      { key: 'artistNames', question: 'Every name you have released under (including old spellings and groups)?', required: true },
-      { key: 'legalName', question: 'Your legal name (SoundExchange pays the person, so it searches both)?', required: true },
-      { key: 'ownsMasters', question: 'Do you own your masters (self-released), or is a label/distributor the owner?', required: true },
-      { key: 'registered', question: 'Have you ever registered with SoundExchange before?', required: true }
+      { key: 'account', question: 'Do you already have a SoundExchange account? Can you log in, or did you forget the password?', required: true },
+      { key: 'ownsMasters', question: 'Do you own your masters (self-released through UnitedMasters, DistroKid, etc.), or does a label own them?', required: true },
+      { key: 'artistNames', question: 'Every name you have released under (old spellings and groups too)?', required: true }
     ],
     steps: [
-      'Search the SoundExchange unclaimed royalties lists (soundexchange.com/what-we-do/for-artists-labels-and-producers/) for every artist name and the legal name. Save screenshots/links of any match on the case.',
-      'If not registered: with the user, register free at SoundExchange (Featured Artist; and Sound Recording Copyright Owner if they own masters). The user enters tax and bank details themselves.',
-      'Once registered, in SoundExchange Direct (sxdirect.soundexchange.com) search and claim every catalog recording by ISRC. Mark each track CLAIMED (studio2u_update_catalog_track).',
-      'If a track is claimed by someone else or credited wrong, draft a message to SoundExchange support with ISRC, release date, distributor proof and ask them to correct it; user approves before sending.',
-      'Follow up until the claims show as approved and payments appear.'
+      'Account first (sx_account). Locked out: open sxdirect.soundexchange.com, have the owner click "Forgot password" and reset it from their email themselves (or call 1-800-961-2091 if that email is gone). Never see, type or store the password. Not registered: register.soundexchange.com (free); the owner enters tax form and direct deposit.',
+      'Roles: self-released (owns masters) = BOTH Featured Artist and Rights Owner (SRCO), or the owner half goes unpaid. Signed to a label = Featured Artist only; the label submits and claims the owner share. Save with save_sx_account.',
+      'sx_queue: for each song you need the ISRC (mandatory) and, if you own it, the UPC, release title and release label. Pull them from the distributor dashboard or the catalog import; ask the owner only for what is missing (save_sx_recording).',
+      'Owner share (only if you own the master): My Catalog > Submit Recordings > pick the SRCO entity > 1) ISRC Recording Information, 2) Recording Claim Information (Copyright Owner, percent of master ownership, Inception, Perpetuity), 3) Releases (every release the song is on; self-released label = SRCO entity name) > Go to top and Review > fix red invalid markers > the owner presses Submit Recordings. 10+ songs: use sx_bulk_rows with the ISRC Ingest Form from that page.',
+      'Artist share: 1-2 days later, My Catalog > Search & Claim by ISRC > Claim as an artist. Report CLAIMED (report_sx_recording) only after seeing it under the account.',
+      'Paperwork when SoundExchange asks: Contact Information Update Form (sx_contact_update; the online update in SXDirect is better than emailing it), Letter of Direction to pay a producer/mixer/engineer from the artist share (sx_letter_of_direction). Reply in the SoundExchange email thread with the filled file attached after the owner approves (draft_case_message with attachments and replyToThread).',
+      'Check unclaimed royalty lists for every artist name and the legal name. Follow up until claims show approved and payments appear.'
     ],
-    rules: ['Never claim a recording the user did not perform on or does not own.'],
+    rules: [
+      'Never claim a recording you did not perform on or do not own.',
+      'Never store or type passwords, tax IDs, bank details. Tax forms (W-9/W-8) are uploaded by the owner inside SXDirect > Contact > Upload a Document, never emailed.',
+      'Percentage Claimed is master OWNERSHIP, not the songwriting split.',
+      'Letters of Direction must be signed by every performer on the featured artist (or their LOD Signatory on file). E-signed LODs need the signature service certificate with the signer name and unredacted email; a Studio2U split-sheet signature does not replace SoundExchange\'s own LOD form.'
+    ],
     contacts: [
-      { name: 'SoundExchange Direct', how: 'https://sxdirect.soundexchange.com (search and claim recordings)', source: 'https://www.soundexchange.com/what-we-do/for-artists-labels-and-producers/' },
-      { name: 'SoundExchange unclaimed royalties search', how: 'https://www.soundexchange.com/what-we-do/for-artists-labels-and-producers/', source: 'https://www.soundexchange.com/what-we-do/for-artists-labels-and-producers/' }
+      { name: 'SoundExchange Direct', how: 'https://sxdirect.soundexchange.com (My Catalog > Submit Recordings / Search & Claim)', source: 'https://www.soundexchange.com/2019/11/04/mastering-my-catalog-a-guide-to-submit-recordings/' },
+      { name: 'SoundExchange support', how: 'Contact tab in SXDirect, or 1-800-961-2091 (9am-6pm ET, Mon-Fri)', source: 'https://www.soundexchange.com/2025/09/30/letters-of-direction-signature-requirements/' },
+      { name: 'Letters of Direction forms', how: 'https://www.soundexchange.com/what-we-do/for-artists-labels-and-producers/letters-of-direction/', source: 'https://www.soundexchange.com/what-we-do/for-artists-labels-and-producers/letters-of-direction/' }
     ],
     facts: [
-      'SoundExchange collects digital performance royalties from non-interactive services like SiriusXM, Pandora and iHeartRadio. You must be registered to be paid.',
-      'Unclaimed SoundExchange royalties expire after 3 years, and SoundExchange collects back as far as 3 years. Older money cannot be recovered, so register now.',
+      'SoundExchange pays digital performance royalties from non-interactive services (SiriusXM, Pandora radio, iHeartRadio): 50% to the sound recording copyright owner, 45% to featured artists, 5% to a fund for non-featured musicians and vocalists.',
+      'Only the master owner (SRCO) submits recordings; artists then claim their share. Submissions appear to claim a day or two later.',
+      'Unclaimed SoundExchange royalties can age out after about 3 years. Registering and claiming now protects the oldest money.',
       'Registration is free.'
     ],
-    followUpDays: [14, 30, 60]
+    followUpDays: [2, 14, 30]
   },
   {
     id: 'unpaid-split', version: 1, owner: 'executive',

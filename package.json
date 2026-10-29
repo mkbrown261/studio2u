@@ -18,7 +18,7 @@
     "test:label-world:research": "node tests/label-world-research.mjs",
     "context:compile": "node tools/compile-label-context.mjs",
     "test:label-world:context": "node tests/label-world-context.mjs",
-    "test:label-world:mcp": "node tests/label-world-mcp.mjs && node tests/label-world-mcp-oauth.mjs && node tests/label-world-autonomy.mjs && node tests/label-world-playbooks.mjs && node tests/label-world-tokens.mjs && node tests/label-world-office.mjs && node tests/label-world-ascap.mjs && node tests/label-world-outreach.mjs",
+    "test:label-world:mcp": "node tests/label-world-mcp.mjs && node tests/label-world-mcp-oauth.mjs && node tests/label-world-autonomy.mjs && node tests/label-world-playbooks.mjs && node tests/label-world-tokens.mjs && node tests/label-world-office.mjs && node tests/label-world-ascap.mjs && node tests/label-world-outreach.mjs && node tests/label-world-soundexchange.mjs",
     "test:label-world:autonomy": "node tests/label-world-autonomy.mjs",
     "deploy:engine": "wrangler deploy -c wrangler.label-world-engine.jsonc",
     "check:live-agent": "node tools/label-world-live-agent-check.mjs"

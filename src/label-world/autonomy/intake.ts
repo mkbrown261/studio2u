@@ -49,6 +49,7 @@ export type Intake = {
   recordingTitle?: string // only if the recording's title differs from the work title
   commercialUse?: { productType: string; productionName: string } // ASCAP: commercial, film or other product
   publicDomain?: 'music' | 'lyrics' | 'both' // ASCAP: arranged public-domain music/lyrics
+  albumTitle?: string // release/album the recording appeared on (SoundExchange Releases step)
 }
 
 export const WRITER_ROLES = ['writer', 'composer', 'lyricist', 'writer_producer', 'arranger', 'adapter', 'translator']
@@ -105,7 +106,7 @@ export function normalizeIpi(v: string): string {
   return s
 }
 
-const keys = new Set(['genre', 'language', 'releaseDate', 'recordLabel', 'isRerelease', 'existingUpc', 'originalReleaseDate', 'explicit', 'radioEdit', 'instrumental', 'containsThirdPartyAudio', 'thirdPartyAudioLicense', 'coverArtThirdParty', 'coverArtLicense', 'isrc', 'upc', 'featuredArtists', 'producers', 'alternateTitles', 'writers', 'masterOwner', 'samples', 'performedPublicly', 'durationSec', 'performers', 'recordingTitle', 'commercialUse', 'publicDomain'])
+const keys = new Set(['genre', 'language', 'releaseDate', 'recordLabel', 'isRerelease', 'existingUpc', 'originalReleaseDate', 'explicit', 'radioEdit', 'instrumental', 'containsThirdPartyAudio', 'thirdPartyAudioLicense', 'coverArtThirdParty', 'coverArtLicense', 'isrc', 'upc', 'featuredArtists', 'producers', 'alternateTitles', 'writers', 'masterOwner', 'samples', 'performedPublicly', 'durationSec', 'performers', 'recordingTitle', 'commercialUse', 'publicDomain', 'albumTitle'])
 
 /**
  * Validate a partial intake patch. `null` clears a field. Unknown keys are rejected
@@ -125,7 +126,7 @@ export function intakePatch(value: unknown): Record<string, unknown> {
       case 'isrc': out[k] = normalizeIsrc(str(v, k, 20)); break
       case 'upc': case 'existingUpc': out[k] = normalizeUpc(str(v, k, 20)); break
       case 'featuredArtists': case 'producers': case 'alternateTitles': case 'performers': out[k] = list(v, k); break
-      case 'recordingTitle': out[k] = str(v, k, 200); break
+      case 'recordingTitle': case 'albumTitle': out[k] = str(v, k, 200); break
       case 'durationSec': { const n = typeof v === 'string' ? parseDuration(v) : v; if (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || n > 43200) throw new Error('durationSec must be 1 second to 12 hours (seconds or HH:MM:SS)'); out[k] = n; break }
       case 'commercialUse': { const c = v as any; if (!c || typeof c !== 'object') throw new Error('commercialUse must be an object'); const pt = PRODUCT_TYPES.find(x => x.toLowerCase() === str(c.productType, 'commercialUse.productType', 100).toLowerCase()); if (!pt) throw new Error(`commercialUse.productType must be one of ${PRODUCT_TYPES.join(', ')}`); out[k] = { productType: pt, productionName: str(c.productionName, 'commercialUse.productionName', 200) }; break }
       case 'publicDomain': if (!['music', 'lyrics', 'both'].includes(v as string)) throw new Error('publicDomain must be music, lyrics or both'); out[k] = v; break
