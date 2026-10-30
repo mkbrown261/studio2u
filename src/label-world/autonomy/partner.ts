@@ -36,14 +36,14 @@ export const SETUP: Record<Platform, { name: string; signup: string; ownerDoes: 
 export const STREAMS = {
   amazon: {
     options: {
-      MERCH_ON_DEMAND: { name: 'Amazon Merch on Demand', url: 'https://merch.amazon.com', facts: ['Free to join, but you apply and wait for an invite (reviews often take weeks).', 'Amazon prints, ships and handles returns; you upload designs and get a royalty per sale.', 'You enter your own tax and bank details at signup.'] },
-      SELLER_CENTRAL: { name: 'Amazon Seller Central', url: 'https://sell.amazon.com/pricing', facts: ['Individual plan: $0.99 per item sold, plus referral fees.', 'Professional plan: $39.99 per month, plus referral fees.', 'You hold or ship the stock (or pay for FBA); you enter tax ID, ID and bank details yourself.'] },
+      MERCH_ON_DEMAND: { name: 'Amazon Merch on Demand', url: 'https://merch.amazon.com', facts: ['Free to join, but you apply first; Amazon says applications are typically processed within 14 days, and a rejection cannot be re-applied.', 'Amazon is the seller: it prints (DTG), ships and handles returns; you upload PNG designs (at least 485x485, under 25 MB) and earn a royalty per sale.', 'New accounts start at Tier 10 (10 published designs); tiers grow with sales.', 'Paid monthly by direct deposit about 30 days after the month an item ships.', 'One account per person, never shared: you log in yourself; your agent only works in your logged-in browser.', 'You do the tax interview and bank details yourself.'] },
+      SELLER_CENTRAL: { name: 'Amazon Seller Central', url: 'https://sell.amazon.com/pricing', facts: ['Individual plan: $0.99 per item sold, plus referral fees.', 'Professional plan: $39.99 per month, plus referral fees.', 'Clothing referral fee: 5% up to $15, 10% from $15 to $20, 17% above $20 (minimum $0.30).', 'You hold or ship the stock (or pay for FBA); you enter tax ID, ID and bank details yourself.'] },
       NONE: { name: 'Not now', url: '', facts: ['Fourthwall already sells your merch with no inventory.'] }
     }
   },
   tickets: {
     options: {
-      EVENTBRITE: { name: 'Eventbrite', url: 'https://www.eventbrite.com/organizer/pricing/', facts: ['Free events are free to list.', 'Paid tickets (US): 3.7% + $1.79 service fee per ticket plus 2.9% payment processing; you can pass fees to buyers.', 'You add your own payout bank details inside Eventbrite.'] },
+      EVENTBRITE: { name: 'Eventbrite', url: 'https://www.eventbrite.com/organizer/pricing/', facts: ['Free events are free to list.', 'Paid tickets (US): 3.7% + $1.79 service fee per ticket plus 2.9% payment processing per order; buyers pay the fees by default, or you can absorb them.', 'You add your own payout bank details inside Eventbrite.'] },
       NONE: { name: 'Not now', url: '', facts: [] }
     }
   }
@@ -308,7 +308,7 @@ function suggestions(m: any, s: any) {
   else if (!m.live && !m.hidden) out.push('Make your first product: a tee from your best design (Merch tab).')
   if (m?.hidden) out.push(`${m.hidden} product(s) are made but hidden. Publish the ones you like.`)
   if (m?.approvedUnused) out.push(`${m.approvedUnused} approved design(s) are not on a product yet. A hoodie or hat is a quick new drop.`)
-  if (!s.streams?.amazon) out.push('Decide on Amazon: Merch on Demand (free, apply and wait) or Seller Central ($0.99/item or $39.99/mo).')
+  if (!s.streams?.amazon) out.push('Decide on Amazon: Merch on Demand (free, apply, usually decided within 14 days) or Seller Central ($0.99/item or $39.99/mo).')
   if (!s.streams?.tickets) out.push('Got a show coming? Free events list free on Eventbrite.')
   return out.slice(0, 4)
 }
