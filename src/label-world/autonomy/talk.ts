@@ -7,7 +7,7 @@ import { openCase, updateCase } from './cases'
 import { understand, sayUnderstood, type Fetcher } from './understand'
 import { suggestPlaybooks, playbookById, playbookScore } from './playbooks'
 
-const AGENTS = ['researcher', 'reviewer', 'executive', 'builder']
+const AGENTS = ['researcher', 'reviewer', 'executive', 'builder', 'partner']
 /** Money/rights problems become cases automatically. Creative/advice playbooks stay a normal chat. */
 export const CASE_PLAYBOOKS = ['tv-cue-sheet', 'register-songs', 'soundexchange-money', 'unpaid-split', 'name-dispute', 'beat-ownership', 'mlc-mechanicals', 'bmi-registration', 'split-sheet', 'merch-drop']
 

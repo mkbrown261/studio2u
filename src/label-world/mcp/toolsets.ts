@@ -25,6 +25,7 @@ export const TOPICS: Record<string, { about: string; tools: string[] }> = {
   office: { about: 'Weekly report, verified money from statements.', tools: ['get_report', 'money_summary', 'list_statements'] },
   agreements: { about: 'Split sheets with e-sign links; attorney pre-check; BMI 200% shares.', tools: ['attorney_precheck', 'bmi_shares', 'create_agreement', 'list_agreements', 'get_agreement', 'revise_agreement'] },
   merch: { about: 'Merch with no inventory (owner\'s free Fourthwall shop): see status, save design ideas. Owner makes images, approves, publishes.', tools: ['merch_status', 'add_merch_idea', 'get_artist_profile'] },
+  partner: { about: 'Business Partner: weekly post plan the owner approves once, posting approved posts in the owner\'s browser while autopilot is ON, money desk.', tools: ['partner_status', 'propose_week_plan', 'list_due_posts', 'mark_post', 'save_partner_account', 'merch_status'] },
   content: { about: 'Content Studio: campaigns and concepts the owner approves.', tools: ['create_campaign', 'list_campaigns', 'get_campaign', 'add_concept', 'mark_concept'] },
   account: { about: 'Who is connected and which labels are authorized.', tools: ['whoami', 'list_labels'] }
 }

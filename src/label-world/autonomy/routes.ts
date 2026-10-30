@@ -14,6 +14,8 @@ import * as sx from './soundexchange'
 import * as know from './discovery'
 import { talk } from './talk'
 import * as merch from './merch'
+import * as partner from './partner'
+import { enqueue } from './engine'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -85,6 +87,16 @@ export function installAutonomyRoutes(app: any) {
   app.post(base + '/merch/products', wrap(async c => c.json(await merch.makeProduct(E(c), L(c), U(c), await body(c)), 201)))
   app.post(base + '/merch/products/:id/state', wrap(async c => c.json(await merch.setProductState(E(c), L(c), U(c), c.req.param('id'), await body(c)))))
   app.get(base + '/merch/products/:id/mockups/:i', wrap(async c => { const m = await merch.mockupImage(E(c), L(c), U(c), c.req.param('id'), Number(c.req.param('i'))); return new Response(m.bytes, { headers: { 'Content-Type': m.type, 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff' } }) }))
+  // ---- Business Partner: approve-once weekly plan, autopilot, Stop, accounts, money desk ----
+  app.get(base + '/partner', wrap(async c => c.json(await partner.partnerOverview(c.env.DB, L(c), U(c)))))
+  app.post(base + '/partner/settings', wrap(async c => c.json(await partner.savePartnerSettings(c.env.DB, L(c), U(c), await body(c)))))
+  app.post(base + '/partner/stop', wrap(async c => c.json(await partner.stopPartner(c.env.DB, L(c), U(c)))))
+  app.post(base + '/partner/streams', wrap(async c => c.json(await partner.saveStreams(c.env.DB, L(c), U(c), await body(c)))))
+  app.post(base + '/partner/channels', wrap(async c => c.json(await partner.saveChannel(c.env.DB, L(c), U(c), await body(c), (t: any) => enqueue(c.env.DB, t)))))
+  app.post(base + '/partner/plans', wrap(async c => c.json(await partner.createPlan(c.env.DB, L(c), U(c), await body(c), 'owner'), 201)))
+  app.post(base + '/partner/plans/:id/decision', wrap(async c => c.json(await partner.decidePlan(c.env.DB, L(c), U(c), c.req.param('id'), await body(c)))))
+  app.post(base + '/partner/posts/:id', wrap(async c => c.json(await partner.markPost(c.env.DB, L(c), U(c), c.req.param('id'), await body(c), 'web'))))
+  app.post(base + '/partner/checkin', wrap(async c => c.json({ text: await partner.postCheckin(E(c), L(c), U(c)) })))
   app.get(base + '/merch/sales', wrap(async c => c.json(await merch.merchSales(E(c), L(c), U(c)))))
   // Plain-language intake: talk, we fill the boxes and answer in the same box.
   app.post(base + '/talk', wrap(async c => c.json(await talk(c.env.DB, L(c), U(c), await body(c)))))

@@ -12,7 +12,7 @@ export type Playbook = {
   id: string
   version: number
   name: string
-  owner: 'executive' | 'researcher' | 'reviewer' | 'builder'
+  owner: 'executive' | 'researcher' | 'reviewer' | 'builder' | 'partner'
   summary: string
   triggers: string[] // plain words an artist would use
   needs: { key: string; question: string; required: boolean }[]

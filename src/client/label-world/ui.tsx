@@ -2,12 +2,13 @@ import {ResearchReportCard} from './ResearchOperations'
 import {ReviewCard} from './ReviewOperations'
 import React, { useEffect, useRef, useState } from 'react'
 import { listen, speak, stopSpeaking, speechInputSupported, speechOutputSupported } from './voice'
-export type AgentId = 'researcher'|'reviewer'|'executive'|'builder'
+export type AgentId = 'researcher'|'reviewer'|'executive'|'builder'|'partner'
 export const agents: Record<AgentId,{name:string,role:string,icon:string,color:string,portrait?:string}> = {
  researcher:{name:'Carla',role:'Researcher / A&R Agent',icon:'radar',color:'gold',portrait:'/label-world/assets/carla-portrait.png'},
  reviewer:{name:'Eric',role:'Reviewer Agent',icon:'shield',color:'purple',portrait:'/label-world/assets/eric-portrait.png'},
  executive:{name:'Executive',role:'Strategy · Decisions · Growth',icon:'crown',color:'gold',portrait:'/label-world/assets/executive-portrait.png'},
- builder:{name:'Builder / Producer',role:'Creative Production & Release',icon:'wave',color:'cyan',portrait:'/label-world/assets/builder-portrait.png'}
+ builder:{name:'Builder / Producer',role:'Creative Production & Release',icon:'wave',color:'cyan',portrait:'/label-world/assets/builder-portrait.png'},
+ partner:{name:'Business Partner',role:'Merch · Campaigns · Money',icon:'wallet',color:'gold',portrait:'/label-world/assets/partner-portrait.png'}
 }
 export async function api(path:string,body?:unknown){const r=await fetch('/api/label-world'+path,body!==undefined?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const d=await r.json();if(r.status===401)window.dispatchEvent(new Event('label-world-session-expired'));if(!r.ok)throw new Error(d.error||`Request failed (${r.status})`);return d}
 const paths: Record<string,React.ReactNode>={

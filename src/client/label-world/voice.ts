@@ -39,7 +39,8 @@ const persona: Record<AgentId, { pitch: number; rate: number; prefer: RegExp }> 
   executive: { pitch: 0.85, rate: 0.98, prefer: /(daniel|alex|guy|david|male|aaron|arthur|google uk english male)/i },
   researcher: { pitch: 1.1, rate: 1.04, prefer: /(samantha|ava|allison|jenny|aria|female|google us english|karen|moira)/i },
   reviewer: { pitch: 1.0, rate: 1.0, prefer: /(tom|fred|ryan|male|google uk english male|oliver)/i },
-  builder: { pitch: 0.95, rate: 1.08, prefer: /(nathan|evan|male|google us english|matthew)/i }
+  builder: { pitch: 0.95, rate: 1.08, prefer: /(nathan|evan|male|google us english|matthew)/i },
+  partner: { pitch: 0.9, rate: 1.02, prefer: /(aaron|reed|male|google us english|matthew|guy)/i }
 }
 function pickVoice(agent: AgentId) {
   const voices = speechSynthesis.getVoices().filter(v => v.lang?.toLowerCase().startsWith((navigator.language || 'en').slice(0, 2).toLowerCase()))

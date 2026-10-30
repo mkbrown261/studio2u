@@ -6,8 +6,9 @@ import { generate, providerId, endpointConfig } from './providers/adapters'
 import { decryptKey, keyContext } from './providers/vault'
 import { spendGuard, recordSpend } from './providers/budget'
 import { runTrends, TREND_INTENT } from './research/trends'
+import { checkinText, PARTNER_INTENT } from './autonomy/partner'
 type Env = AppEnv & { Variables: { lwUser: SessionUser; lwRole: string } }
-const agents = ['researcher','reviewer','executive','builder']
+const agents = ['researcher','reviewer','executive','builder','partner']
 const base = '/api/label-world/labels/:labelId'
 function field(value:unknown,max:number,required=false){if(typeof value!=='string'||value.length>max||(required&&!value.trim()))throw new Error('Invalid input');return value.trim()}
 export function installWorkspaceRoutes(app:Hono<Env>){
@@ -30,6 +31,8 @@ export function installWorkspaceRoutes(app:Hono<Env>){
   await c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,release_id,role,content,status) VALUES (?,?,?,?,?,'user',?,'WAITING_FOR_PROVIDER')").bind(id,label,user,agent,releaseId,content).run()
   // Carla answers "what's hot" from live public charts right away: no AI key, no tokens.
   if(agent==='researcher'&&TREND_INTENT.test(content)){try{await runTrends(c.env,label,user,{text:content,replyTo:id});return c.json({messages:await history(c),status:'COMPLETED'},201)}catch{/* fall through to the model */}}
+  // The Business Partner answers money/plan/post questions instantly from the facts (no AI key, no tokens).
+  if(agent==='partner'&&(PARTNER_INTENT.test(content)||!preference)){try{const text=await checkinText(c.env,label,user);await c.env.DB.batch([c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,role,content,status,reply_to,provider,model) VALUES (?,?,?,'partner','assistant',?,'COMPLETED',?,'studio2u','money-desk')").bind(crypto.randomUUID(),label,user,text,id),c.env.DB.prepare("UPDATE lw_employee_messages SET status='COMPLETED' WHERE id=?").bind(id)]);return c.json({messages:await history(c),status:'COMPLETED'},201)}catch{/* fall through */}}
   const conn=preference?await c.env.DB.prepare('SELECT encrypted_key,endpoint_config FROM lw_provider_connections WHERE user_id=? AND provider=?').bind(user,preference.provider).first():null
   if(!conn)return c.json({messages:await history(c),status:'WAITING_FOR_PROVIDER',message:'Connect a personal provider and select a model. Your message has been saved.'},201)
   try{

@@ -204,6 +204,6 @@ labelWorldRoutes.get('/label-world',c=>headquartersPage(c))
 labelWorldRoutes.get('/label-world/inbox',c=>headquartersPage(c,true))
 labelWorldRoutes.get('/label-world/money',c=>headquartersPage(c,true))
 labelWorldRoutes.get('/label-world/agents/:agent',c=>{
-  if(!['researcher','reviewer','executive','builder'].includes(c.req.param('agent')))return c.notFound()
+  if(!['researcher','reviewer','executive','builder','partner'].includes(c.req.param('agent')))return c.notFound()
   return headquartersPage(c,true)
 })

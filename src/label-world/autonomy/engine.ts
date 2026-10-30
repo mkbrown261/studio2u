@@ -14,7 +14,7 @@ import { buildPacket, derivedStatus, targets, type Target, type ReleaseRow, type
 import type { Intake } from './intake'
 import { decryptKey } from '../providers/vault'
 
-export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST'] as const
+export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST', 'PARTNER_POST', 'PARTNER_SETUP'] as const
 export type TaskKind = typeof taskKinds[number]
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
@@ -231,6 +231,10 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     const t = await dailyTrends(env, opts.labelIds).catch(() => ({ ran: 0, answered: 0 }))
     summary.trends = t.ran; summary.trendAnswers = t.answered
   }
+  // Business Partner: approved posts become screen tasks while autopilot is ON; daily money check-in.
+  const { partnerPass } = await import('./partner')
+  const pp = await partnerPass(env, (t: any) => enqueue(db, t), opts.labelIds, new Date(started), opts.fetcher).catch(() => ({ queued: 0, checkins: 0, drafted: 0 }))
+  summary.partnerPosts = pp.queued; summary.partnerCheckins = pp.checkins; summary.partnerPlans = pp.drafted
   // Monday Report: one per label per local day, at the label's chosen weekday/hour.
   const { scheduledReports } = await import('./office')
   const reports = await scheduledReports(db, opts.labelIds, new Date(started)).catch(() => [] as string[])
