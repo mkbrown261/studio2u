@@ -16,6 +16,7 @@ import { talk } from './talk'
 import * as merch from './merch'
 import * as partner from './partner'
 import * as shows from './shows'
+import { approvalStatus, approvalAction } from './approval'
 import { enqueue } from './engine'
 
 const base = '/api/label-world/labels/:labelId'
@@ -145,6 +146,8 @@ export function installAutonomyRoutes(app: any) {
     const b = await body(c)
     return c.json(await updateIntake(c.env.DB, c.req.param('labelId'), c.req.param('releaseId'), c.get('lwUser').id, b.patch, b.expectedVersion, 'web'))
   }))
+  app.get(base + '/releases/:releaseId/approval', wrap(async c => c.json(await approvalStatus(c.env.DB, L(c), c.req.param('releaseId'), U(c)))))
+  app.post(base + '/releases/:releaseId/approval', wrap(async c => c.json(await approvalAction(c.env.DB, L(c), c.req.param('releaseId'), U(c), await body(c)))))
   app.get(base + '/releases/:releaseId/submissions', wrap(async c => c.json({ submissions: await listSubmissions(c.env.DB, c.req.param('labelId'), c.req.param('releaseId')) })))
   app.get(base + '/releases/:releaseId/submissions/:target', wrap(async c => c.json(await getPacket(c.env.DB, c.req.param('labelId'), c.req.param('releaseId'), c.req.param('target').toUpperCase()))))
   app.post(base + '/releases/:releaseId/submissions/report', wrap(async c => c.json(await reportSubmission(c.env.DB, c.req.param('labelId'), c.req.param('releaseId'), c.get('lwUser').id, await body(c), 'web'))))
