@@ -200,6 +200,15 @@ async function headquartersPage(c:any, requireSession=false){
   const bootstrap=JSON.stringify({authenticated:Boolean(user),userName:user?.name||null}).replace(/</g,'\\u003c')
   return c.html(html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Studio2U · Label World Headquarters</title><link rel="stylesheet" href="/label-world-ui.css"><link rel="stylesheet" href="/label-world-hq.css"></head><body><div id="label-world-app"><p style="padding:32px;color:#e8bd6b;background:#080d12">Loading Studio2U headquarters…</p></div><script id="label-world-bootstrap" type="application/json">${raw(bootstrap)}</script><script type="module" src="/label-world/app/main.js"></script><noscript><p>JavaScript is required for 3D headquarters. <a href="/label-world/dashboard">Open accessible release dashboard</a>.</p></noscript></body></html>`)
 }
+// Public show page (fans): no sign-in. Only PUBLISHED/CANCELLED shows exist here.
+labelWorldRoutes.get('/show/:slug',async c=>{
+  const {publicShow,countVisit,showPage}=await import('../label-world/autonomy/shows')
+  const s=await publicShow(c.env.DB,c.req.param('slug'))
+  if(!s)return c.notFound()
+  try{const job=countVisit(c.env.DB,s.id,c.req.query('src')==='qr');try{c.executionCtx.waitUntil(job)}catch{await job}}catch{/* counting is best effort */}
+  c.header('Cache-Control','no-store')
+  return c.html(showPage(s))
+})
 labelWorldRoutes.get('/label-world',c=>headquartersPage(c))
 labelWorldRoutes.get('/label-world/inbox',c=>headquartersPage(c,true))
 labelWorldRoutes.get('/label-world/money',c=>headquartersPage(c,true))

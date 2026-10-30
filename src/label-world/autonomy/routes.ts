@@ -15,6 +15,7 @@ import * as know from './discovery'
 import { talk } from './talk'
 import * as merch from './merch'
 import * as partner from './partner'
+import * as shows from './shows'
 import { enqueue } from './engine'
 
 const base = '/api/label-world/labels/:labelId'
@@ -96,6 +97,10 @@ export function installAutonomyRoutes(app: any) {
   app.post(base + '/partner/plans', wrap(async c => c.json(await partner.createPlan(c.env.DB, L(c), U(c), await body(c), 'owner'), 201)))
   app.post(base + '/partner/plans/:id/decision', wrap(async c => c.json(await partner.decidePlan(c.env.DB, L(c), U(c), c.req.param('id'), await body(c)))))
   app.post(base + '/partner/posts/:id', wrap(async c => c.json(await partner.markPost(c.env.DB, L(c), U(c), c.req.param('id'), await body(c), 'web'))))
+  app.get(base + '/shows', wrap(async c => c.json({ shows: await shows.listShows(c.env.DB, L(c), U(c)) })))
+  app.post(base + '/shows', wrap(async c => c.json(await shows.saveShow(c.env.DB, L(c), U(c), await body(c)), 201)))
+  app.post(base + '/shows/:id/status', wrap(async c => c.json(await shows.setShowStatus(c.env.DB, L(c), U(c), c.req.param('id'), await body(c)))))
+  app.get(base + '/shows/:id/qr.svg', wrap(async c => { const s = await shows.getShow(c.env.DB, L(c), c.req.param('id')); return new Response(shows.qrSvg(s.url + '?src=qr'), { headers: { 'Content-Type': 'image/svg+xml', 'Content-Disposition': `inline; filename="${s.slug}-qr.svg"`, 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' } }) }))
   app.post(base + '/partner/checkin', wrap(async c => c.json({ text: await partner.postCheckin(E(c), L(c), U(c)) })))
   app.get(base + '/merch/sales', wrap(async c => c.json(await merch.merchSales(E(c), L(c), U(c)))))
   // Plain-language intake: talk, we fill the boxes and answer in the same box.

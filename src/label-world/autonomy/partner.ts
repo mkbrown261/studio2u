@@ -23,7 +23,7 @@ const HOSTS: Record<Platform, RegExp> = {
 }
 /** Video-first platforms can't take a text-only post. */
 const NEEDS_MEDIA: Platform[] = ['instagram', 'tiktok', 'youtube']
-/** Account setup: the owner signs up (phone check is theirs); the partner fills the profile. */
+/** Account setup: the owner signs up (phone check is theirs); Ben fills the profile. */
 export const SETUP: Record<Platform, { name: string; signup: string; ownerDoes: string; partnerDoes: string[] }> = {
   instagram: { name: 'Instagram', signup: 'https://www.instagram.com/accounts/emailsignup/', ownerDoes: 'Sign up with your phone or email, then switch to a free Professional (Creator) account in Settings.', partnerDoes: ['Profile photo, name and bio', 'Link to your shop / music', 'Category: Musician/Band'] },
   tiktok: { name: 'TikTok', signup: 'https://www.tiktok.com/signup', ownerDoes: 'Sign up with your phone. Keep it a personal account so you can use trending sounds.', partnerDoes: ['Profile photo, name and bio', 'Link in bio when TikTok allows it', 'Pin your best post'] },
@@ -43,6 +43,7 @@ export const STREAMS = {
   },
   tickets: {
     options: {
+      OWN_LINK: { name: 'Your own show page + QR code', url: '', facts: ['Add a show in Shows: you get a public page and a QR code for flyers, posters and the merch table.', 'Scanning goes to your page; "Get tickets" goes straight to your own ticket link (or the show is free).', 'Easiest paid link: a Stripe Payment Link from your own free Stripe account: 2.9% + 30c per US card sale, no monthly fee. Or your Eventbrite or the venue box office.', 'You set up Stripe yourself and enter your own bank details there. Studio2U never sees payments or buyer details; it only counts views and QR scans.'] },
       EVENTBRITE: { name: 'Eventbrite', url: 'https://www.eventbrite.com/organizer/pricing/', facts: ['Free events are free to list.', 'Paid tickets (US): 3.7% + $1.79 service fee per ticket plus 2.9% payment processing per order; buyers pay the fees by default, or you can absorb them.', 'You add your own payout bank details inside Eventbrite.'] },
       NONE: { name: 'Not now', url: '', facts: [] }
     }
@@ -102,7 +103,7 @@ export async function saveStreams(db: any, label: string, actor: number, b: any)
   const status = ['NOT_STARTED', 'APPLIED', 'APPROVED', 'LIVE']
   if (b?.amazon != null) { if (!(b.amazon in STREAMS.amazon.options)) throw new ServiceError('amazon must be MERCH_ON_DEMAND, SELLER_CENTRAL or NONE'); next.amazon = b.amazon }
   if (b?.amazonStatus != null) { if (!status.includes(b.amazonStatus)) throw new ServiceError('Invalid amazonStatus'); next.amazonStatus = b.amazonStatus }
-  if (b?.tickets != null) { if (!(b.tickets in STREAMS.tickets.options)) throw new ServiceError('tickets must be EVENTBRITE or NONE'); next.tickets = b.tickets }
+  if (b?.tickets != null) { if (!(b.tickets in STREAMS.tickets.options)) throw new ServiceError('tickets must be OWN_LINK, EVENTBRITE or NONE'); next.tickets = b.tickets }
   if (b?.ticketsStatus != null) { if (!status.includes(b.ticketsStatus)) throw new ServiceError('Invalid ticketsStatus'); next.ticketsStatus = b.ticketsStatus }
   await upsert(db, label, actor, { streams_json: JSON.stringify(next) })
   return next
@@ -125,7 +126,7 @@ export async function saveChannel(db: any, label: string, actor: number, b: any,
   if (handle && !/^[A-Za-z0-9._-]{1,60}$/.test(handle)) throw new ServiceError('Handle can only use letters, numbers, dot, dash and underscore')
   const status = String(b?.status ?? (handle ? 'READY' : 'NEEDS_ACCOUNT'))
   if (!['NEEDS_ACCOUNT', 'READY', 'PAUSED'].includes(status)) throw new ServiceError('status must be NEEDS_ACCOUNT, READY or PAUSED')
-  if (status === 'READY' && role !== 'owner') throw new ServiceError('Only the label owner can hand an account to the partner', 403)
+  if (status === 'READY' && role !== 'owner') throw new ServiceError('Only the label owner can hand an account to Ben', 403)
   if (status === 'READY' && !handle) throw new ServiceError('Add the account handle first')
   const method = String(b?.method ?? 'OWNER_BROWSER')
   if (!(METHODS as readonly string[]).includes(method) || method === 'OFFICIAL_API') throw new ServiceError('method must be OWNER_BROWSER (your agent posts in your browser) or OWNER_POSTS (you post the kit yourself)')
@@ -158,15 +159,18 @@ function checkPost(p: any, weekStart: string, ppd: number): PostIn {
 export async function draftWeek(db: any, label: string, weekStart: string) {
   const s = await getPartnerSettings(db, label)
   const ready = (await listChannels(db, label)).filter(c => c.status === 'READY')
-  if (!ready.length) throw new ServiceError('Hand the partner at least one account first (Accounts: "I made it" + handle).')
+  if (!ready.length) throw new ServiceError('Hand Ben at least one account first (Accounts: "I made it" + handle).')
   const id: any = await db.prepare('SELECT artist_name FROM lw_label_identity WHERE label_id=?').bind(label).first()
   const artist = id?.artist_name ?? 'me'
   const shop: any = await db.prepare('SELECT shop_json FROM lw_merch_shops WHERE label_id=?').bind(label).first()
   let shopUrl: string | null = null; try { const j = JSON.parse(shop?.shop_json || '{}'); const d = j.publicDomain || j.domain; shopUrl = d ? `https://${d}` : null } catch { /* no shop */ }
   const merch = (await db.prepare("SELECT id,name FROM lw_merch_products WHERE label_id=? AND state='PUBLIC' ORDER BY created_at DESC LIMIT 6").bind(label).all()).results as any[]
   const songs = (await db.prepare("SELECT title,link FROM lw_catalog_tracks WHERE label_id=? AND pro_status<>'NOT_MINE' ORDER BY COALESCE(release_date,'') DESC LIMIT 6").bind(label).all()).results as any[]
+  const { upcomingShows } = await import('./shows')
+  const gigs = await upcomingShows(db, label, weekStart, 28)
   const pool: PostIn[] = []
   const rot: { kind: string; make: (day: string, p: Platform) => PostIn }[] = []
+  gigs.forEach(g => rot.push({ kind: 'announcement', make: (day, p) => ({ day, platform: p, kind: 'announcement', caption: `${artist} live: ${g.title}. ${g.venue}, ${g.city}. ${g.free ? 'Free entry.' : `Tickets${g.priceText ? ` ${g.priceText}` : ''} at the link ${p === 'instagram' || p === 'tiktok' ? 'in bio' : 'below'}.`}`, link: g.url, media: { needs: 'OWNER_CLIP', hint: 'Flyer with the QR code, or a short clip inviting fans' } }) }))
   merch.forEach(m => rot.push({ kind: 'merch', make: (day, p) => ({ day, platform: p, kind: 'merch', caption: `New ${m.name} is live. Printed when you order, shipped to your door. Link ${p === 'instagram' || p === 'tiktok' ? 'in bio' : 'below'}.`, link: shopUrl, media: { productId: m.id, mockup: 0 } }) }))
   songs.forEach(t => rot.push({ kind: 'song', make: (day, p) => ({ day, platform: p, kind: 'song', caption: `"${t.title}" by ${artist}. Run it back and tell me your favorite line.`, link: t.link && /^https:/.test(t.link) ? t.link : null, media: { needs: 'OWNER_CLIP', hint: `15-30s clip or visualizer of "${t.title}"` } }) }))
   rot.push({ kind: 'question', make: (day, p) => ({ day, platform: p, kind: 'question', caption: `What should ${artist} drop next: a new single, a hoodie, or a live show? Comment below.`, link: null, media: {} }) })
@@ -289,7 +293,7 @@ export async function partnerOverview(db: any, label: string, actor: number) {
   const settings = await getPartnerSettings(db, label), now = await today(db, label)
   const plans = (await db.prepare("SELECT id,week_start,status,created_by,created_at,approved_at FROM lw_partner_plans WHERE label_id=? AND week_start>=? AND status IN ('DRAFT','APPROVED') ORDER BY week_start,created_at DESC").bind(label, mondayOf(now.date)).all()).results as any[]
   const current = plans.find(p => p.status === 'DRAFT') ?? plans.find(p => p.status === 'APPROVED') ?? null
-  const merch: any = await db.prepare("SELECT (SELECT COUNT(*) FROM lw_merch_shops WHERE label_id=?) AS shop,(SELECT COUNT(*) FROM lw_merch_products WHERE label_id=? AND state='PUBLIC') AS live,(SELECT COUNT(*) FROM lw_merch_products WHERE label_id=? AND state='HIDDEN') AS hidden,(SELECT COUNT(*) FROM lw_merch_designs WHERE label_id=? AND status='APPROVED' AND id NOT IN (SELECT design_id FROM lw_merch_products WHERE label_id=?)) AS approvedUnused").bind(label, label, label, label, label).first()
+  const merch: any = await db.prepare("SELECT (SELECT COUNT(*) FROM lw_shows WHERE label_id=? AND status='PUBLISHED') AS shows,(SELECT COUNT(*) FROM lw_merch_shops WHERE label_id=?) AS shop,(SELECT COUNT(*) FROM lw_merch_products WHERE label_id=? AND state='PUBLIC') AS live,(SELECT COUNT(*) FROM lw_merch_products WHERE label_id=? AND state='HIDDEN') AS hidden,(SELECT COUNT(*) FROM lw_merch_designs WHERE label_id=? AND status='APPROVED' AND id NOT IN (SELECT design_id FROM lw_merch_products WHERE label_id=?)) AS approvedUnused").bind(label, label, label, label, label, label).first()
   const lastCheckin: any = await db.prepare("SELECT content,created_at FROM lw_employee_messages WHERE label_id=? AND agent_id='partner' AND role='assistant' AND model='daily-checkin' ORDER BY created_at DESC LIMIT 1").bind(label).first()
   const week: any = await db.prepare("SELECT SUM(p.status='POSTED') AS posted,SUM(p.status IN ('PLANNED','SCHEDULED')) AS planned,SUM(p.status='FAILED') AS failed FROM lw_partner_posts p JOIN lw_partner_plans pl ON pl.id=p.plan_id WHERE p.label_id=? AND pl.status='APPROVED' AND p.day BETWEEN ? AND ?").bind(label, mondayOf(now.date), addDays(mondayOf(now.date), 6)).first()
   return {
@@ -309,7 +313,7 @@ function suggestions(m: any, s: any) {
   if (m?.hidden) out.push(`${m.hidden} product(s) are made but hidden. Publish the ones you like.`)
   if (m?.approvedUnused) out.push(`${m.approvedUnused} approved design(s) are not on a product yet. A hoodie or hat is a quick new drop.`)
   if (!s.streams?.amazon) out.push('Decide on Amazon: Merch on Demand (free, apply, usually decided within 14 days) or Seller Central ($0.99/item or $39.99/mo).')
-  if (!s.streams?.tickets) out.push('Got a show coming? Free events list free on Eventbrite.')
+  if (!m?.shows) out.push('Got a show coming? Add it in Shows: you get a page and a QR code that sends fans to your ticket link.')
   return out.slice(0, 4)
 }
 /** The daily check-in text. Facts only; no AI tokens. */
@@ -327,6 +331,8 @@ export async function checkinText(env: any, label: string, actor: number, fetche
   lines.push(`Posts this week: ${o.week.posted} posted, ${o.week.planned} still planned${o.week.failed ? `, ${o.week.failed} failed` : ''}. Due now: ${due.length}${due.length ? ` (${ready} I can post, ${due.length - ready} need you)` : ''}.`)
   if (!o.plan) lines.push('No plan for this week yet. Tap "Draft my week" and approve it once.')
   else if (o.plan.plan.status === 'DRAFT') lines.push(`This week's plan (${o.plan.posts.length} posts) is waiting for your one-tap approval.`)
+  { const { upcomingShows } = await import('./shows'); const g = await upcomingShows(env.DB, label, o.today, 30).catch(() => [] as any[])
+    for (const x of g.slice(0, 3)) lines.push(`Show: ${x.title} on ${x.startsAt.slice(0, 10)} at ${x.venue}: ${x.views} page views, ${x.qrScans} QR scans.`) }
   lines.push(`Autopilot: ${o.settings.autopilot}.`)
   if (o.suggestions.length) lines.push('Ideas: ' + o.suggestions.join(' '))
   return lines.join('\n')

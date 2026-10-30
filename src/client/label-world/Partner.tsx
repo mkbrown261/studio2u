@@ -12,13 +12,13 @@ export function PartnerWorkspace(p: WorkspaceProps) {
   const load = () => p.labelId ? api(base).then(x => { setD(x); setCap(String((x.settings.spendCapCents ?? 0) / 100)) }).catch(e => p.notify(e.message)) : Promise.resolve()
   useEffect(() => { setD(null); setEdits({}); load() }, [p.labelId])
   async function run(key: string, fn: () => Promise<any>, ok?: string) { setBusy(key); try { const r = await fn(); if (ok || r?.say) { p.notify(ok ?? r.say); chime() } await load(); return r } catch (e) { p.notify((e as Error).message) } finally { setBusy(null) } }
-  if (!p.labelId) return <Panel title="Business Partner" icon="wallet"><p className="lw-muted">Choose a label workspace at the top first.</p></Panel>
+  if (!p.labelId) return <Panel title="Ben · Business Partner" icon="wallet"><p className="lw-muted">Choose a label workspace at the top first.</p></Panel>
   if (!d) return <p className="lw-muted">Loading the money desk…</p>
   const owner = d.role === 'owner', editor = d.role !== 'viewer', s = d.settings, plan = d.plan
   const ready = d.channels.filter((c: any) => c.status === 'READY')
 
   return <div className="lw-partner">
-    <div className="lw-agent-heading"><div className="lw-avatar large gold"><Icon name="wallet" size={36}/></div><div><h1>Business Partner <Badge tone={s.autopilot === 'ON' ? 'cyan' : s.autopilot === 'PAUSED' ? 'red' : 'muted'}>Autopilot {s.autopilot}</Badge></h1><h2>Merch · Campaigns · Money</h2><p>You approve the week once. He posts it day by day from your own logged-in browser. Stop pauses everything.</p></div></div>
+    <div className="lw-agent-heading"><div className="lw-avatar large gold"><Icon name="wallet" size={36}/></div><div><h1>Ben <Badge tone={s.autopilot === 'ON' ? 'cyan' : s.autopilot === 'PAUSED' ? 'red' : 'muted'}>Autopilot {s.autopilot}</Badge></h1><h2>Business Partner · Merch · Shows · Money</h2><p>You approve the week once. He posts it day by day from your own logged-in browser. Stop pauses everything.</p></div></div>
 
     <Panel title="Autopilot" icon="flag" className="lw-partner-controls">
       <div className="lw-partner-row">
@@ -66,6 +66,8 @@ export function PartnerWorkspace(p: WorkspaceProps) {
       </div>)}
     </Panel>
 
+    <Shows labelId={p.labelId} owner={owner} editor={editor} notify={p.notify}/>
+
     <Panel title="Accounts he runs" icon="people">
       <p className="lw-muted">You create each account (it needs your phone). Then type the handle and tap "Hand it over". He fills in the profile and posts only approved posts.</p>
       <div className="lw-partner-channels">{d.channels.map((c: any) => <div key={c.platform} className="lw-partner-channel">
@@ -97,4 +99,40 @@ function Streams({d, owner, save}: {d: any, owner: boolean, save: (b: any) => vo
     {chosen[key] && chosen[key] !== 'NONE' && owner && <label>Where are you?<select value={chosen[key + 'Status'] ?? 'NOT_STARTED'} onChange={e => save({[key + 'Status']: e.target.value})}>{['NOT_STARTED', 'APPLIED', 'APPROVED', 'LIVE'].map(x => <option key={x}>{x}</option>)}</select></label>}
   </div>
   return <div className="lw-partner-streams">{block('amazon', 'Amazon')}{block('tickets', 'Tickets')}<small>You sign up and enter your own tax and bank details on these sites. He never sees them.</small></div>
+}
+
+function Shows({labelId, owner, editor, notify}: {labelId: string, owner: boolean, editor: boolean, notify: (s: string) => void}) {
+  const [list, setList] = useState<any[] | null>(null), [form, setForm] = useState<any | null>(null), [busy, setBusy] = useState(false)
+  const base = `/labels/${labelId}/shows`
+  const load = () => api(base).then(d => setList(d.shows)).catch(e => notify(e.message))
+  useEffect(() => { setList(null); load() }, [labelId])
+  async function go(fn: () => Promise<any>, ok: string) { setBusy(true); try { await fn(); notify(ok); chime(); await load() } catch (e) { notify((e as Error).message) } finally { setBusy(false) } }
+  const blank = {title: '', startsAt: '', venue: '', city: '', address: '', details: '', ticketUrl: '', priceText: '', free: false}
+  const set = (k: string) => (e: any) => setForm({...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value})
+  return <Panel title="Shows + QR tickets" icon="calendar" action={editor && !form && <Button onClick={() => setForm(blank)}>Add a show</Button>}>
+    <p className="lw-muted">Each show gets its own page and a QR code for flyers, posters and the merch table. Scan, then "Get tickets" opens your own ticket link. Easiest: a Stripe Payment Link from your own Stripe account (2.9% + 30¢ per card sale, no monthly fee). Studio2U never touches the money.</p>
+    {form && <form className="lw-stacked-form lw-show-form" onSubmit={e => { e.preventDefault(); go(() => api(base, form).then(() => setForm(null)), form.id ? 'Show updated.' : 'Show saved as a draft.') }}>
+      <div className="lw-form-two"><label>Show name<input required maxLength={120} value={form.title} onChange={set('title')} placeholder="Aviator Keyz Live"/></label><label>Date and start time<input required type="datetime-local" value={form.startsAt} onChange={set('startsAt')}/></label></div>
+      <div className="lw-form-two"><label>Venue<input required maxLength={120} value={form.venue} onChange={set('venue')}/></label><label>City<input required maxLength={80} value={form.city} onChange={set('city')}/></label></div>
+      <label>Address <small>(optional)</small><input maxLength={200} value={form.address ?? ''} onChange={set('address')}/></label>
+      <label className="lw-inline"><input type="checkbox" checked={form.free} onChange={set('free')}/> Free show</label>
+      {!form.free && <div className="lw-form-two"><label>Your ticket link <small>(Stripe Payment Link, Eventbrite, venue)</small><input type="url" maxLength={2000} value={form.ticketUrl ?? ''} onChange={set('ticketUrl')} placeholder="https://buy.stripe.com/..."/></label><label>Price <small>(optional)</small><input maxLength={60} value={form.priceText ?? ''} onChange={set('priceText')} placeholder="$20"/></label></div>}
+      <label>Details <small>(optional: doors, age, lineup)</small><textarea rows={2} maxLength={1000} value={form.details ?? ''} onChange={set('details')}/></label>
+      <div className="lw-partner-row"><Button type="submit" gold disabled={busy}>Save</Button><Button onClick={() => setForm(null)}>Cancel</Button></div>
+    </form>}
+    {!list ? <p className="lw-muted">Loading…</p> : !list.length ? (!form && <p className="lw-muted">No shows yet.</p>) : <div className="lw-shows">{list.map(s => <div key={s.id} className="lw-show">
+      <div><b>{s.title}</b> <Badge tone={s.status === 'PUBLISHED' ? 'cyan' : s.status === 'CANCELLED' ? 'red' : 'gold'}>{s.status === 'PUBLISHED' ? 'LIVE' : s.status}</Badge>
+        <p>{new Date(s.startsAt + ':00Z').toLocaleString([], {timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'})} · {s.venue}, {s.city}</p>
+        <small>{s.free ? 'Free' : s.ticketUrl ? `Tickets: ${new URL(s.ticketUrl).hostname}${s.priceText ? ` · ${s.priceText}` : ''}` : 'Needs your ticket link'} · {s.views} views · {s.qrScans} QR scans</small>
+        <div className="lw-partner-row">
+          {s.status === 'PUBLISHED' && <a className="lw-button" href={s.url} target="_blank" rel="noreferrer noopener">Open page</a>}
+          {s.status !== 'DRAFT' || owner ? <a className="lw-button" href={`/api/label-world${base}/${s.id}/qr.svg`} download={`${s.slug}-qr.svg`}>Download QR</a> : null}
+          {editor && s.status !== 'CANCELLED' && <Button onClick={() => setForm({...s, address: s.address ?? '', details: s.details ?? '', ticketUrl: s.ticketUrl ?? '', priceText: s.priceText ?? ''})}>Edit</Button>}
+          {owner && s.status === 'DRAFT' && <Button gold disabled={busy} onClick={() => go(() => api(`${base}/${s.id}/status`, {status: 'PUBLISHED'}), 'Show page is live. Download the QR for your flyer.')}>Put it live</Button>}
+          {editor && s.status === 'PUBLISHED' && <Button disabled={busy} onClick={() => confirm('Cancel this show? The page will say it was cancelled.') && go(() => api(`${base}/${s.id}/status`, {status: 'CANCELLED'}), 'Show marked cancelled.')}>Cancel show</Button>}
+        </div>
+      </div>
+      {s.status === 'PUBLISHED' && <img className="lw-show-qr" alt={`QR code for ${s.title}`} src={`/api/label-world${base}/${s.id}/qr.svg`}/>}
+    </div>)}</div>}
+  </Panel>
 }

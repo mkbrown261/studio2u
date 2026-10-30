@@ -8,7 +8,7 @@ export const agents: Record<AgentId,{name:string,role:string,icon:string,color:s
  reviewer:{name:'Eric',role:'Reviewer Agent',icon:'shield',color:'purple',portrait:'/label-world/assets/eric-portrait.png'},
  executive:{name:'Executive',role:'Strategy · Decisions · Growth',icon:'crown',color:'gold',portrait:'/label-world/assets/executive-portrait.png'},
  builder:{name:'Builder / Producer',role:'Creative Production & Release',icon:'wave',color:'cyan',portrait:'/label-world/assets/builder-portrait.png'},
- partner:{name:'Business Partner',role:'Merch · Campaigns · Money',icon:'wallet',color:'gold',portrait:'/label-world/assets/partner-portrait.png'}
+ partner:{name:'Ben',role:'Business Partner · Merch · Shows · Money',icon:'wallet',color:'gold',portrait:'/label-world/assets/partner-portrait.png'}
 }
 export async function api(path:string,body?:unknown){const r=await fetch('/api/label-world'+path,body!==undefined?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});const d=await r.json();if(r.status===401)window.dispatchEvent(new Event('label-world-session-expired'));if(!r.ok)throw new Error(d.error||`Request failed (${r.status})`);return d}
 const paths: Record<string,React.ReactNode>={
