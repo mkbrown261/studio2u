@@ -82,9 +82,12 @@ export function PackageTools({labelId, release, assets, notify}: {labelId: strin
     try {
       const m = await manifest()
       if (kind === 'preview') { setPreview(m); return }
-      const blob = new Blob([JSON.stringify(m, null, 2)], {type: 'application/json'}), a = document.createElement('a')
-      a.href = URL.createObjectURL(blob); a.download = `${(release.artist + '-' + release.title).replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-v${release.version}-package.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000)
-      notify('Package manifest downloaded.'); chime()
+      if (!assets.some(a => a.kind === 'master' || a.kind === 'artwork')) throw new Error('Upload the master WAV or artwork first; there is nothing to package yet.')
+      const res = await fetch(`/api/label-world/labels/${labelId}/releases/${release.id}/package.zip`)
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Package failed')
+      const blob = await res.blob(), a = document.createElement('a')
+      a.href = URL.createObjectURL(blob); a.download = (res.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/)?.[1] || 'release.zip'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000)
+      notify('Release zip downloaded: audio, artwork and manifest.'); chime()
     } catch (e) { notify((e as Error).message) } finally { setBusy(false) }
   }
   return <>
@@ -94,7 +97,7 @@ export function PackageTools({labelId, release, assets, notify}: {labelId: strin
       <h4>Files</h4>{preview.files.length ? <ul>{preview.files.map((f: any) => <li key={f.sha256}>{f.kind}: {f.name} · {Math.round(f.bytes / 1024)} KB · <code>{f.sha256.slice(0, 16)}…</code></li>)}</ul> : <p className="lw-muted">No master or artwork uploaded yet.</p>}
       <h4>Final approval</h4><p>{preview.finalApproval?.status ?? 'Unknown'}{preview.finalApproval?.blockers?.length ? ` · ${preview.finalApproval.blockers.length} thing(s) to fix first` : ''}</p>
       <h4>Where it goes</h4><ul>{preview.submissions.map((s: any) => <li key={s.target}>{s.target}: {s.status.replaceAll('_', ' ')}{s.missing ? ` (${s.missing} missing)` : ''}</li>)}</ul>
-      <Button gold onClick={() => { setPreview(null); run('build') }}>Download manifest</Button>
+      <Button gold onClick={() => { setPreview(null); run('build') }}>Download zip</Button>
     </section></div>}
   </>
 }
@@ -145,5 +148,62 @@ export function TrendsLive({labelId, role, notify, onAsk}: {labelId: string, rol
       <small className="lw-source-line">Pulled {new Date(d.report.observedAt).toLocaleString()} · Deezer, Apple Music, iTunes, YouTube · free public charts</small>
       <table><thead><tr><th>Song</th><th>Artist</th><th>Chart</th><th></th></tr></thead><tbody>{shown.map((r, i) => <tr key={i}><td>{r.source_url ? <a href={r.source_url} target="_blank" rel="noreferrer noopener">{r.track}</a> : r.track}</td><td>{r.artist}</td><td>{r.period}</td><td><button onClick={() => onAsk(`What can I learn from "${r.track}" by ${r.artist} for my own next release?`)}>Ask Carla</button></td></tr>)}</tbody></table>
     </>}
+  </div>
+}
+
+/** Image AI switch: Auto (the provider your label uses) or any connected image provider. */
+export function ImageProviderPicker({labelId, value, onChange}: {labelId: string, value: string, onChange: (v: string) => void}) {
+  const [d, setD] = useState<any>(null)
+  useEffect(() => { api(`/image-providers${labelId ? `?labelId=${encodeURIComponent(labelId)}` : ''}`).then(setD).catch(() => setD({available: [], auto: null})) }, [labelId])
+  if (!d) return null
+  if (!d.available.length) return <small className="lw-muted">Connect an image AI key (OpenAI, Google Gemini, xAI Grok or OpenRouter) in <b>AI setup</b> to make images.</small>
+  return <label className="lw-inline-select">Image AI<select value={value} onChange={e => onChange(e.target.value)}><option value="auto">Auto ({d.available.find((a: any) => a.id === d.auto)?.name ?? d.available[0].name})</option>{d.available.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+}
+
+/** Cover art: really made with the owner's image AI, saved as the release artwork. */
+export function CoverArt({labelId, release, role, notify, onMade}: {labelId: string, release: any, role: string, notify: N, onMade: () => void}) {
+  const [idea, setIdea] = useState(''), [provider, setProvider] = useState('auto'), [busy, setBusy] = useState(false), [last, setLast] = useState<any>(null)
+  async function make() {
+    if (!release) { notify('Pick a release at the top first.'); return }
+    setBusy(true)
+    try { const r = await api(`/labels/${labelId}/releases/${release.id}/cover`, {prompt: idea || undefined, provider}); setLast(r); notify(r.say); chime(); onMade() }
+    catch (e) { notify((e as Error).message) } finally { setBusy(false) }
+  }
+  return <div className="lw-release-tool">
+    <textarea rows={2} maxLength={1500} value={idea} onChange={e => setIdea(e.target.value)} placeholder="Optional idea: e.g. gold 22 on a night runway, grainy film look"/>
+    <div className="lw-partner-row"><ImageProviderPicker labelId={labelId} value={provider} onChange={setProvider}/><Button gold disabled={busy || !release || role === 'viewer'} onClick={make}>{busy ? 'Making cover… (up to 2 min)' : 'Generate cover'}</Button></div>
+    {last && <img className="lw-cover-preview" alt="Generated cover" src={`/api/label-world/labels/${labelId}/releases/${release.id}/artwork/${last.assetId}`}/>}
+  </div>
+}
+
+/** Suno / Higgsfield / Genjitsu: your agent does it in your logged-in browser. */
+export function CreativeTool({labelId, releaseId, tool, name, href, role, notify}: {labelId: string, releaseId: string, tool: string, name: string, href: string, role: string, notify: N}) {
+  const [open, setOpen] = useState(false), [goal, setGoal] = useState(''), [busy, setBusy] = useState(false)
+  async function go(e: React.FormEvent) { e.preventDefault(); setBusy(true); try { const r = await api(`/labels/${labelId}/creative`, {tool, goal, releaseId: releaseId || undefined}); notify(r.say); chime(); setGoal(''); setOpen(false) } catch (e) { notify((e as Error).message) } finally { setBusy(false) } }
+  return <>
+    <div className="lw-partner-row"><Button gold disabled={role === 'viewer'} onClick={() => labelId ? setOpen(!open) : notify('Choose a label workspace first.')}>Have my agent do it</Button><a className="lw-button" href={href} target="_blank" rel="noreferrer noopener">Open {name}</a></div>
+    {open && <form className="lw-stacked-form lw-assign" onSubmit={go}><textarea required rows={2} maxLength={1500} value={goal} onChange={e => setGoal(e.target.value)} placeholder={tool === 'suno' ? 'e.g. A dark trap beat at 140 BPM for my next single' : tool === 'higgsfield' ? 'e.g. A 15-second visualizer for "22" for TikTok' : 'e.g. Cut my studio footage into a 30-second reel'}/><small className="lw-muted">Log in to {name} once in your browser. Your agent asks before spending credits or posting anything.</small><Button type="submit" gold disabled={busy || !goal.trim()}>Queue it</Button></form>}
+  </>
+}
+
+/** Checkpoints + STOP: shown on every page. Agents ask here before Submit/Publish/Post/Sell/Send/Spend. */
+export function ControlBar({labelId, notify}: {labelId: string, notify: N}) {
+  const [d, setD] = useState<any>(null), [busy, setBusy] = useState<string | null>(null)
+  const load = () => labelId ? api(`/labels/${labelId}/control`).then(setD).catch(() => setD(null)) : Promise.resolve(setD(null))
+  useEffect(() => { setD(null); load(); const t = setInterval(load, 30000); const f = () => load(); window.addEventListener('focus', f); return () => { clearInterval(t); window.removeEventListener('focus', f) } }, [labelId])
+  async function act(key: string, path: string, body: unknown) { setBusy(key); try { const r = await api(`/labels/${labelId}/${path}`, body); notify(r.say); chime(); await load() } catch (e) { notify((e as Error).message) } finally { setBusy(null) } }
+  if (!labelId || !d) return null
+  const owner = d.role === 'owner', editor = d.role !== 'viewer'
+  const verb: Record<string, string> = {SUBMIT: 'Submit', PUBLISH: 'Publish', POST: 'Post', SELL: 'Sell', SEND: 'Send', SPEND: 'Spend', DELETE: 'Delete', OTHER: 'Do'}
+  return <div id="checkpoints" className={`lw-control ${d.paused ? 'paused' : ''}`}>
+    <div className="lw-control-head">
+      <b>{d.paused ? '⏸ Your agents are stopped' : d.pending.length ? `${d.pending.length} thing(s) waiting for your OK` : d.running ? `Your agents are working (${d.running})` : 'Your agents ask you here before anything big happens'}</b>
+      {d.paused ? (owner && <Button gold disabled={busy === 'resume'} onClick={() => act('resume', 'control/resume', {})}>Resume</Button>) : (editor && <button className="lw-stop" disabled={busy === 'stop'} onClick={() => confirm('Stop every agent on this label right now?') && act('stop', 'control/stop', {})}>STOP</button>)}
+    </div>
+    {d.pending.map((c: any) => <div key={c.id} className="lw-checkpoint">
+      <div><Badge tone="gold">{verb[c.kind] ?? c.kind}</Badge> <b>{c.title}</b>{c.site && <small> · {c.site}</small>}{c.amountUsd != null && <small> · ${c.amountUsd.toFixed(2)}</small>}
+        {c.detail && <p>{c.detail}</p>}{c.previewUrl && <a href={c.previewUrl} target="_blank" rel="noreferrer noopener">Look first</a>}<small className="lw-muted"> asked by {c.requestedBy}</small></div>
+      {owner ? <div className="lw-partner-row"><Button gold disabled={!!busy} onClick={() => act('a' + c.id, `checkpoints/${c.id}/decision`, {decision: 'APPROVED'})}>Yes, do it</Button><Button disabled={!!busy} onClick={() => act('d' + c.id, `checkpoints/${c.id}/decision`, {decision: 'DENIED'})}>No</Button></div> : <small className="lw-muted">Waiting for the label owner</small>}
+    </div>)}
   </div>
 }

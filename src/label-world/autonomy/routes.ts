@@ -17,6 +17,8 @@ import * as merch from './merch'
 import * as partner from './partner'
 import * as shows from './shows'
 import { approvalStatus, approvalAction } from './approval'
+import * as cp from './checkpoints'
+import * as creative from './creative'
 import { enqueue } from './engine'
 
 const base = '/api/label-world/labels/:labelId'
@@ -35,7 +37,7 @@ export function installAutonomyRoutes(app: any) {
   app.post(base + '/artist-profile', wrap(async c => {
     const profile = await cases.saveProfile(c.env.DB, L(c), U(c), await body(c))
     // Get to know them right away (free public lookups, no AI tokens), not on the next engine pass.
-    const job = know.discoverPublic(c.env.DB, L(c), U(c)).catch(() => null)
+    const job = know.discoverPublic(c.env.DB, L(c), U(c)).then(() => creative.brandKickoff(c.env.DB, L(c), U(c), (t: any) => enqueue(c.env.DB, t))).catch(() => null)
     try { c.executionCtx.waitUntil(job) } catch { await job }
     return c.json({ profile, discovering: true })
   }))
@@ -146,6 +148,18 @@ export function installAutonomyRoutes(app: any) {
     const b = await body(c)
     return c.json(await updateIntake(c.env.DB, c.req.param('labelId'), c.req.param('releaseId'), c.get('lwUser').id, b.patch, b.expectedVersion, 'web'))
   }))
+  // ---- checkpoints + STOP (every agent asks before Submit/Publish/Post/Sell/Send/Spend) ----
+  app.get(base + '/control', wrap(async c => c.json(await cp.controlStatus(c.env.DB, L(c), U(c)))))
+  app.post(base + '/control/stop', wrap(async c => c.json(await cp.stopAll(c.env.DB, L(c), U(c)))))
+  app.post(base + '/control/resume', wrap(async c => c.json(await cp.resumeAll(c.env.DB, L(c), U(c)))))
+  app.post(base + '/checkpoints/:id/decision', wrap(async c => c.json(await cp.decideCheckpoint(c.env.DB, L(c), U(c), c.req.param('id'), await body(c)))))
+  // ---- creative: cover art (provider switch), one-zip package, Suno/Higgsfield/Genjitsu, brand kickoff ----
+  app.get('/api/label-world/image-providers', wrap(async c => { const { imageProviders } = await import('../providers/images'); return c.json(await imageProviders(c.env.DB, U(c), c.req.query('labelId') || undefined)) }))
+  app.post(base + '/releases/:releaseId/cover', wrap(async c => c.json(await creative.generateCover(E(c), L(c), U(c), c.req.param('releaseId'), await body(c)), 201)))
+  app.get(base + '/releases/:releaseId/artwork/:assetId', wrap(async c => new Response(await creative.assetImage(E(c), L(c), c.req.param('releaseId'), c.req.param('assetId')), { headers: { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' } })))
+  app.get(base + '/releases/:releaseId/package.zip', wrap(async c => { const z = await creative.packageZip(E(c), L(c), c.req.param('releaseId')); return new Response(z.bytes, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${z.filename}"`, 'Cache-Control': 'no-store' } }) }))
+  app.post(base + '/creative', wrap(async c => c.json(await creative.creativeTask(c.env.DB, L(c), U(c), await body(c), (t: any) => enqueue(c.env.DB, t)), 201)))
+  app.post(base + '/brand/kickoff', wrap(async c => { const q = await creative.brandKickoff(c.env.DB, L(c), U(c), (t: any) => enqueue(c.env.DB, t), true); return c.json({ queued: q, say: q ? 'Ben is on it: he studies your brand and socials, then designs your first merch and a brand story. Open Codex/Claude and say "do my Studio2U tasks".' : 'Your agents are stopped. Tap Resume first.' }) }))
   app.get(base + '/releases/:releaseId/approval', wrap(async c => c.json(await approvalStatus(c.env.DB, L(c), c.req.param('releaseId'), U(c)))))
   app.post(base + '/releases/:releaseId/approval', wrap(async c => c.json(await approvalAction(c.env.DB, L(c), c.req.param('releaseId'), U(c), await body(c)))))
   app.get(base + '/releases/:releaseId/submissions', wrap(async c => c.json({ submissions: await listSubmissions(c.env.DB, c.req.param('labelId'), c.req.param('releaseId')) })))

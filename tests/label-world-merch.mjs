@@ -65,7 +65,7 @@ await assert.rejects(merch.addIdea(db, 'lab-a', 1, { title: 'Swoosh tee', prompt
 const idea = await merch.addIdea(db, 'lab-a', 1, { title: 'Broken heart 22', prompt: 'Big gold "22" in graffiti letters with a broken heart, black and gold' }, 'Codex')
 assert.equal(idea.status, 'IDEA')
 // AI: needs owner's OpenAI key, respects budget, records spend, stores transparent PNG
-await assert.rejects(merch.generateDesign(env, 'lab-a', 1, { ideaId: idea.id }, fwFetch), /Connect your OpenAI key/)
+await assert.rejects(merch.generateDesign(env, 'lab-a', 1, { ideaId: idea.id }, fwFetch), /Connect an image-capable AI key in AI setup \(OpenAI, Google Gemini, xAI Grok or OpenRouter\)/)
 sqlite.prepare('INSERT INTO lw_provider_connections(user_id,provider,encrypted_key) VALUES (?,?,?)').run(1, 'openai', await encryptKey(env.LLM_KEY_ENCRYPTION_SECRET, 'sk-test', keyContext(1, 'openai', '{}')))
 let sentPrompt = null
 const ai = async (url, init) => { if (url.includes('api.openai.com/v1/images/generations')) { const b = JSON.parse(init.body); sentPrompt = b; assert.equal(init.headers.Authorization, 'Bearer sk-test'); return json(200, { data: [{ b64_json: Buffer.from(png(1600, 2000)).toString('base64') }] }) } return fwFetch(url, init) }

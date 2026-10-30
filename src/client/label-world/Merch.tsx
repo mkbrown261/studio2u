@@ -2,13 +2,14 @@
 // No inventory: Fourthwall prints and ships each order. You approve every design and press Publish.
 import React, {useEffect, useState} from 'react'
 import {api, chime, Badge, Button} from './ui'
+import {ImageProviderPicker} from './ReleaseTools'
 
 type N = (s: string) => void
 const usd = (n: number) => `$${(n ?? 0).toFixed(2)}`
 
 export function Merch({labelId, editable, notify, onAsk}: {labelId: string, editable: boolean, notify: N, onAsk: (q: string) => void}) {
   const [d, setD] = useState<any>(null), [busy, setBusy] = useState<string | null>(null), [sales, setSales] = useState<any>(null)
-  const [prompt, setPrompt] = useState(''), [title, setTitle] = useState(''), [make, setMake] = useState<{designId: string, kind: string} | null>(null)
+  const [prompt, setPrompt] = useState(''), [title, setTitle] = useState(''), [provider, setProvider] = useState('auto'), [make, setMake] = useState<{designId: string, kind: string} | null>(null)
   const base = `/labels/${labelId}/merch`
   const load = () => api(base).then(setD).catch(e => notify(e.message))
   useEffect(() => { setD(null); setSales(null); load() }, [labelId])
@@ -26,7 +27,7 @@ export function Merch({labelId, editable, notify, onAsk}: {labelId: string, edit
       notify(j.warnings?.length ? j.warnings.join(' ') : 'Design uploaded. Approve it to make products.'); chime(); setTitle(''); await load()
     } catch (e) { notify((e as Error).message) } finally { setBusy(null) }
   }
-  const generate = (ideaId?: string) => run('gen' + (ideaId ?? ''), () => api(`${base}/designs/generate`, ideaId ? {ideaId} : {prompt, title: title || undefined}).then(r => { setPrompt(''); setTitle(''); return r }), 'Design ready. Approve it if you like it.')
+  const generate = (ideaId?: string) => run('gen' + (ideaId ?? ''), () => api(`${base}/designs/generate`, ideaId ? {ideaId, provider} : {prompt, title: title || undefined, provider}).then(r => { setPrompt(''); setTitle(''); return r }), 'Design ready. Approve it if you like it.')
   const decide = (id: string, decision: 'APPROVED' | 'REJECTED') => {
     if (decision === 'APPROVED' && !confirm('Do you own this art (you made it, or paid for it with the rights), and it uses no other brands, characters or real people\'s faces?')) return
     return run('dec' + id, () => api(`${base}/designs/${id}/decision`, {decision, ownsRights: decision === 'APPROVED'}), decision === 'APPROVED' ? 'Approved. Pick a product to put it on.' : 'Removed.')
@@ -46,7 +47,7 @@ export function Merch({labelId, editable, notify, onAsk}: {labelId: string, edit
     {editable && <section className="lw-merch-step"><h4>{d.shop ? '2' : 'Meanwhile'}. Make a design</h4>
       <label>Name it<input value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder='e.g. "22" tour tee'/></label>
       <label>Describe it (or upload your own PNG below)<textarea rows={3} maxLength={2000} value={prompt} onChange={e => setPrompt(e.target.value)} placeholder='e.g. Big gold "22" in graffiti letters with a broken heart, black and gold, streetwear vibe'/></label>
-      <div className="lw-mf-row"><Button gold disabled={!prompt.trim() || !!busy} onClick={() => generate()}>{busy === 'gen' ? 'Making it… (up to a minute)' : 'Make it with AI (~10¢, your OpenAI key)'}</Button>
+      <div className="lw-mf-row"><ImageProviderPicker labelId={labelId} value={provider} onChange={setProvider}/><Button gold disabled={!prompt.trim() || !!busy} onClick={() => generate()}>{busy === 'gen' ? 'Making it… (up to a minute)' : 'Make it with AI (~10¢, your own AI key)'}</Button>
         <label className="lw-button lw-merch-file">{busy === 'upload' ? 'Uploading…' : 'Upload my PNG'}<input type="file" accept="image/png" hidden disabled={!!busy} onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = '' }}/></label>
         <button className="lw-link-btn" onClick={() => onAsk('Read my Know me brief and save 3 merch design ideas that fit my look and my top songs (use studio2u_guide merch → add_merch_idea). Original art only.')}>Have the Builder suggest 3 ideas</button></div>
       <p className="lw-muted small">Best results: transparent background, 2250×2700 px or bigger. Only art you own: no other brands, logos, characters or real people's faces.</p>

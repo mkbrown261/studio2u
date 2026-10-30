@@ -20,6 +20,8 @@ export function PartnerWorkspace(p: WorkspaceProps) {
   return <div className="lw-partner">
     <div className="lw-agent-heading"><div className="lw-avatar large gold"><Icon name="wallet" size={36}/></div><div><h1>Ben <Badge tone={s.autopilot === 'ON' ? 'cyan' : s.autopilot === 'PAUSED' ? 'red' : 'muted'}>Autopilot {s.autopilot}</Badge></h1><h2>Business Partner · Merch · Shows · Money</h2><p>You approve the week once. He posts it day by day from your own logged-in browser. Stop pauses everything.</p></div></div>
 
+    <Panel title="Build my brand" icon="crown"><p className="lw-muted">Ben studies your brand and socials, learns how you talk, writes your brand story, designs your first merch (with your own image AI) and drafts a week of posts in your voice. He asks before anything goes on sale or gets posted.</p><Button gold disabled={busy === 'brand' || !editor} onClick={() => run('brand', () => api(`/labels/${p.labelId}/brand/kickoff`, {}))}>Build my brand now</Button></Panel>
+
     <Panel title="Autopilot" icon="flag" className="lw-partner-controls">
       <div className="lw-partner-row">
         {owner && s.autopilot !== 'ON' && <Button gold disabled={busy === 'on' || !ready.length} onClick={() => run('on', () => api(`${base}/settings`, {autopilot: 'ON'}), 'Autopilot is on. He posts only what you approved.')}>Turn autopilot on</Button>}

@@ -24,7 +24,6 @@ export const KINDS = {
   mug: { label: 'Mug', templateId: 'pro_4v5OfYhyRx62KW5b7Oj6Uw', name: 'White Glossy Mug', region: 'default', base: 5.95, margin: 10, colors: ['White'] }
 } as const
 export type Kind = keyof typeof KINDS
-const AI_COST_MICROS = 100000 // ~$0.10 per design (gpt-image-2.5-flare, medium, ~3 MP); recorded as an estimate
 const BRANDS = /\b(nike|adidas|jordan|supreme|gucci|louis\s*vuitton|lv|chanel|prada|balenciaga|off-?white|bape|disney|marvel|dc comics|pokemon|nintendo|sanrio|hello kitty|mickey|spongebob|nba|nfl|mlb|coca-?cola|pepsi|mcdonald|apple logo|playboy|rolex|ferrari|lamborghini)\b/i
 const str = (v: unknown, f: string, max: number) => { if (v == null || v === '') return null; if (typeof v !== 'string' || v.length > max || /[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(v)) throw new ServiceError(`Invalid ${f}`); return v.trim() || null }
 const ctxKey = (label: string) => `studio2u:merch:v1:${label}`
@@ -131,29 +130,17 @@ export async function generateDesign(env: any, label: string, actor: number, b: 
   }
   if (!prompt) throw new ServiceError('Describe the design (what goes on it, colors, vibe).')
   if (BRANDS.test(`${title ?? ''} ${prompt}`)) throw new ServiceError('No other brands, logos or characters. Merch must be your own art.')
-  const conn: any = await env.DB.prepare("SELECT encrypted_key,endpoint_config FROM lw_provider_connections WHERE user_id=? AND provider='openai'").bind(actor).first()
-  if (!conn) throw new ServiceError('Connect your OpenAI key in AI setup to make designs, or upload your own PNG.', 409)
-  await spendGuard(env.DB, actor)
-  const key = await decryptKey(env.LLM_KEY_ENCRYPTION_SECRET, conn.encrypted_key, keyContext(actor, 'openai', conn.endpoint_config))
   const id: any = await env.DB.prepare('SELECT artist_name FROM lw_label_identity WHERE label_id=?').bind(label).first()
   const facts = (await env.DB.prepare("SELECT key,value_json FROM lw_artist_facts WHERE label_id=? AND key IN ('genres','brandWords')").bind(label).all().catch(() => ({ results: [] }))).results as any[]
   const f: Record<string, any> = {}; for (const r of facts) f[r.key] = JSON.parse(r.value_json)
   const full = designPrompt(prompt, { artist: id?.artist_name ?? 'the artist', genres: f.genres, brandWords: f.brandWords })
-  const call = async (size: string) => fetcher('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'gpt-image-2.5-flare', prompt: full, size, quality: 'medium', background: 'transparent', output_format: 'png', n: 1, safety_identifier: `s2u-${label.slice(0, 40)}` }), signal: AbortSignal.timeout(150000) })
-  let r: Response
-  try { r = await call('1600x2000'); if (r.status === 400) r = await call('1024x1536') } catch { throw new ServiceError('OpenAI did not answer. Try again.', 502) }
-  if (r.status === 401) throw new ServiceError('OpenAI rejected your key. Check it in AI setup.', 400)
-  if (r.status === 429) throw new ServiceError('OpenAI rate limit or balance reached. Add credit at platform.openai.com.', 429)
-  if (r.status === 400) throw new ServiceError('OpenAI would not make that image (it may look like a brand, a real person or unsafe content). Try describing it differently.', 400)
-  const data: any = await r.json().catch(() => null)
-  const b64 = data?.data?.[0]?.b64_json
-  if (!r.ok || typeof b64 !== 'string') throw new ServiceError('OpenAI returned no image. Try again.', 502)
-  const bin = atob(b64), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-  const month = new Date().toISOString().slice(0, 7)
-  await env.DB.prepare(`INSERT INTO lw_ai_usage(user_id,month,calls,input_tokens,output_tokens,cost_micros,estimated) VALUES (?,?,1,0,0,?,1)
-    ON CONFLICT(user_id,month) DO UPDATE SET calls=calls+1,cost_micros=cost_micros+excluded.cost_micros,estimated=1`).bind(actor, month, AI_COST_MICROS).run()
+  const { makeImage } = await import('../providers/images')
+  let made: any
+  try { made = await makeImage(env, actor, { prompt: full, provider: b?.provider ?? null, label, shape: 'portrait', transparent: true, needPng: true }, fetcher) }
+  catch (e: any) { throw new ServiceError(e?.message ?? 'Image failed', e?.status ?? 502) }
+  const bytes = made.bytes
   const saved = await storeDesign(env, label, bytes, { title: title ?? prompt.slice(0, 60), prompt, source: 'AI', by: 'owner', id: ideaId ?? undefined })
-  return { ...saved, title: title ?? prompt.slice(0, 60), estimatedCostUsd: AI_COST_MICROS / 1e6 }
+  return { ...saved, title: title ?? prompt.slice(0, 60), provider: made.provider, estimatedCostUsd: made.costMicros / 1e6 }
 }
 export async function decideDesign(db: any, label: string, actor: number, id: string, b: any) {
   await requireEditor(db, label, actor)

@@ -14,7 +14,7 @@ import { buildPacket, derivedStatus, targets, type Target, type ReleaseRow, type
 import type { Intake } from './intake'
 import { decryptKey } from '../providers/vault'
 
-export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST', 'PARTNER_POST', 'PARTNER_SETUP'] as const
+export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST', 'PARTNER_POST', 'PARTNER_SETUP', 'CREATIVE_TOOL', 'BRAND_KICKOFF'] as const
 export type TaskKind = typeof taskKinds[number]
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
@@ -65,8 +65,8 @@ export async function refreshSubmissions(db: any, label: string, releaseId: stri
 export async function enqueue(db: any, t: { label: string; release?: string | null; kind: TaskKind; role: string; capability?: 'ANY' | 'SCREEN_CONTROL' | 'HUMAN'; title: string; input: Record<string, unknown>; dedupe: string; runAfter?: string | null }) {
   const id = crypto.randomUUID()
   const r = await db.prepare(`INSERT INTO lw_tasks(id,label_id,release_id,agent_role,status,input_json,kind,capability,title,dedupe_key,run_after)
-    VALUES (?,?,?,?,'QUEUED',?,?,?,?,?,?) ON CONFLICT DO NOTHING`)
-    .bind(id, t.label, t.release ?? null, t.role, JSON.stringify(t.input), t.kind, t.capability ?? 'ANY', t.title.slice(0, 200), t.dedupe, t.runAfter ?? null).run()
+    SELECT ?,?,?,?,'QUEUED',?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM lw_agent_control WHERE label_id=? AND paused=1) ON CONFLICT DO NOTHING`)
+    .bind(id, t.label, t.release ?? null, t.role, JSON.stringify(t.input), t.kind, t.capability ?? 'ANY', t.title.slice(0, 200), t.dedupe, t.runAfter ?? null, t.label).run()
   if (r.meta.changes) await db.prepare('INSERT INTO lw_task_events(label_id,task_id,status,payload_json) VALUES (?,?,?,?)').bind(t.label, id, 'QUEUED', JSON.stringify({ kind: t.kind, by: 'engine' })).run()
   return Boolean(r.meta.changes)
 }
@@ -150,7 +150,7 @@ export async function claimTask(db: any, o: { labels: string[]; agent: string; s
   const t = now(), caps = o.screen ? ['ANY', 'SCREEN_CONTROL'] : ['ANY']
   const kinds = o.kinds?.length ? o.kinds : [...taskKinds]
   return db.prepare(`UPDATE lw_tasks SET status='RUNNING',claimed_by=?,lease_until=?,attempts=attempts+1,updated_at=CURRENT_TIMESTAMP
-    WHERE id=(SELECT id FROM lw_tasks WHERE status='QUEUED' AND label_id IN (SELECT value FROM json_each(?)) AND capability IN (SELECT value FROM json_each(?))
+    WHERE id=(SELECT id FROM lw_tasks WHERE status='QUEUED' AND label_id IN (SELECT value FROM json_each(?)) AND label_id NOT IN (SELECT label_id FROM lw_agent_control WHERE paused=1) AND capability IN (SELECT value FROM json_each(?))
       AND kind IN (SELECT value FROM json_each(?)) AND (run_after IS NULL OR run_after<=?) ORDER BY created_at,id LIMIT 1) AND status='QUEUED'
     RETURNING id,label_id,release_id,kind,capability,title,input_json,attempts,lease_until`)
     .bind(o.agent.slice(0, 100), later(LEASE_MINUTES * 60000), JSON.stringify(o.labels), JSON.stringify(caps), JSON.stringify(kinds), t).first()
@@ -159,6 +159,7 @@ export async function claimTask(db: any, o: { labels: string[]; agent: string; s
 /** Optional: wake the user's own Claude Code scheduled task through its documented /fire endpoint. */
 export const ROUTINE_URL = /^https:\/\/api\.anthropic\.com\/v1\/claude_code\/routines\/trig_[A-Za-z0-9_-]{4,100}\/fire$/
 export async function wakeAgents(db: any, env: any, label: string, fetcher: typeof fetch = fetch) {
+  if ((await db.prepare('SELECT paused FROM lw_agent_control WHERE label_id=?').bind(label).first().catch(() => null) as any)?.paused) return 'PAUSED'
   const hook = await db.prepare("SELECT value FROM lw_label_secrets WHERE label_id=? AND name='claude_routine'").bind(label).first().catch(() => null)
   if (!hook) return 'NOT_CONFIGURED'
   const last = await db.prepare("SELECT MAX(created_at) AS at FROM lw_task_events WHERE label_id=? AND status='AGENT_WOKEN'").bind(label).first()

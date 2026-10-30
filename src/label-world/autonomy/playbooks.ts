@@ -25,7 +25,7 @@ export type Playbook = {
 
 export const STANDING_RULES = [
   'Ask before acting. Show the user every email, letter or form you prepared and wait for an explicit "yes, send it" before sending or submitting anything.',
-  'The human presses the final Submit on any official site. Never tick legal attestations for them.',
+  'Do the work yourself, screen control included. Before any final Submit, Publish, Post, Sell, Send, Spend or Delete, call studio2u_ask_checkpoint and wait until check_checkpoint says go=true; then you may press it. Never tick legal attestations for them. If STOP is on, do nothing.',
   'Never invent facts: legal names, splits, IPI/ISNI, ISRC/UPC, air dates, amounts owed or deadlines. If you do not know, ask or look it up on an official source and cite it.',
   'You are not a lawyer. For disputes (names, contracts, unpaid splits) prepare organized evidence and drafts, and recommend review by an entertainment attorney or a Volunteer Lawyers for the Arts program before sending anything legal.',
   'Never ask for, read aloud, or store passwords. The user logs in to provider sites themselves.',
@@ -477,8 +477,8 @@ export const SCREEN_POLICY = [
   'Use Studio2U tools and public web pages first. Use the screen only when there is no API: provider forms (UnitedMasters, ASCAP, SoundExchange, BMI, MLC), the user\'s own analytics (Instagram, TikTok, YouTube Studio), Suno/creative tools, or the user asks.',
   'Prefer reading the page structure (accessibility snapshot / DOM text) over screenshots; take screenshots only to confirm a step, small (JPEG, ~1000px wide).',
   'One focused session per task. Do not leave the browser polling or re-check pages on a loop; save what you read with Studio2U tools and close the tab.',
-  'The user logs in themselves and presses every final Submit / Pay / Publish button.',
-  'Never post, like, follow, comment, DM or change settings on social accounts.'
+  'The user logs in themselves. Every final Submit / Pay / Publish / Post / Send is a checkpoint: ask_checkpoint, wait for go=true, then press it (or let the owner press it if they prefer).',
+  'Never post, like, follow, comment, DM or change settings on social accounts unless the owner approved it (an approved Ben plan post or an approved POST checkpoint). Never change passwords, 2FA or payment settings.'
 ]
 
 export const playbookById = (id: string) => PLAYBOOKS.find(p => p.id === id)
