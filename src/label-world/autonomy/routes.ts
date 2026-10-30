@@ -13,6 +13,7 @@ import * as outreach from './outreach'
 import * as sx from './soundexchange'
 import * as know from './discovery'
 import { talk } from './talk'
+import * as merch from './merch'
 
 const base = '/api/label-world/labels/:labelId'
 const wrap = (fn: (c: any) => Promise<Response>) => async (c: any) => {
@@ -63,6 +64,28 @@ export function installAutonomyRoutes(app: any) {
   app.post(base + '/catalog/:trackId/ascap/report', wrap(async c => c.json(await ascap.reportTrack(c.env.DB, L(c), U(c), c.req.param('trackId'), await body(c)))))
   app.post(base + '/catalog/:trackId', wrap(async c => c.json(await cases.updateTrack(c.env.DB, L(c), U(c), c.req.param('trackId'), await body(c)))))
   app.get(base + '/playbooks', wrap(async c => c.json({ standingRules: cases.STANDING_RULES, playbooks: cases.PLAYBOOKS.map(p => ({ id: p.id, name: p.name, owner: p.owner, summary: p.summary, needs: p.needs })), suggested: c.req.query('match') ? cases.suggestPlaybooks(c.req.query('match')!) : [] })))
+  // ---- Merch (no inventory): the owner's own free Fourthwall shop ----
+  const E = (c: any) => c.env
+  app.get(base + '/merch', wrap(async c => c.json(await merch.merchOverview(E(c), L(c), U(c)))))
+  app.post(base + '/merch/shop', wrap(async c => c.json(await merch.connectShop(E(c), L(c), U(c), await body(c)))))
+  app.post(base + '/merch/shop/disconnect', wrap(async c => c.json(await merch.disconnectShop(E(c), L(c), U(c)))))
+  app.get(base + '/merch/template/:kind', wrap(async c => c.json(await merch.templateInfo(c.req.param('kind')))))
+  app.post(base + '/merch/designs/upload', wrap(async c => {
+    const declared = Number(c.req.header('Content-Length')); if (declared > 20 * 1024 * 1024) throw new ServiceError('PNG must be under 20 MB', 413)
+    const reader = c.req.raw.body?.getReader(); if (!reader) throw new ServiceError('File bytes required')
+    const chunks: Uint8Array[] = []; let n = 0
+    for (;;) { const { done, value } = await reader.read(); if (done) break; n += value.length; if (n > 20 * 1024 * 1024) { await reader.cancel(); throw new ServiceError('PNG must be under 20 MB', 413) } chunks.push(value) }
+    const bytes = new Uint8Array(n); let o = 0; for (const ch of chunks) { bytes.set(ch, o); o += ch.length }
+    return c.json(await merch.uploadDesign(E(c), L(c), U(c), bytes, c.req.header('X-Title') ? decodeURIComponent(c.req.header('X-Title')) : null), 201)
+  }))
+  app.post(base + '/merch/designs/ideas', wrap(async c => c.json(await merch.addIdea(c.env.DB, L(c), U(c), await body(c), 'owner'), 201)))
+  app.post(base + '/merch/designs/generate', wrap(async c => c.json(await merch.generateDesign(E(c), L(c), U(c), await body(c)), 201)))
+  app.post(base + '/merch/designs/:id/decision', wrap(async c => c.json(await merch.decideDesign(c.env.DB, L(c), U(c), c.req.param('id'), await body(c)))))
+  app.get(base + '/merch/designs/:id/image', wrap(async c => new Response(await merch.designImage(E(c), L(c), U(c), c.req.param('id')), { headers: { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' } })))
+  app.post(base + '/merch/products', wrap(async c => c.json(await merch.makeProduct(E(c), L(c), U(c), await body(c)), 201)))
+  app.post(base + '/merch/products/:id/state', wrap(async c => c.json(await merch.setProductState(E(c), L(c), U(c), c.req.param('id'), await body(c)))))
+  app.get(base + '/merch/products/:id/mockups/:i', wrap(async c => { const m = await merch.mockupImage(E(c), L(c), U(c), c.req.param('id'), Number(c.req.param('i'))); return new Response(m.bytes, { headers: { 'Content-Type': m.type, 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff' } }) }))
+  app.get(base + '/merch/sales', wrap(async c => c.json(await merch.merchSales(E(c), L(c), U(c)))))
   // Plain-language intake: talk, we fill the boxes and answer in the same box.
   app.post(base + '/talk', wrap(async c => c.json(await talk(c.env.DB, L(c), U(c), await body(c)))))
   app.get(base + '/cases', wrap(async c => c.json({ cases: await cases.listCases(c.env.DB, L(c), U(c)) })))

@@ -24,6 +24,7 @@ export const TOPICS: Record<string, { about: string; tools: string[] }> = {
   soundexchange: { about: 'SoundExchange: account/roles, submit recordings as owner, claim as artist, contact update form, Letters of Direction.', tools: ['sx_account', 'save_sx_account', 'sx_queue', 'prepare_sx_recording', 'save_sx_recording', 'report_sx_recording', 'sx_bulk_rows', 'sx_contact_update', 'sx_letter_of_direction'] },
   office: { about: 'Weekly report, verified money from statements.', tools: ['get_report', 'money_summary', 'list_statements'] },
   agreements: { about: 'Split sheets with e-sign links; attorney pre-check; BMI 200% shares.', tools: ['attorney_precheck', 'bmi_shares', 'create_agreement', 'list_agreements', 'get_agreement', 'revise_agreement'] },
+  merch: { about: 'Merch with no inventory (owner\'s free Fourthwall shop): see status, save design ideas. Owner makes images, approves, publishes.', tools: ['merch_status', 'add_merch_idea', 'get_artist_profile'] },
   content: { about: 'Content Studio: campaigns and concepts the owner approves.', tools: ['create_campaign', 'list_campaigns', 'get_campaign', 'add_concept', 'mark_concept'] },
   account: { about: 'Who is connected and which labels are authorized.', tools: ['whoami', 'list_labels'] }
 }
