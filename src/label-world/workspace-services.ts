@@ -5,6 +5,7 @@ import type { SessionUser } from '../lib/session'
 import { generate, providerId, endpointConfig } from './providers/adapters'
 import { decryptKey, keyContext } from './providers/vault'
 import { spendGuard, recordSpend } from './providers/budget'
+import { runTrends, TREND_INTENT } from './research/trends'
 type Env = AppEnv & { Variables: { lwUser: SessionUser; lwRole: string } }
 const agents = ['researcher','reviewer','executive','builder']
 const base = '/api/label-world/labels/:labelId'
@@ -27,6 +28,8 @@ export function installWorkspaceRoutes(app:Hono<Env>){
   if(existing){if(existing.content!==content||existing.release_id!==releaseId||existing.agent_id!==agent)return c.json({error:'Message ID already used'},409);return c.json({messages:await history(c),status:existing.status,replayed:true})}
   const preference=await c.env.DB.prepare('SELECT provider,model FROM lw_reasoning_preferences WHERE label_id=? AND user_id=?').bind(label,user).first()
   await c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,release_id,role,content,status) VALUES (?,?,?,?,?,'user',?,'WAITING_FOR_PROVIDER')").bind(id,label,user,agent,releaseId,content).run()
+  // Carla answers "what's hot" from live public charts right away: no AI key, no tokens.
+  if(agent==='researcher'&&TREND_INTENT.test(content)){try{await runTrends(c.env,label,user,{text:content,replyTo:id});return c.json({messages:await history(c),status:'COMPLETED'},201)}catch{/* fall through to the model */}}
   const conn=preference?await c.env.DB.prepare('SELECT encrypted_key,endpoint_config FROM lw_provider_connections WHERE user_id=? AND provider=?').bind(user,preference.provider).first():null
   if(!conn)return c.json({messages:await history(c),status:'WAITING_FOR_PROVIDER',message:'Connect a personal provider and select a model. Your message has been saved.'},201)
   try{

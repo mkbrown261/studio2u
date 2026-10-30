@@ -225,6 +225,12 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
   const { queueDiscovery } = await import('./discovery')
   const disc = await queueDiscovery(db, (t: any) => enqueue(db, t), opts.labelIds, opts.lookup).catch(() => ({ lookedUp: 0, queued: 0 }))
   summary.discovered = disc.lookedUp; summary.knowArtist = disc.queued
+  // Carla: once a day per label, fresh charts (free, no AI) and answers to any waiting "what's hot" question.
+  if (!opts.labelIds || (opts as any).trends) {
+    const { dailyTrends } = await import('../research/trends')
+    const t = await dailyTrends(env, opts.labelIds).catch(() => ({ ran: 0, answered: 0 }))
+    summary.trends = t.ran; summary.trendAnswers = t.answered
+  }
   // Monday Report: one per label per local day, at the label's chosen weekday/hour.
   const { scheduledReports } = await import('./office')
   const reports = await scheduledReports(db, opts.labelIds, new Date(started)).catch(() => [] as string[])

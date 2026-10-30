@@ -151,14 +151,16 @@ export async function discoverPublic(db: any, label: string, actor: number, look
   if (!id) throw new ServiceError('Tell us your artist name first (Who I am).', 409)
   const throttle = lookup === defaultLookup ? () => wait(1100) : async () => {}
   const names = [id.artist_name, ...JSON.parse(id.aliases_json || '[]')].slice(0, 3) as string[]
-  const targets = new Set(names.map(norm))
+  // Compare without spaces too: "AVIATORKEYZ" is the same artist as "Aviator Keyz".
+  const tight = (x: string) => norm(x).replace(/ /g, '')
+  const targets = new Set(names.map(tight))
   const found: any[] = [], facts: Record<string, unknown> = {}, notes: string[] = []
   const add = (x: any) => { if (!found.some(f => f.url === x.url)) found.push(x) }
   const known = (u: string) => (id.spotify_artist_id && u.includes(id.spotify_artist_id)) || (id.apple_artist_id && u.includes(id.apple_artist_id))
   // MusicBrainz: official links, genres, area, IPI.
   for (const name of names.slice(0, 2)) {
     let res: any; try { res = await lookup(`https://musicbrainz.org/ws/2/artist?query=${encodeURIComponent(`artist:"${name}"`)}&limit=5&fmt=json`) } catch { notes.push('MusicBrainz did not answer.'); break }
-    const exact = (res?.artists ?? []).filter((a: any) => (a.score ?? 0) >= 90 && (targets.has(norm(a.name)) || (a.aliases ?? []).some((x: any) => targets.has(norm(x.name)))))
+    const exact = (res?.artists ?? []).filter((a: any) => (a.score ?? 0) >= 90 && (targets.has(tight(a.name)) || (a.aliases ?? []).some((x: any) => targets.has(tight(x.name)))))
     if (exact.length > 1) notes.push(`${exact.length} artists in MusicBrainz are named "${name}". Only confirm the links that are you.`)
     for (const a of exact.slice(0, 2)) {
       await throttle()
@@ -188,7 +190,7 @@ export async function discoverPublic(db: any, label: string, actor: number, look
   // Deezer: fans, top tracks, similar artists (only with a single exact match).
   try {
     const d = await lookup(`https://api.deezer.com/search/artist?q=${encodeURIComponent(names[0])}&limit=8`)
-    const exact = (d?.data ?? []).filter((a: any) => targets.has(norm(a.name)))
+    const exact = (d?.data ?? []).filter((a: any) => targets.has(tight(a.name)))
     for (const a of exact.slice(0, 3)) add({ url: `https://www.deezer.com/artist/${a.id}`, platform: 'deezer', source: 'DEEZER', confidence: exact.length === 1 ? 'LIKELY' : 'POSSIBLE', evidence: `Deezer artist "${a.name}": ${a.nb_fan ?? 0} fans, ${a.nb_album ?? 0} releases`, metrics: { fans: a.nb_fan ?? null, releases: a.nb_album ?? null } })
     if (exact.length === 1) {
       const a = exact[0]; facts.publicFans = a.nb_fan ?? 0
@@ -201,7 +203,7 @@ export async function discoverPublic(db: any, label: string, actor: number, look
   // Apple Music profile(s).
   try {
     const d = await lookup(`https://itunes.apple.com/search?term=${encodeURIComponent(names[0])}&entity=musicArtist&limit=6`)
-    const exact = (d?.results ?? []).filter((a: any) => targets.has(norm(a.artistName ?? '')))
+    const exact = (d?.results ?? []).filter((a: any) => targets.has(tight(a.artistName ?? '')))
     for (const a of exact.slice(0, 3)) if (a.artistLinkUrl) add({ url: String(a.artistLinkUrl).split('?')[0], platform: 'apple_music', source: 'ITUNES', confidence: id.apple_artist_id && String(a.artistId) === String(id.apple_artist_id) ? 'STRONG' : exact.length === 1 ? 'LIKELY' : 'POSSIBLE', evidence: `Apple Music artist "${a.artistName}"${a.primaryGenreName ? ` (${a.primaryGenreName})` : ''}` })
     if (!facts.genres && exact.length === 1 && exact[0].primaryGenreName) facts.genres = [exact[0].primaryGenreName]
   } catch { notes.push('Apple Music did not answer.') }
