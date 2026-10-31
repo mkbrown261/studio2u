@@ -40,7 +40,9 @@ export function MoneyFound({labelId, role, notify, onAskAgent}: {labelId: string
     try {
       const t = await api(`/labels/${labelId}/talk`, {text, ...(playbook ? {playbook} : {})})
       if (!t.handled) { notify(t.suggested?.length ? 'Pick the closest problem below, or say a bit more.' : 'Say a bit more about what happened.'); return }
-      setProblem(''); setSuggested([]); setReply({caseId: t.caseId, text: t.reply}); chime()
+      setProblem(''); setSuggested([]); chime()
+      if (t.command) { setReply(null); notify(t.reply); await load(); return }
+      setReply({caseId: t.caseId, text: t.reply})
       await load(); focusCase(t.caseId)
       notify(t.reused ? 'Added to the case you already opened.' : 'Case opened. Answer right in the case, in your own words.')
     } catch (e) { notify((e as Error).message) } finally { setBusy(false) }

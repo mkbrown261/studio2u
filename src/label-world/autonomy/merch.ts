@@ -101,6 +101,13 @@ export async function uploadDesign(env: any, label: string, actor: number, bytes
   const t = str(title, 'title', 120) ?? 'My design'
   return storeDesign(env, label, bytes, { title: t, prompt: null, source: 'UPLOAD', by: 'owner' })
 }
+/** A PNG the owner's agent made with its own image tool (via a one-time upload link). Fills the idea if given. */
+export async function saveAgentDesign(env: any, label: string, actor: number, bytes: Uint8Array, title: string | null, ideaId?: string | null) {
+  await requireEditor(env.DB, label, actor)
+  if (bytes.length > 20 * 1024 * 1024) throw new ServiceError('PNG must be under 20 MB', 413)
+  const idea: any = ideaId ? await env.DB.prepare("SELECT id,title,prompt FROM lw_merch_designs WHERE id=? AND label_id=?").bind(ideaId, label).first() : null
+  return storeDesign(env, label, bytes, { title: str(title, 'title', 120) ?? idea?.title ?? 'Design', prompt: idea?.prompt ?? null, source: 'AI', by: 'agent', id: idea?.id })
+}
 /** An agent (Claude/Codex) or the owner saves an idea; nothing is generated or spent until the owner taps Make it. */
 export async function addIdea(db: any, label: string, actor: number, b: any, by: string) {
   await requireEditor(db, label, actor)
@@ -137,10 +144,17 @@ export async function generateDesign(env: any, label: string, actor: number, b: 
   const { makeImage } = await import('../providers/images')
   let made: any
   try { made = await makeImage(env, actor, { prompt: full, provider: b?.provider ?? null, label, shape: 'portrait', transparent: true, needPng: true }, fetcher) }
-  catch (e: any) { throw new ServiceError(e?.message ?? 'Image failed', e?.status ?? 502) }
+  catch (e: any) {
+    if (e?.code === 'NO_KEY' || e?.code === 'KEY_FAILED') {
+      const keep = ideaId ?? (await addIdea(env.DB, label, actor, { title: title ?? prompt.slice(0, 60), prompt }, 'owner')).id
+      const { imageTask } = await import('./creative')
+      return { ...(await imageTask(env.DB, label, { kind: 'merch', prompt: full, title: title ?? prompt.slice(0, 60), ideaId: keep, why: e.code === 'KEY_FAILED' ? e.message : null })), id: keep }
+    }
+    throw new ServiceError(e?.message ?? 'Image failed', e?.status ?? 502)
+  }
   const bytes = made.bytes
   const saved = await storeDesign(env, label, bytes, { title: title ?? prompt.slice(0, 60), prompt, source: 'AI', by: 'owner', id: ideaId ?? undefined })
-  return { ...saved, title: title ?? prompt.slice(0, 60), provider: made.provider, estimatedCostUsd: made.costMicros / 1e6 }
+  return { ...saved, title: title ?? prompt.slice(0, 60), provider: made.provider, estimatedCostUsd: made.costMicros / 1e6, say: 'Design ready. Approve it if you like it.' }
 }
 export async function decideDesign(db: any, label: string, actor: number, id: string, b: any) {
   await requireEditor(db, label, actor)

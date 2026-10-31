@@ -27,7 +27,7 @@ export function Merch({labelId, editable, notify, onAsk}: {labelId: string, edit
       notify(j.warnings?.length ? j.warnings.join(' ') : 'Design uploaded. Approve it to make products.'); chime(); setTitle(''); await load()
     } catch (e) { notify((e as Error).message) } finally { setBusy(null) }
   }
-  const generate = (ideaId?: string) => run('gen' + (ideaId ?? ''), () => api(`${base}/designs/generate`, ideaId ? {ideaId, provider} : {prompt, title: title || undefined, provider}).then(r => { setPrompt(''); setTitle(''); return r }), 'Design ready. Approve it if you like it.')
+  const generate = (ideaId?: string) => run('gen' + (ideaId ?? ''), () => api(`${base}/designs/generate`, ideaId ? {ideaId, provider} : {prompt, title: title || undefined, provider}).then(r => { setPrompt(''); setTitle(''); return r }))
   const decide = (id: string, decision: 'APPROVED' | 'REJECTED') => {
     if (decision === 'APPROVED' && !confirm('Do you own this art (you made it, or paid for it with the rights), and it uses no other brands, characters or real people\'s faces?')) return
     return run('dec' + id, () => api(`${base}/designs/${id}/decision`, {decision, ownsRights: decision === 'APPROVED'}), decision === 'APPROVED' ? 'Approved. Pick a product to put it on.' : 'Removed.')
@@ -39,7 +39,8 @@ export function Merch({labelId, editable, notify, onAsk}: {labelId: string, edit
 
     {!d.shop && <section className="lw-merch-step"><h4>1. Connect your free Fourthwall shop</h4>
       <ol className="lw-merch-how"><li>Sign up free at <a href="https://fourthwall.com" target="_blank" rel="noopener noreferrer">fourthwall.com</a> (no card needed to start). Add your payout info there yourself.</li><li>In Fourthwall: <b>Settings → For developers → Create API user</b>.</li><li>Paste the API username and password here. It's a shop key, not your login; it's stored encrypted and never shown again.</li></ol>
-      {isOwner ? <form onSubmit={connect} className="lw-form-two"><label>API username<input name="username" required autoComplete="off" maxLength={200}/></label><label>API password<input name="password" type="password" required autoComplete="off" maxLength={300}/></label><Button gold type="submit" disabled={busy === 'connect'}>{busy === 'connect' ? 'Checking…' : 'Connect shop'}</Button></form> : <p className="lw-muted">Only the label owner can connect the shop.</p>}
+      {editable && <div className="lw-mf-row"><Button gold disabled={!!busy} onClick={() => run('setup', () => api(`${base}/shop/setup`, {}))}>Have my agent set it up</Button><small className="lw-muted">Your agent opens Fourthwall in your browser, sets up the free shop and connects it. Or say "sell my merch on Fourthwall" in any chat.</small></div>}
+      {isOwner ? <details><summary>Already have the API user? Paste it</summary><form onSubmit={connect} className="lw-form-two"><label>API username<input name="username" required autoComplete="off" maxLength={200}/></label><label>API password<input name="password" type="password" required autoComplete="off" maxLength={300}/></label><Button gold type="submit" disabled={busy === 'connect'}>{busy === 'connect' ? 'Checking…' : 'Connect shop'}</Button></form></details> : <p className="lw-muted">Only the label owner can connect the shop.</p>}
     </section>}
 
     {sales && <section className="lw-merch-sales"><div><strong>{sales.orders}</strong><span>orders</span></div><div><strong>{sales.items}</strong><span>items sold</span></div><div><strong>{usd(sales.salesUsd)}</strong><span>sales</span></div><div><strong>{usd(sales.profitBeforeCardFeesUsd)}</strong><span>your profit*</span></div><small>*Before card fees. Payouts happen inside Fourthwall.</small></section>}
@@ -47,7 +48,7 @@ export function Merch({labelId, editable, notify, onAsk}: {labelId: string, edit
     {editable && <section className="lw-merch-step"><h4>{d.shop ? '2' : 'Meanwhile'}. Make a design</h4>
       <label>Name it<input value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder='e.g. "22" tour tee'/></label>
       <label>Describe it (or upload your own PNG below)<textarea rows={3} maxLength={2000} value={prompt} onChange={e => setPrompt(e.target.value)} placeholder='e.g. Big gold "22" in graffiti letters with a broken heart, black and gold, streetwear vibe'/></label>
-      <div className="lw-mf-row"><ImageProviderPicker labelId={labelId} value={provider} onChange={setProvider}/><Button gold disabled={!prompt.trim() || !!busy} onClick={() => generate()}>{busy === 'gen' ? 'Making it… (up to a minute)' : 'Make it with AI (~10¢, your own AI key)'}</Button>
+      <div className="lw-mf-row"><ImageProviderPicker labelId={labelId} value={provider} onChange={setProvider}/><Button gold disabled={!prompt.trim() || !!busy} onClick={() => generate()}>{busy === 'gen' ? 'Making it… (up to a minute)' : 'Make it with AI'}</Button>
         <label className="lw-button lw-merch-file">{busy === 'upload' ? 'Uploading…' : 'Upload my PNG'}<input type="file" accept="image/png" hidden disabled={!!busy} onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = '' }}/></label>
         <button className="lw-link-btn" onClick={() => onAsk('Read my Know me brief and save 3 merch design ideas that fit my look and my top songs (use studio2u_guide merch → add_merch_idea). Original art only.')}>Have the Builder suggest 3 ideas</button></div>
       <p className="lw-muted small">Best results: transparent background, 2250×2700 px or bigger. Only art you own: no other brands, logos, characters or real people's faces.</p>
@@ -58,7 +59,7 @@ export function Merch({labelId, editable, notify, onAsk}: {labelId: string, edit
       <b>{x.title}</b><small>{x.source === 'IDEA' ? `Idea from ${x.created_by}` : x.source === 'AI' ? 'Made with AI' : 'Your upload'}{x.has_image && !x.transparent ? ' · no transparent background' : ''}</small>
       <Badge tone={x.status === 'APPROVED' ? 'green' : x.status === 'REJECTED' ? 'muted' : 'gold'}>{x.status === 'IDEA' ? 'idea' : x.status === 'DRAFT' ? 'needs your OK' : x.status.toLowerCase()}</Badge>
       {editable && <div className="lw-mf-draft-actions">
-        {x.status === 'IDEA' && <Button gold disabled={!!busy} onClick={() => generate(x.id)}>{busy === 'gen' + x.id ? 'Making…' : 'Make it (~10¢)'}</Button>}
+        {x.status === 'IDEA' && <Button gold disabled={!!busy} onClick={() => generate(x.id)}>{busy === 'gen' + x.id ? 'Making…' : 'Make it'}</Button>}
         {x.status === 'DRAFT' && <><Button onClick={() => decide(x.id, 'REJECTED')}>No</Button><button className="lw-mf-approve" onClick={() => decide(x.id, 'APPROVED')}>Approve</button></>}
         {x.status === 'APPROVED' && d.shop && <Button gold onClick={() => setMake({designId: x.id, kind: 'tee'})}>Put it on a product</Button>}
         {x.status === 'APPROVED' && !d.shop && <small>Connect your shop to make products.</small>}

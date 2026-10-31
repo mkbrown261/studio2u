@@ -34,6 +34,13 @@ export const SETUP: Record<Platform, { name: string; signup: string; ownerDoes: 
 }
 /** Other money streams. Facts checked on the official pages on PARTNER_FACTS_VERSION; re-check before signing up. */
 export const STREAMS = {
+  merch: {
+    options: {
+      FOURTHWALL: { name: 'Fourthwall (your own free shop)', url: 'https://fourthwall.com', facts: ['No upfront cost and no inventory: Fourthwall prints and ships each order.', 'Card fee 2.9% + $0.30 per order; Fourthwall is the merchant of record (handles sales tax and support).', 'Your agent sets it up and connects it in your browser; you enter your own payout details inside Fourthwall.'] },
+      AMAZON: { name: 'Amazon only', url: 'https://merch.amazon.com', facts: ['Uses your Amazon choice below.'] },
+      BOTH: { name: 'Fourthwall and Amazon', url: '', facts: ['Same designs in both places.'] }
+    }
+  },
   amazon: {
     options: {
       MERCH_ON_DEMAND: { name: 'Amazon Merch on Demand', url: 'https://merch.amazon.com', facts: ['Free to join, but you apply first; Amazon says applications are typically processed within 14 days, and a rejection cannot be re-applied.', 'Amazon is the seller: it prints (DTG), ships and handles returns; you upload PNG designs (at least 485x485, under 25 MB) and earn a royalty per sale.', 'New accounts start at Tier 10 (10 published designs); tiers grow with sales.', 'Paid monthly by direct deposit about 30 days after the month an item ships.', 'One account per person, never shared: you log in yourself; your agent only works in your logged-in browser.', 'You do the tax interview and bank details yourself.'] },
@@ -101,6 +108,12 @@ export async function saveStreams(db: any, label: string, actor: number, b: any)
   const cur = (await getPartnerSettings(db, label)).streams
   const next: any = { ...cur }
   const status = ['NOT_STARTED', 'APPLIED', 'APPROVED', 'LIVE']
+  if (b?.merch != null) {
+    if (!(b.merch in STREAMS.merch.options)) throw new ServiceError('merch must be FOURTHWALL, AMAZON or BOTH')
+    next.merch = b.merch
+    if (b.merch === 'FOURTHWALL' && b.amazon == null) next.amazon = 'NONE'
+    if (b.merch !== 'FOURTHWALL' && b.amazon == null && (!next.amazon || next.amazon === 'NONE')) next.amazon = 'MERCH_ON_DEMAND'
+  }
   if (b?.amazon != null) { if (!(b.amazon in STREAMS.amazon.options)) throw new ServiceError('amazon must be MERCH_ON_DEMAND, SELLER_CENTRAL or NONE'); next.amazon = b.amazon }
   if (b?.amazonStatus != null) { if (!status.includes(b.amazonStatus)) throw new ServiceError('Invalid amazonStatus'); next.amazonStatus = b.amazonStatus }
   if (b?.tickets != null) { if (!(b.tickets in STREAMS.tickets.options)) throw new ServiceError('tickets must be OWN_LINK, EVENTBRITE or NONE'); next.tickets = b.tickets }
@@ -135,7 +148,7 @@ export async function saveChannel(db: any, label: string, actor: number, b: any,
     ON CONFLICT(label_id,platform) DO UPDATE SET handle=excluded.handle,status=excluded.status,method=excluded.method,updated_at=CURRENT_TIMESTAMP`).bind(label, platform, handle, status, method).run()
   await audit(db, label, actor, 'partner.channel', { platform, handle, status, method }).run()
   let setupQueued = false
-  if (status === 'READY' && prev?.status !== 'READY' && method === 'OWNER_BROWSER' && enqueueFn) {
+  if (status === 'READY' && prev?.status !== 'READY' && method === 'OWNER_BROWSER' && enqueueFn && !b?.existing) {
     setupQueued = await enqueueFn({ label, kind: 'PARTNER_SETUP', role: 'business_partner', capability: 'SCREEN_CONTROL', title: `Set up your ${SETUP[platform].name} profile (@${handle})`, input: { platform, handle }, dedupe: `psetup:${label}:${platform}:${handle}` })
   }
   return { platform, handle, status, method, setupQueued }
@@ -301,18 +314,18 @@ export async function partnerOverview(db: any, label: string, actor: number) {
     plan: current ? await getPlan(db, label, current.id) : null, plans, due: await duePosts(db, label),
     week: { posted: week?.posted ?? 0, planned: week?.planned ?? 0, failed: week?.failed ?? 0 },
     merch: { shopConnected: Boolean(merch?.shop), live: merch?.live ?? 0, hidden: merch?.hidden ?? 0, approvedDesignsNotMade: merch?.approvedUnused ?? 0 },
-    streams: { amazon: STREAMS.amazon.options, tickets: STREAMS.tickets.options, chosen: settings.streams },
+    streams: { merch: STREAMS.merch.options, amazon: STREAMS.amazon.options, tickets: STREAMS.tickets.options, chosen: { merch: 'FOURTHWALL', ...settings.streams } },
     lastCheckin, suggestions: suggestions(merch, settings),
     rules: ['Posts only from a plan the owner approved, only while autopilot is ON.', 'Never handles passwords, card or bank details; never DMs, follows, likes, comments or buys ads.', `Never spends more than $${(settings.spendCapCents / 100).toFixed(2)} a month (he has no way to spend money today).`, 'Anyone on the label can press Stop. Only the owner turns autopilot back on.']
   }
 }
 function suggestions(m: any, s: any) {
   const out: string[] = []
-  if (!m?.shop) out.push('Connect your free Fourthwall shop (Merch tab) so there is something to sell.')
+  if (!m?.shop) out.push('No Fourthwall shop connected yet: your agent sets it up in your browser on its next run (be logged in to fourthwall.com).')
   else if (!m.live && !m.hidden) out.push('Make your first product: a tee from your best design (Merch tab).')
   if (m?.hidden) out.push(`${m.hidden} product(s) are made but hidden. Publish the ones you like.`)
   if (m?.approvedUnused) out.push(`${m.approvedUnused} approved design(s) are not on a product yet. A hoodie or hat is a quick new drop.`)
-  if (!s.streams?.amazon) out.push('Decide on Amazon: Merch on Demand (free, apply, usually decided within 14 days) or Seller Central ($0.99/item or $39.99/mo).')
+  if (!s.streams?.amazon && s.streams?.merch !== 'FOURTHWALL') out.push('Decide on Amazon: Merch on Demand (free, apply, usually decided within 14 days) or Seller Central ($0.99/item or $39.99/mo).')
   if (!m?.shows) out.push('Got a show coming? Add it in Shows: you get a page and a QR code that sends fans to your ticket link.')
   return out.slice(0, 4)
 }
@@ -353,12 +366,13 @@ export const PARTNER_INTENT = /\b(money|sales|sold|orders?|merch|plan|posts?|pos
  */
 export async function partnerPass(env: any, enqueueFn: (t: any) => Promise<boolean>, labelIds?: string[], at = new Date(), fetcher?: typeof fetch) {
   const db = env.DB
-  const rows = (await db.prepare(`SELECT s.label_id,s.autopilot,s.checkin_hour,s.last_checkin_date,(SELECT user_id FROM lw_memberships m WHERE m.label_id=s.label_id AND m.role='owner' ORDER BY user_id LIMIT 1) AS owner
+  const rows = (await db.prepare(`SELECT s.label_id,s.autopilot,s.checkin_hour,s.last_checkin_date,s.streams_json,(SELECT user_id FROM lw_memberships m WHERE m.label_id=s.label_id AND m.role='owner' ORDER BY user_id LIMIT 1) AS owner
     FROM lw_partner_settings s WHERE s.autopilot<>'PAUSED' AND (? IS NULL OR s.label_id IN (SELECT value FROM json_each(?))) LIMIT 200`).bind(labelIds ? 1 : null, JSON.stringify(labelIds ?? [])).all()).results as any[]
   let queued = 0, checkins = 0, drafted = 0
   for (const r of rows) {
     if (!r.owner) continue
     const now = await today(db, r.label_id, at)
+    await queueShopSetup(db, r.label_id, enqueueFn, r.streams_json, at).catch(() => false)
     if (r.autopilot === 'ON') {
       for (const p of (await duePosts(db, r.label_id, at)).posts.filter(p => p.canPostNow)) {
         if (await enqueueFn({ label: r.label_id, kind: 'PARTNER_POST', role: 'business_partner', capability: 'SCREEN_CONTROL', title: `Post on ${SETUP[p.platform as Platform].name} (@${p.handle}): ${p.caption.slice(0, 60)}`, input: { partnerPostId: p.id, platform: p.platform }, dedupe: `ppost:${p.id}` })) queued++
@@ -380,4 +394,21 @@ export async function partnerPass(env: any, enqueueFn: (t: any) => Promise<boole
     }
   }
   return { queued, checkins, drafted }
+}
+
+/** Merch sells on Fourthwall (owner said so) but no shop is connected: the owner's agent sets it up in their browser. */
+export async function queueShopSetup(db: any, label: string, enqueueFn: (t: any) => Promise<boolean>, streamsJson?: string | null, at = new Date(), force = false) {
+  let st: any = {}
+  try { st = streamsJson != null ? JSON.parse(streamsJson || '{}') : (await getPartnerSettings(db, label)).streams } catch { st = {} }
+  if (!force && !['FOURTHWALL', 'BOTH'].includes(st.merch)) return false
+  if (await db.prepare('SELECT 1 FROM lw_merch_shops WHERE label_id=?').bind(label).first()) return false
+  return enqueueFn({ label, kind: 'SETUP_SHOP', role: 'business_partner', capability: 'SCREEN_CONTROL', title: 'Set up and connect your free Fourthwall shop', input: { url: 'https://fourthwall.com' }, dedupe: force ? `shop:${label}:${at.getTime()}` : `shop:${label}:${at.toISOString().slice(0, 7)}` })
+}
+/** "Have my agent set up the shop" button / command. */
+export async function requestShopSetup(db: any, label: string, actor: number, enqueueFn: (t: any) => Promise<boolean>) {
+  await requireEditor(db, label, actor)
+  if (await db.prepare('SELECT 1 FROM lw_merch_shops WHERE label_id=?').bind(label).first()) return { queued: false, say: 'Your Fourthwall shop is already connected.' }
+  const q = await queueShopSetup(db, label, enqueueFn, null, new Date(), true)
+  if (!q) throw new ServiceError('Your agents are stopped (STOP is on). Tap Resume first.', 423)
+  return { queued: true, say: 'Your agent sets up your free Fourthwall shop in your browser and connects it here. If Fourthwall asks for a code or your payout details, that one step is yours.' }
 }

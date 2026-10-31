@@ -71,11 +71,11 @@ export function PartnerWorkspace(p: WorkspaceProps) {
     <Shows labelId={p.labelId} owner={owner} editor={editor} notify={p.notify}/>
 
     <Panel title="Accounts he runs" icon="people">
-      <p className="lw-muted">You create each account (it needs your phone). Then type the handle and tap "Hand it over". He fills in the profile and posts only approved posts.</p>
+      <p className="lw-muted">Already have accounts? Type the handle and tap "Ben runs it", or just say "my instagram is @yourname" in any chat. Ben keeps your profile as is and posts only what you approved. Your agent also finds the accounts you are logged in to when it builds your brand.</p>
       <div className="lw-partner-channels">{d.channels.map((c: any) => <div key={c.platform} className="lw-partner-channel">
-        <header><b>{c.name}</b><Badge tone={c.status === 'READY' ? 'cyan' : c.status === 'PAUSED' ? 'red' : 'gold'}>{c.status === 'NEEDS_ACCOUNT' ? 'Needs account' : c.status}</Badge></header>
-        {c.status === 'READY' ? <p>@{c.handle}</p> : <><small>{c.ownerDoes}</small><a href={c.signup} target="_blank" rel="noreferrer noopener">Create it</a></>}
-        {owner && c.status !== 'READY' && <div className="lw-partner-row"><input placeholder="@handle" maxLength={60} value={handles[c.platform] ?? c.handle ?? ''} onChange={e => setHandles({...handles, [c.platform]: e.target.value})}/><Button disabled={busy === c.platform || !(handles[c.platform] ?? c.handle)} onClick={() => run(c.platform, () => api(`${base}/channels`, {platform: c.platform, handle: handles[c.platform] ?? c.handle, status: 'READY'}), `${c.name} handed over.`)}>Hand it over</Button></div>}
+        <header><b>{c.name}</b><Badge tone={c.status === 'READY' ? 'cyan' : c.status === 'PAUSED' ? 'red' : 'gold'}>{c.status === 'NEEDS_ACCOUNT' ? 'Not linked' : c.status === 'READY' ? 'Ben runs it' : c.status}</Badge></header>
+        {c.status === 'READY' ? <p>@{c.handle}</p> : <><small>{c.ownerDoes}</small><a href={c.signup} target="_blank" rel="noreferrer noopener">No account? Create one</a></>}
+        {owner && c.status !== 'READY' && <div className="lw-partner-row"><input placeholder="@handle" maxLength={60} value={handles[c.platform] ?? c.handle ?? ''} onChange={e => setHandles({...handles, [c.platform]: e.target.value})}/><Button disabled={busy === c.platform || !(handles[c.platform] ?? c.handle)} onClick={() => run(c.platform, () => api(`${base}/channels`, {platform: c.platform, handle: handles[c.platform] ?? c.handle, status: 'READY', existing: true}), `Ben runs your ${c.name}.`)}>Ben runs it</Button></div>}
         {owner && c.status === 'READY' && <Button disabled={busy === c.platform} onClick={() => run(c.platform, () => api(`${base}/channels`, {platform: c.platform, handle: c.handle, status: 'PAUSED'}), `${c.name} paused.`)}>Pause this account</Button>}
       </div>)}</div>
     </Panel>
@@ -96,11 +96,11 @@ function PostedBox({onDone, onSkip}: {onDone: (url: string) => void, onSkip: () 
 
 function Streams({d, owner, save}: {d: any, owner: boolean, save: (b: any) => void}) {
   const chosen = d.streams.chosen ?? {}
-  const block = (key: 'amazon' | 'tickets', title: string) => <div className="lw-partner-stream"><h4>{title}</h4>
+  const block = (key: 'merch' | 'amazon' | 'tickets', title: string) => <div className="lw-partner-stream"><h4>{title}</h4>
     {Object.entries<any>(d.streams[key]).map(([id, o]) => <label key={id} className="lw-inline"><input type="radio" name={key} disabled={!owner} checked={chosen[key] === id} onChange={() => save({[key]: id})}/> <span><b>{o.name}</b>{o.facts.map((f: string) => <small key={f}>{f}</small>)}{o.url && <a href={o.url} target="_blank" rel="noreferrer noopener">Official page</a>}</span></label>)}
-    {chosen[key] && chosen[key] !== 'NONE' && owner && <label>Where are you?<select value={chosen[key + 'Status'] ?? 'NOT_STARTED'} onChange={e => save({[key + 'Status']: e.target.value})}>{['NOT_STARTED', 'APPLIED', 'APPROVED', 'LIVE'].map(x => <option key={x}>{x}</option>)}</select></label>}
+    {key !== 'merch' && chosen[key] && chosen[key] !== 'NONE' && owner && <label>Where are you?<select value={chosen[key + 'Status'] ?? 'NOT_STARTED'} onChange={e => save({[key + 'Status']: e.target.value})}>{['NOT_STARTED', 'APPLIED', 'APPROVED', 'LIVE'].map(x => <option key={x}>{x}</option>)}</select></label>}
   </div>
-  return <div className="lw-partner-streams">{block('amazon', 'Amazon')}{block('tickets', 'Tickets')}<small>You sign up and enter your own tax and bank details on these sites. He never sees them.</small></div>
+  return <div className="lw-partner-streams"><small className="lw-muted">Or just say it in any chat: "sell my merch on Fourthwall", "tickets on Eventbrite", "my instagram is @me".</small>{block('merch', 'Where merch sells')}{block('amazon', 'Amazon')}{block('tickets', 'Tickets')}<small>You sign up and enter your own tax and bank details on these sites. He never sees them.</small></div>
 }
 
 function Shows({labelId, owner, editor, notify}: {labelId: string, owner: boolean, editor: boolean, notify: (s: string) => void}) {

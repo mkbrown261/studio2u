@@ -156,7 +156,7 @@ export function ImageProviderPicker({labelId, value, onChange}: {labelId: string
   const [d, setD] = useState<any>(null)
   useEffect(() => { api(`/image-providers${labelId ? `?labelId=${encodeURIComponent(labelId)}` : ''}`).then(setD).catch(() => setD({available: [], auto: null})) }, [labelId])
   if (!d) return null
-  if (!d.available.length) return <small className="lw-muted">Connect an image AI key (OpenAI, Google Gemini, xAI Grok or OpenRouter) in <b>AI setup</b> to make images.</small>
+  if (!d.available.length) return <small className="lw-muted">Your agent (Codex/Claude) makes this with its own image tool.</small>
   return <label className="lw-inline-select">Image AI<select value={value} onChange={e => onChange(e.target.value)}><option value="auto">Auto ({d.available.find((a: any) => a.id === d.auto)?.name ?? d.available[0].name})</option>{d.available.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
 }
 
@@ -172,7 +172,8 @@ export function CoverArt({labelId, release, role, notify, onMade}: {labelId: str
   return <div className="lw-release-tool">
     <textarea rows={2} maxLength={1500} value={idea} onChange={e => setIdea(e.target.value)} placeholder="Optional idea: e.g. gold 22 on a night runway, grainy film look"/>
     <div className="lw-partner-row"><ImageProviderPicker labelId={labelId} value={provider} onChange={setProvider}/><Button gold disabled={busy || !release || role === 'viewer'} onClick={make}>{busy ? 'Making cover… (up to 2 min)' : 'Generate cover'}</Button></div>
-    {last && <img className="lw-cover-preview" alt="Generated cover" src={`/api/label-world/labels/${labelId}/releases/${release.id}/artwork/${last.assetId}`}/>}
+    {last?.assetId && <img className="lw-cover-preview" alt="Generated cover" src={`/api/label-world/labels/${labelId}/releases/${release.id}/artwork/${last.assetId}`}/>}
+    {last?.queued && <small className="lw-muted">{last.say}</small>}
   </div>
 }
 

@@ -209,6 +209,17 @@ labelWorldRoutes.get('/show/:slug',async c=>{
   c.header('Cache-Control','no-store')
   return c.html(showPage(s))
 })
+// One-time upload link for an image the owner's own agent made with its own image tool.
+labelWorldRoutes.post('/label-world/agent-upload/:token',async c=>{
+  const {acceptUpload}=await import('../label-world/autonomy/agent-upload')
+  const {ServiceError}=await import('../label-world/autonomy/service')
+  c.header('Cache-Control','no-store')
+  try{
+    if(Number(c.req.header('Content-Length')||0)>25*1024*1024)return c.json({error:'Send one PNG under 25 MB'},413)
+    const bytes=new Uint8Array(await c.req.arrayBuffer())
+    return c.json(await acceptUpload(c.env,c.req.param('token'),bytes),201)
+  }catch(e){return e instanceof ServiceError?c.json({error:e.message},e.status as any):c.json({error:'Upload failed'},500)}
+})
 labelWorldRoutes.get('/label-world',c=>headquartersPage(c))
 labelWorldRoutes.get('/label-world/inbox',c=>headquartersPage(c,true))
 labelWorldRoutes.get('/label-world/money',c=>headquartersPage(c,true))

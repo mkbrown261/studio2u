@@ -44,20 +44,39 @@ export async function generateCover(env: any, label: string, actor: number, rele
   const idea = str(b?.prompt, 'idea', 1500)
   const facts = (await env.DB.prepare("SELECT key,value_json FROM lw_artist_facts WHERE label_id=? AND key IN ('genres','brandWords')").bind(label).all().catch(() => ({ results: [] }))).results as any[]
   const f: Record<string, any> = {}; for (const x of facts) f[x.key] = JSON.parse(x.value_json)
+  const prompt = coverPrompt(r, idea, f)
   const { makeImage } = await import('../providers/images')
   let made: any
-  try { made = await makeImage(env, actor, { prompt: coverPrompt(r, idea, f), provider: b?.provider ?? null, label, shape: 'square', needPng: true, hi: true }, fetcher) }
-  catch (e: any) { throw new ServiceError(e?.message ?? 'Image failed', e?.status ?? 502) }
-  const info = pngInfo(made.bytes), id = crypto.randomUUID(), key = `label-world/private/${label}/${r.id}/${id}`, hash = await checksum(made.bytes)
-  await env.R2.put(key, made.bytes, { httpMetadata: { contentType: 'image/png' } })
+  try { made = await makeImage(env, actor, { prompt, provider: b?.provider ?? null, label, shape: 'square', needPng: true, hi: true }, fetcher) }
+  catch (e: any) {
+    // No image key? The owner's own agent (Codex/Claude) makes it with its own image tool and uploads it.
+    if (e?.code === 'NO_KEY' || e?.code === 'KEY_FAILED') return imageTask(env.DB, label, { kind: 'cover', releaseId: r.id, prompt, title: `Cover for "${r.title}"`, why: e.code === 'KEY_FAILED' ? e.message : null })
+    throw new ServiceError(e?.message ?? 'Image failed', e?.status ?? 502)
+  }
+  const saved = await saveCover(env, label, actor, r.id, made.bytes, { provider: made.provider, model: made.model, idea })
+  return { ...saved, estimatedCostUsd: made.costMicros / 1e6 }
+}
+/** Store a PNG as the release artwork (from the image switch, or uploaded by the owner's agent). */
+export async function saveCover(env: any, label: string, actor: number, releaseId: string, bytes: Uint8Array, meta: { provider: string; model?: string | null; idea?: string | null }) {
+  await requireEditor(env.DB, label, actor)
+  const r = await release(env.DB, label, releaseId)
+  const info = pngInfo(bytes), id = crypto.randomUUID(), key = `label-world/private/${label}/${r.id}/${id}`, hash = await checksum(bytes)
+  await env.R2.put(key, bytes, { httpMetadata: { contentType: 'image/png' } })
   await env.DB.batch([
     env.DB.prepare('INSERT INTO lw_assets(id,label_id,release_id,kind,original_name,object_key,byte_size,sha256,version,provenance_json) VALUES (?,?,?,?,?,?,?,?,?,?)')
-      .bind(id, label, r.id, 'artwork', `${r.title}-cover-${made.provider}.png`.replace(/[^\w.-]+/g, '-'), key, made.bytes.length, hash, r.version, JSON.stringify({ generatedBy: actor, provider: made.provider, model: made.model, idea })),
-    env.DB.prepare('INSERT INTO lw_audit_events(id,label_id,release_id,actor_id,action,payload_json) VALUES (?,?,?,?,?,?)').bind(crypto.randomUUID(), label, r.id, actor, 'artwork.generated', JSON.stringify({ assetId: id, provider: made.provider, width: info.width }))
+      .bind(id, label, r.id, 'artwork', `${r.title}-cover-${meta.provider}.png`.replace(/[^\w.-]+/g, '-'), key, bytes.length, hash, r.version, JSON.stringify({ generatedBy: actor, provider: meta.provider, model: meta.model ?? null, idea: meta.idea ?? null })),
+    env.DB.prepare('INSERT INTO lw_audit_events(id,label_id,release_id,actor_id,action,payload_json) VALUES (?,?,?,?,?,?)').bind(crypto.randomUUID(), label, r.id, actor, 'artwork.generated', JSON.stringify({ assetId: id, provider: meta.provider, width: info.width }))
   ])
   const small = info.width < 3000 || info.height < 3000
-  return { assetId: id, width: info.width, height: info.height, provider: made.provider, estimatedCostUsd: made.costMicros / 1e6,
-    say: small ? `Cover made with ${made.provider} (${info.width}×${info.height}). Distributors want 3000×3000: switch to Gemini or OpenRouter (they make 4K), or upscale it before release.` : `Cover made with ${made.provider} (${info.width}×${info.height}) and saved as this release's artwork. Ask Eric to review it.` }
+  return { assetId: id, width: info.width, height: info.height, provider: meta.provider,
+    say: small ? `Cover made with ${meta.provider} (${info.width}×${info.height}). Distributors want 3000×3000: switch to Gemini or OpenRouter (they make 4K), or upscale it before release.` : `Cover made with ${meta.provider} (${info.width}×${info.height}) and saved as this release's artwork. Ask Eric to review it.` }
+}
+/** Queue the image for the owner's own agent, which makes it with its own image tool (no key needed here). */
+export async function imageTask(db: any, label: string, t: { kind: 'cover' | 'merch'; releaseId?: string | null; prompt: string; title: string; ideaId?: string | null; why?: string | null }) {
+  const { enqueue } = await import('./engine')
+  const queued = await enqueue(db, { label, release: t.releaseId ?? null, kind: 'MAKE_IMAGE', role: 'producer', capability: 'ANY', title: `Make image: ${t.title}`.slice(0, 200), input: t, dedupe: `img:${t.kind}:${t.releaseId ?? t.ideaId ?? ''}:${Date.now()}` })
+  if (!queued) throw new ServiceError('Your agents are stopped (STOP is on). Tap Resume first.', 423)
+  return { queued: true, say: `${t.why ? t.why + ' ' : ''}Your agent makes this with its own image tool (Codex/Claude already make images) and saves it here. It runs the next time your agent works ("do my Studio2U tasks").` }
 }
 export async function assetImage(env: any, label: string, releaseId: string, assetId: string) {
   const a: any = await env.DB.prepare("SELECT object_key FROM lw_assets WHERE label_id=? AND release_id=? AND id=? AND kind='artwork'").bind(label, releaseId, assetId).first()

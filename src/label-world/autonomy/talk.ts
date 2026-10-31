@@ -25,6 +25,21 @@ export async function talk(db: any, label: string, actor: number, b: any, fetche
   const text = typeof b?.text === 'string' ? b.text.trim() : ''
   if (!text || text.length > 4000 || /[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(text)) throw new ServiceError('Say what happened (up to 4000 characters).')
   const agent = AGENTS.includes(b?.agent) ? b.agent : null
+  // Settings in plain words ("sell on Fourthwall", "my instagram is @me", "autopilot on", "stop").
+  if (!b?.caseId || /^\s*(stop|resume)\b/i.test(text)) {
+    const { ownerCommand } = await import('./commands')
+    const cmd = await ownerCommand(db, label, actor, text)
+    if (cmd) {
+      if (agent) {
+        const uid = crypto.randomUUID()
+        await db.batch([
+          db.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,role,content,status) VALUES (?,?,?,?,'user',?,'COMPLETED')").bind(uid, label, actor, agent, text),
+          db.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,role,content,status,reply_to,provider,model) VALUES (?,?,?,?,'assistant',?,'COMPLETED',?,'studio2u','command')").bind(crypto.randomUUID(), label, actor, agent, cmd.reply, uid)
+        ])
+      }
+      return { handled: true, command: true, did: cmd.did, caseId: null, opened: false, reused: false, case: null, reply: cmd.reply, found: [], ask: [], confirm: [], options: null, done: true }
+    }
+  }
   const tracks = (await db.prepare(`SELECT title,work_json FROM lw_catalog_tracks WHERE label_id=? AND pro_status<>'NOT_MINE' LIMIT 400`).bind(label).all()).results as any[]
   const idr: any = await db.prepare('SELECT artist_name,legal_name,pro FROM lw_label_identity WHERE label_id=?').bind(label).first()
   const me = {

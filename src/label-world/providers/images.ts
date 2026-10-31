@@ -16,7 +16,7 @@ export const IMAGE_INFO: Record<ImageProvider, { name: string; model: string; co
   xai: { name: 'xAI Grok Imagine', model: 'grok-imagine-image-2.0', costMicros: 70000, transparent: false },
   openrouter: { name: 'OpenRouter', model: 'openai/gpt-image-2', costMicros: 130000, transparent: true }
 }
-export class ImageError extends Error { status: number; constructor(m: string, s = 400) { super(m); this.status = s } }
+export class ImageError extends Error { status: number; code: string | null; constructor(m: string, s = 400, code: string | null = null) { super(m); this.status = s; this.code = code } }
 
 /** Which image providers this user has keys for, and which one "Auto" will use. */
 export async function imageProviders(db: any, user: number, label?: string) {
@@ -67,7 +67,7 @@ async function call(p: ImageProvider, key: string, prompt: string, o: { shape: '
 /** Make one image with the chosen (or auto) provider. Returns PNG/JPEG bytes and what it cost. */
 export async function makeImage(env: any, user: number, o: { prompt: string; provider?: string | null; label?: string; shape?: 'square' | 'portrait'; transparent?: boolean; needPng?: boolean; hi?: boolean }, fetcher: Fetch = fetch) {
   const { available, auto, chatOnly } = await imageProviders(env.DB, user, o.label)
-  if (!available.length) throw new ImageError(`Connect an image-capable AI key in AI setup (OpenAI, Google Gemini, xAI Grok or OpenRouter) to make images${chatOnly.length ? ` — ${chatOnly.join(', ')} only writes text` : ''}, or upload your own PNG.`, 409)
+  if (!available.length) throw new ImageError(`Connect an image-capable AI key in AI setup (OpenAI, Google Gemini, xAI Grok or OpenRouter) to make images${chatOnly.length ? ` — ${chatOnly.join(', ')} only writes text` : ''}, or upload your own PNG.`, 409, 'NO_KEY')
   const p = (o.provider && o.provider !== 'auto' ? o.provider : auto) as ImageProvider
   if (!available.some(a => a.id === p)) throw new ImageError(`No ${IMAGE_INFO[p]?.name ?? o.provider} key connected. Connected: ${available.map(a => a.name).join(', ')}.`, 409)
   await spendGuard(env.DB, user)
@@ -75,8 +75,8 @@ export async function makeImage(env: any, user: number, o: { prompt: string; pro
   const key = await decryptKey(env.LLM_KEY_ENCRYPTION_SECRET, conn.encrypted_key, keyContext(user, p, conn.endpoint_config))
   let r: Response
   try { r = await call(p, key, o.prompt, { shape: o.shape ?? 'square', transparent: Boolean(o.transparent), hi: Boolean(o.hi) }, fetcher) } catch { throw new ImageError(`${IMAGE_INFO[p].name} did not answer. Try again.`, 502) }
-  if (r.status === 401 || r.status === 403) throw new ImageError(`${IMAGE_INFO[p].name} rejected your key. Check it in AI setup.`, 400)
-  if (r.status === 402 || r.status === 429) throw new ImageError(`${IMAGE_INFO[p].name} rate limit or balance reached. Add credit with them, or switch provider.`, 429)
+  if (r.status === 401 || r.status === 403) throw new ImageError(`${IMAGE_INFO[p].name} rejected your key for images (OpenAI image models can need organization verification).`, 400, 'KEY_FAILED')
+  if (r.status === 402 || r.status === 429) throw new ImageError(`${IMAGE_INFO[p].name} rate limit or balance reached.`, 429, 'KEY_FAILED')
   const data: any = await r.json().catch(() => null)
   if (r.status === 400 || r.status === 422) throw new ImageError(`${IMAGE_INFO[p].name} would not make that image (it may look like a brand, a real person or unsafe content). Try describing it differently.${data?.error?.message ? ` (${String(data.error.message).slice(0, 160)})` : ''}`, 400)
   const img = findImage(data)
