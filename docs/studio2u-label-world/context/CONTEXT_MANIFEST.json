@@ -1,0 +1,527 @@
+{
+  "version": "1.0.0",
+  "knowledgeVersion": "2026-10-13",
+  "budgets": {
+    "maxFiles": 10,
+    "maxDepth": 3,
+    "maxChars": 24000,
+    "maxRecords": 30,
+    "historyMessages": 8
+  },
+  "skills": [
+    {
+      "id": "studio2u.ar_discover_music",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/ar_discover_music.yaml",
+      "sourceHash": "9d22d6886ca2841e4b3329b2960cec20a1125dffcc083999c4fed78273620542",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.ar_viral_record_analysis",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/ar_viral_record_analysis.yaml",
+      "sourceHash": "23e8b92721cabeb38a8930709218b408b63e11b937306923dd54640492dba46c",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.catalog_audio_intake",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/catalog_audio_intake.yaml",
+      "sourceHash": "6c50aac78a0d84e0a7d89fa476e67d4aacd5b24c42e53e76d635c3675b92a3f5",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.catalog_contributor_splits",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/catalog_contributor_splits.yaml",
+      "sourceHash": "7c2646a7a9687bf1831d48aec7ef46d994ff08578ba924d86d55011285109ac7",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.catalog_lyrics_transcription",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/catalog_lyrics_transcription.yaml",
+      "sourceHash": "d9e2e35c4d35cf95e8364113e4f5b14f44f0c2ce6524b5dff51f5a893ab0df15",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.editor_hook_selection",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/editor_hook_selection.yaml",
+      "sourceHash": "5cf20b95969683bad87bd1b4e02ea3b87e93a4928e4fddc0ce7908f33e2ec492",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.editor_shortform_assembly",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/editor_shortform_assembly.yaml",
+      "sourceHash": "53d3350fc47bf1aab8320a7003782801f231cc6897e449e46ee1d7a7eef8bd0d",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.executive_release_director",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/executive_release_director.yaml",
+      "sourceHash": "a5c24faf0cfe70a43b1a3ba611fdb1737a1ea589537ee4b352697a36627fd257",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.marketing_campaign_plan",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/marketing_campaign_plan.yaml",
+      "sourceHash": "2b366dad80b454498557466e1017471fd0ea1ecfa0fb1943a96c964986e62a42",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.producer_beat_brief",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/producer_beat_brief.yaml",
+      "sourceHash": "289938ccd422f5088282153f8bfaa163eda6710e89e281400aa61db85bd19291",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.producer_generate_music",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/producer_generate_music.yaml",
+      "sourceHash": "efdc12760446da1355ee4c075b286c456102e9ca1631a4d187ab0844f12c4118",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.publishing_pro_intake",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/publishing_pro_intake.yaml",
+      "sourceHash": "92aa067732ab2e109e5bea53fc44ad188c73daa18d25ffda875e78cbd0f3610e",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.release_fast_prepare",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/release_fast_prepare.yaml",
+      "sourceHash": "8aeae18e09df38cbad7b6cb400f7d35ef494dc24c06fcc6d64fc50068c690722",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.release_managed_prepare",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/release_managed_prepare.yaml",
+      "sourceHash": "0df73ab51e6cf2779606a95bdf0558e2ba1579d868af4ab34f310516f5a783d9",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.reviewer_creative_social_qc",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/reviewer_creative_social_qc.yaml",
+      "sourceHash": "76690b9e015f6f15ffb6ce7caa22ce9aa9543b7f2e03f914df696683796c1c5b",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.reviewer_release_qc",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/reviewer_release_qc.yaml",
+      "sourceHash": "9eef2345a99cdea2f0ce9b7a19ee115ace1d41efb17baec4ec241866081c34de",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.rights_clearance_triage",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/rights_clearance_triage.yaml",
+      "sourceHash": "e055deda7ea06542379d5c970e2103b8eecaa8ee5719cb777ec7d41afa6a66a8",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.rights_copyright_packet",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/rights_copyright_packet.yaml",
+      "sourceHash": "645f069bbea44c44fc727dc7bb9ecb7a8180c53bec07f07e2b16008d8be8b934",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.royalties_mlc_followup",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/royalties_mlc_followup.yaml",
+      "sourceHash": "bf3b8292166911b75689ec981d529d0282f46d491f96d6ddfe2f657f8619622e",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.royalties_soundexchange_followup",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/royalties_soundexchange_followup.yaml",
+      "sourceHash": "989e67b9dca8f72d6edbf7852d209f2e8d3e77ae356c843442ad442e20d5709f",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.social_prepare_publish",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/social_prepare_publish.yaml",
+      "sourceHash": "42ee663fbed6158fb533593bbc1a6c6f084dbaa14d2a191e21f32b3e944a806b",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.videographer_concept_storyboard",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/videographer_concept_storyboard.yaml",
+      "sourceHash": "ce2a30bc78ae30b819879f53608fa96819eb60f547e68ee8ec00648921014e48",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    },
+    {
+      "id": "studio2u.videographer_higgsfield_generation",
+      "version": "1.0.0",
+      "path": "docs/studio2u-label-world/skills/videographer_higgsfield_generation.yaml",
+      "sourceHash": "5a8948c63b91dfd3740fc572714857c03bae7b68774c0fcc074660aa22e2534f",
+      "status": "DESIGNED_NOT_IMPLEMENTED"
+    }
+  ],
+  "resources": [
+    {
+      "id": "boundaries",
+      "path": "shared/BOUNDARIES.md",
+      "allowedNext": [],
+      "sourceHash": "d5a78fe0835035f784927d682fdc958860e66a339533cee2b00649774c62a42f",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "evidence_rules",
+      "path": "shared/EVIDENCE_RULES.md",
+      "allowedNext": [],
+      "sourceHash": "3896ae4c5a787b941d4a5d99f7130f1b28fcbc8c4610e2d0d8ef39b20fc036bd",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "security",
+      "path": "shared/SECURITY.md",
+      "allowedNext": [],
+      "sourceHash": "a42cd341d4495009ab3b7af0a429304ef71db58d15d2fff76f9f1f29111ac4b8",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "capability_rules",
+      "path": "shared/CAPABILITY_RULES.md",
+      "allowedNext": [],
+      "sourceHash": "6b9530a537486e1a6b8643e04d44f55f2c66ec14cf68a1feb827bba8b1f3fcc2",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "reviewer.route",
+      "path": "departments/reviewer/ROUTE.md",
+      "allowedNext": [
+        "reviewer.role",
+        "review_release.entry"
+      ],
+      "sourceHash": "ef2ed50dd10721e7a9450a4cf75bccb9dfefd68ff079e61bd2475cbf9f0b6010",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "reviewer.role",
+      "path": "departments/reviewer/CONTEXT.md",
+      "allowedNext": [],
+      "sourceHash": "22b2ee1cb42c9ccac6fc8c2a37d8e5a2fe85938623d1be309be86beb72e98a7e",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "review_release.entry",
+      "path": "workflows/review_release/ENTRY.md",
+      "allowedNext": [
+        "review_release.procedure",
+        "review_release.output"
+      ],
+      "sourceHash": "56d63c4c0977a13a605c0af7d617ec4f4e212fb00a3088e62fbd1dfe7ec60e7b",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "review_release.procedure",
+      "path": "workflows/review_release/PROCEDURE.md",
+      "allowedNext": [],
+      "sourceHash": "77eb75bad15110f7fc98d14a1ef7a68c0bbe1f47623f5c605af806fdd00437ee",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "review_release.output",
+      "path": "workflows/review_release/OUTPUT_CONTRACT.md",
+      "allowedNext": [],
+      "sourceHash": "1e3b4db1140231c79603f720c91b7b85afa7963f7b44720059c3eb9b2b82783e",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "researcher.route",
+      "path": "departments/researcher/ROUTE.md",
+      "allowedNext": [
+        "researcher.role",
+        "research_artist.entry"
+      ],
+      "sourceHash": "093f59e3c955f2502a7db956c79cb3606db167df6b295bc67a3061da71fdec99",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "researcher.role",
+      "path": "departments/researcher/CONTEXT.md",
+      "allowedNext": [],
+      "sourceHash": "4f42a79e133588a5eec521454612137f6535bdbe48c278470432e3a74a4f7f01",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "research_artist.entry",
+      "path": "workflows/research_artist/ENTRY.md",
+      "allowedNext": [
+        "research_artist.procedure",
+        "research_artist.output"
+      ],
+      "sourceHash": "e094e0d2e7571ee65510b22033d45da47a990e701afd56b483af8245df61b115",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "research_artist.procedure",
+      "path": "workflows/research_artist/PROCEDURE.md",
+      "allowedNext": [],
+      "sourceHash": "d8023a5218e5dd281309a9adbde0d418ad8a7ef745f500e2c2bde98e1fbd3fdc",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "research_artist.output",
+      "path": "workflows/research_artist/OUTPUT_CONTRACT.md",
+      "allowedNext": [],
+      "sourceHash": "1e3b4db1140231c79603f720c91b7b85afa7963f7b44720059c3eb9b2b82783e",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "executive.route",
+      "path": "departments/executive/ROUTE.md",
+      "allowedNext": [
+        "executive.role",
+        "coordinate_label.entry"
+      ],
+      "sourceHash": "efc9393734692caddc2685fd5eeb336f6cf1d1cdeac1a189608309371aeb3f24",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "executive.role",
+      "path": "departments/executive/CONTEXT.md",
+      "allowedNext": [],
+      "sourceHash": "b25760f09c1409fdfbb775cd3bde72fdc2da532376d7933c5780f4171714721f",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "coordinate_label.entry",
+      "path": "workflows/coordinate_label/ENTRY.md",
+      "allowedNext": [
+        "coordinate_label.procedure",
+        "coordinate_label.output"
+      ],
+      "sourceHash": "f24db42975229461e4c51afdfe2a6f27e6bc8a10e147b14853ee5609501aee50",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "coordinate_label.procedure",
+      "path": "workflows/coordinate_label/PROCEDURE.md",
+      "allowedNext": [],
+      "sourceHash": "46528e519bc35dd158f2156db860ab8af18b454bd70c48e8f57502350f22229f",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "coordinate_label.output",
+      "path": "workflows/coordinate_label/OUTPUT_CONTRACT.md",
+      "allowedNext": [],
+      "sourceHash": "1e3b4db1140231c79603f720c91b7b85afa7963f7b44720059c3eb9b2b82783e",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "builder.route",
+      "path": "departments/builder/ROUTE.md",
+      "allowedNext": [
+        "builder.role",
+        "prepare_release.entry"
+      ],
+      "sourceHash": "f36f61c439bd49ec1143466fee36c901f4ab252ae9cb90e6e0e6015d74493cfd",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "builder.role",
+      "path": "departments/builder/CONTEXT.md",
+      "allowedNext": [],
+      "sourceHash": "1127ed4a57007fff4243de7f297c225ee2dfc169badb58af545754903284d2c3",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "prepare_release.entry",
+      "path": "workflows/prepare_release/ENTRY.md",
+      "allowedNext": [
+        "prepare_release.procedure",
+        "prepare_release.output"
+      ],
+      "sourceHash": "263c809ad9fa6f51dc802584d447d4f6bc71aac656b78f49d9ac147a2da0d0d1",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "prepare_release.procedure",
+      "path": "workflows/prepare_release/PROCEDURE.md",
+      "allowedNext": [],
+      "sourceHash": "3b5303c22d474f408109b8bef2c8a7d44e43148acd8aaa2b2605dffabd4b9651",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    },
+    {
+      "id": "prepare_release.output",
+      "path": "workflows/prepare_release/OUTPUT_CONTRACT.md",
+      "allowedNext": [],
+      "sourceHash": "1e3b4db1140231c79603f720c91b7b85afa7963f7b44720059c3eb9b2b82783e",
+      "mandatory": true,
+      "lastVerified": "2026-10-13",
+      "recheckAfter": "2027-01-13"
+    }
+  ],
+  "routes": [
+    {
+      "id": "reviewer",
+      "department": "reviewer",
+      "workflowId": "review_release",
+      "entry": "reviewer.route",
+      "requiredContext": [
+        "boundaries",
+        "evidence_rules",
+        "security",
+        "capability_rules"
+      ],
+      "skillId": "studio2u.reviewer_release_qc",
+      "skillVersion": "1.0.0",
+      "requiredInputs": [
+        "authenticatedUserId",
+        "labelId",
+        "releaseId"
+      ],
+      "permittedReasoningModes": [
+        "REASONING_ONLY"
+      ],
+      "requiredCapabilities": [
+        "authorized_records_read"
+      ],
+      "status": "REASONING_ONLY",
+      "maxChars": 24000
+    },
+    {
+      "id": "researcher",
+      "department": "researcher",
+      "workflowId": "research_artist",
+      "entry": "researcher.route",
+      "requiredContext": [
+        "boundaries",
+        "evidence_rules",
+        "security",
+        "capability_rules"
+      ],
+      "skillId": "studio2u.ar_discover_music",
+      "skillVersion": "1.0.0",
+      "requiredInputs": [
+        "authenticatedUserId",
+        "labelId"
+      ],
+      "permittedReasoningModes": [
+        "REASONING_ONLY"
+      ],
+      "requiredCapabilities": [
+        "authorized_records_read"
+      ],
+      "status": "REASONING_ONLY",
+      "maxChars": 24000
+    },
+    {
+      "id": "executive",
+      "department": "executive",
+      "workflowId": "coordinate_label",
+      "entry": "executive.route",
+      "requiredContext": [
+        "boundaries",
+        "evidence_rules",
+        "security",
+        "capability_rules"
+      ],
+      "skillId": "studio2u.executive_release_director",
+      "skillVersion": "1.0.0",
+      "requiredInputs": [
+        "authenticatedUserId",
+        "labelId"
+      ],
+      "permittedReasoningModes": [
+        "REASONING_ONLY"
+      ],
+      "requiredCapabilities": [
+        "authorized_records_read"
+      ],
+      "status": "REASONING_ONLY",
+      "maxChars": 24000
+    },
+    {
+      "id": "builder",
+      "department": "builder",
+      "workflowId": "prepare_release",
+      "entry": "builder.route",
+      "requiredContext": [
+        "boundaries",
+        "evidence_rules",
+        "security",
+        "capability_rules"
+      ],
+      "skillId": "studio2u.release_fast_prepare",
+      "skillVersion": "1.0.0",
+      "requiredInputs": [
+        "authenticatedUserId",
+        "labelId",
+        "releaseId"
+      ],
+      "permittedReasoningModes": [
+        "REASONING_ONLY"
+      ],
+      "requiredCapabilities": [
+        "authorized_records_read"
+      ],
+      "status": "REASONING_ONLY",
+      "maxChars": 24000,
+      "alternateSkills": {
+        "MANAGED_RELEASE": "studio2u.release_managed_prepare"
+      }
+    }
+  ]
+}

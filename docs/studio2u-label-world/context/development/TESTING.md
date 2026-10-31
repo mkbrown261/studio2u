@@ -1,0 +1,2 @@
+# Testing
+Run context manifest/routing/budget/security/provider fixtures first. Before production run npm run test:label-world, Reviewer and Researcher suites, npm run build and built-worker security tests. Tests must assert tenant denial, missing-provider behavior, history/Inbox continuity, stale revisions and unchanged deterministic findings. Paid live explanation requires a deliberately connected provider; mock response quality cannot prove model accuracy, cost or latency.

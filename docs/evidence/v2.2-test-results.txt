@@ -1,0 +1,35 @@
+
+> test:label-world
+> node tests/label-world-blueprint.mjs && node tests/label-world-contracts.mjs && python3 tests/label-world-schema.py && python3 tests/label-world-v2-schema.py && node tests/label-world-api.mjs && node tests/label-world-providers.mjs && node tests/label-world-workspace.mjs && node tests/label-world-entry.mjs && node tests/label-world-navigation.mjs && node tests/label-world-interactions.mjs && python3 tests/label-world-assets.py && node tests/label-world-booking-regression.mjs
+
+PASS: all 94 requirements + 6 nonfunctional requirements, 14 workflows, all 23 YAML skill contracts, v1 preservation and explicit unavailable runtime statuses
+PASS: terminal states, approval resumption and release validation
+PASS: migration, membership scope, duplicate membership, task status, cross-label asset/task/approval references
+PASS: additive migration preserves old drafts, backfills four independent follow-ups, cross-tenant foreign keys, uniqueness and no fabricated official confirmation
+PASS: registration queue survives database close/reopen with no streams or browser dependency
+(node:62305) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS: authenticated two-tenant API isolation, RBAC, both modes, durable independent queues, rights blockers, unverified receipts, optimistic edits, immutable audit, branding, profiles, CSRF and atomic rollback
+(node:62306) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS: five provider request/response adapters; current-catalog filtering/pagination; AES-GCM encryption/AAD isolation; auth/CSRF/RBAC; personal-key isolation; preference persistence; sanitized errors/timeouts; rate limits; disconnect cascade. Mock HTTP only, no live LLM calls.
+(node:62307) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS workspace: tenant isolation, histories, missing-provider persistence, viewer scope, research revisions, creative drafts, mocked provider reasoning with bounded tenant context and sanitized failure; no live model call
+(node:62308) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS: public sanitized bootstrap, all four authenticated direct routes, scoped sign-in return, invalid role 404, redirect allowlist, script-safe user name
+PASS: real password verification, shared secure session cookie, selected-workspace redirect and failed-login rate limiting using synthetic account
+PASS: embedded-texture security policy applies only to the Label World scene pages, not legacy routes
+PASS: three-room bounds; studio/lobby and lobby/conference door thresholds; no conference/studio passage
+PASS: furniture/wall/closed-door collisions, sprint tunneling, moved-sofa clearance, open-door crossings, safe spawns, registry proximity and role targets
+PASS: actual-clip registry and nonblocking missing animation/model fallbacks
+PASS studio embedded GLB 17930948 bytes 255 mesh groups 0 clips
+PASS lobby embedded GLB 11354012 bytes 166 mesh groups 0 clips
+PASS conference embedded GLB 12941516 bytes 384 mesh groups 0 clips
+PASS carla embedded GLB 1932912 bytes 1 mesh groups 1 clips
+PASS eric embedded GLB 8331112 bytes 2 mesh groups 1 clips
+PASS: exported rigs, embedded textures/normals, sampled wrist continuity and Pages asset limits. Visual animation quality remains a browser check.
+(node:62312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS: original booking messages, sender/read flags, engineer/customer unread scopes, separate employee persistence and no query-email authentication bypass

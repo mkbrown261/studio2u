@@ -1,0 +1,47 @@
+id: "studio2u.release_fast_prepare"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "release_manager"
+goal: "Produce a fast distributor-ready package and persistent royalty follow-up"
+trigger: "FAST_RELEASE chosen"
+inputs:
+  - "releaseId"
+  - "targetDistributor"
+  - "approvedAssets"
+tools:
+  - "release.validate"
+  - "release.manifest"
+  - "release.build_zip"
+  - "tasks.create"
+steps:
+  - "Verify rights distribution gate and target specs."
+  - "Extract required distributor metadata and create missing-item checklist."
+  - "Build manifest/ZIP and readiness report, preserving originals."
+  - "Prepare manual submission if no authorized distributor API."
+  - "Create durable PRO/MLC/SoundExchange/copyright follow-up tasks whether or not streams are large."
+outputs:
+  - "releasePackageZip"
+  - "deliveryChecklist"
+  - "followUpTaskIds"
+validations:
+  - "Do not mark SUBMITTED or LIVE absent official evidence."
+  - "Follow-up tasks cannot silently vanish."
+approval_gates:
+  - "distributor submission"
+  - "external declarations"
+failure_and_escalation:
+  - "incomplete sample license -> BLOCK"
+  - "platform unavailable -> manual handoff"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "packagePassRate"
+  - "followUpCompletionRate"
+test_scenarios:
+  - "upload does not mean ASCAP registered"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

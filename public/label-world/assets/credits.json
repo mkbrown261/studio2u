@@ -1,0 +1,111 @@
+{
+  "credits": [
+    {
+      "title": "Carla Rigged 001 - Rigged 3D Business Women",
+      "creator": "Renderpeople",
+      "source": "https://sketchfab.com/3d-models/acf520f450d14dd799f98a6fede3edf5",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "Eric Rigged 001 - Rigged 3D Business Man",
+      "creator": "Renderpeople",
+      "source": "https://sketchfab.com/3d-models/a46bc9f67aaa415bb4f3241eef900e7f",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "Tablet",
+      "creator": "jQueary",
+      "source": "https://sketchfab.com/3d-models/774782cf1069483196ede65274ba69d8",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "Studio Monitors",
+      "creator": "Kyler Michaelson",
+      "source": "https://sketchfab.com/3d-models/12b3ce23f32a4aa99cd5ba07330bf086",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "Midi Keyboard",
+      "creator": "dennissoderblom",
+      "source": "https://sketchfab.com/3d-models/e392c51356f24febb61ae27d1864628c",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "Basic Computer Monitor & TV - Lowpoly",
+      "creator": "fatihmcnn",
+      "source": "https://sketchfab.com/3d-models/967ebecf66ef4d69b90655b173fb444f",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "audio mixing console",
+      "creator": "SURVIVED",
+      "source": "https://sketchfab.com/3d-models/2de856e665044d41897ec6047f41aa91",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "Focusrite Scarlett Solo 4th Gen",
+      "creator": "Ivan_WSK",
+      "source": "https://sketchfab.com/3d-models/9cdbec90442a4fd1a6aa7fd4b1be136a",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "modifications": "Imported, consolidated where appropriate, scaled, placed, textured/baked and exported for Studio2U. Character poses/animations adapted.",
+      "endorsement": "No endorsement implied"
+    },
+    {
+      "title": "wooden_floor_02",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/wooden_floor_02",
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
+    },
+    {
+      "title": "brown_leather",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/brown_leather",
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
+    },
+    {
+      "title": "marble_01",
+      "creator": "Poly Haven",
+      "source": "https://polyhaven.com/a/marble_01",
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "modifications": "Packed PBR maps and tinting. Marble source retained in the authoring project; final black veining uses authored shader."
+    },
+    {
+      "asset": "executive.glb",
+      "title": "Businessman (Rigged)",
+      "source": "https://sketchfab.com/3d-models/businessman-rigged-8933d61fcb1e46f3aead661227bb4fed",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "\"Businessman (Rigged)\" via Sketchfab, licensed under CC BY 4.0",
+      "modifications": "Decimated to ~30k faces, textures resized to 1024px, helper mesh removed, procedural idle animation added by Studio2U"
+    }
+  ],
+  "locally_authored": "Rooms, furniture details and hanging foliage; no BagaPie asset used",
+  "inventory": "/label-world/assets/export-inventory.json"
+}

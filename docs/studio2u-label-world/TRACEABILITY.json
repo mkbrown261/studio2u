@@ -1,0 +1,1873 @@
+{
+  "blueprint": "2.2",
+  "requirements": [
+    {
+      "id": "R001",
+      "scope": "Multi-tenant accounts, labels, RBAC, strict backend tenant isolation.",
+      "taskId": "TASK-R001",
+      "owner": "foundation",
+      "gate": "Gate 1A",
+      "acceptance": [
+        "T01"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R002",
+      "scope": "Configurable label branding, gold record plaque, studio theme, agent appearance and roles.",
+      "taskId": "TASK-R002",
+      "owner": "world",
+      "gate": "Gate 2A",
+      "acceptance": [
+        "T17"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R003",
+      "scope": "Three.js/React Three Fiber main 3D studio, camera controls, interaction targets, room architecture.",
+      "taskId": "TASK-R003",
+      "owner": "world",
+      "gate": "Gate 2A",
+      "acceptance": [
+        "T13"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R004",
+      "scope": "Blender asset pipeline: character references, reusable rigs, clean UVs, optimized GLB, validated animations, furniture and modular environment.",
+      "taskId": "TASK-R004",
+      "owner": "world",
+      "gate": "Gate 2A",
+      "acceptance": [
+        "T18"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R005",
+      "scope": "Persistent agent/task/event model independent of frontend; WebSocket live activity.",
+      "taskId": "TASK-R005",
+      "owner": "orchestration",
+      "gate": "Gate 4A",
+      "acceptance": [
+        "T16"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.executive_release_director"
+      ]
+    },
+    {
+      "id": "R006",
+      "scope": "Approval gates, audit trail, secret storage, safe file workspace and upload validation.",
+      "taskId": "TASK-R006",
+      "owner": "foundation",
+      "gate": "Gate 1A",
+      "acceptance": [
+        "T07"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R007",
+      "scope": "Canonical product docs, decision log, backlog and build-status verification.",
+      "taskId": "TASK-R007",
+      "owner": "project-control",
+      "gate": "Gate 0A",
+      "acceptance": [
+        "DOC"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R008",
+      "scope": "Provider-neutral domain services and MCP interface architecture.",
+      "taskId": "TASK-R008",
+      "owner": "connections",
+      "gate": "Gate 6A",
+      "acceptance": [
+        "T01"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R101",
+      "scope": "Create release projects and edit tracklists, credits, dates, artwork and metadata.",
+      "taskId": "TASK-R101",
+      "owner": "release",
+      "gate": "Gate 1A",
+      "acceptance": [
+        "T02"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R102",
+      "scope": "Upload and preserve originals, checksum audio, inspect technical metadata, detect exact duplicates.",
+      "taskId": "TASK-R102",
+      "owner": "catalog",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T03"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.catalog_audio_intake"
+      ]
+    },
+    {
+      "id": "R103",
+      "scope": "Distinguish compositions, recordings, releases, contributors, rights, identifiers.",
+      "taskId": "TASK-R103",
+      "owner": "catalog",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T05"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.catalog_contributor_splits"
+      ]
+    },
+    {
+      "id": "R104",
+      "scope": "Build versioned downloadable release ZIP, JSON/CSV manifest, readiness report and checklist.",
+      "taskId": "TASK-R104",
+      "owner": "release",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T06"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.release_fast_prepare"
+      ]
+    },
+    {
+      "id": "R105",
+      "scope": "Deterministic Reviewer checks with PASS/FAIL/WARNING/NEEDS_HUMAN_REVIEW/NOT_TESTED.",
+      "taskId": "TASK-R105",
+      "owner": "reviewer",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T11"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.reviewer_creative_social_qc",
+        "studio2u.reviewer_release_qc"
+      ]
+    },
+    {
+      "id": "R106",
+      "scope": "Executive delegates release workflow, Researcher gathers requirements, Builder packages, Reviewer verifies.",
+      "taskId": "TASK-R106",
+      "owner": "orchestration",
+      "gate": "Gate 4A",
+      "acceptance": [
+        "T16"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.executive_release_director"
+      ]
+    },
+    {
+      "id": "R107",
+      "scope": "Real backend events drive idle/walk/sit/type/review/talk visual states; demo mode clearly labeled.",
+      "taskId": "TASK-R107",
+      "owner": "world",
+      "gate": "Gate 4A",
+      "acceptance": [
+        "T13"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R108",
+      "scope": "Marketing campaign per release, social content drafts, content calendar and short-form video brief.",
+      "taskId": "TASK-R108",
+      "owner": "marketing",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.marketing_campaign_plan"
+      ]
+    },
+    {
+      "id": "R109",
+      "scope": "Creative Production Gateway and provider adapter contracts, cost caps and approval.",
+      "taskId": "TASK-R109",
+      "owner": "connections",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R110",
+      "scope": "Connected Services UI with integration status and safe authentication model.",
+      "taskId": "TASK-R110",
+      "owner": "connections",
+      "gate": "Gate 6A",
+      "acceptance": [
+        "T08"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R201",
+      "scope": "A&R music discovery: chart/genre/region/underground/public social signals from authorized sources; sourced reports and watchlists.",
+      "taskId": "TASK-R201",
+      "owner": "research",
+      "gate": "Gate 8A",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.ar_discover_music"
+      ]
+    },
+    {
+      "id": "R202",
+      "scope": "Publishing admin: songwriter splits, composition metadata, ASCAP preparation, status and official confirmations.",
+      "taskId": "TASK-R202",
+      "owner": "publishing",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.publishing_pro_intake"
+      ]
+    },
+    {
+      "id": "R203",
+      "scope": "Rights admin: composition/master ownership, samples, contracts, copyright application preparation and receipts.",
+      "taskId": "TASK-R203",
+      "owner": "rights",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T07"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.rights_clearance_triage",
+        "studio2u.rights_copyright_packet"
+      ]
+    },
+    {
+      "id": "R204",
+      "scope": "Distributor preparation and authorized UnitedMasters/other distributor integration where permitted.",
+      "taskId": "TASK-R204",
+      "owner": "release",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T06"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R205",
+      "scope": "Higgsfield video generation adapter if officially supported for the intended use; prompt, job, output and provenance.",
+      "taskId": "TASK-R205",
+      "owner": "creative",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.videographer_higgsfield_generation"
+      ]
+    },
+    {
+      "id": "R206",
+      "scope": "Other music/creative provider adapters, including Suno only after verifying authorized API/commercial terms.",
+      "taskId": "TASK-R206",
+      "owner": "creative",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.producer_generate_music"
+      ]
+    },
+    {
+      "id": "R207",
+      "scope": "Social account connections, scheduled drafts, approved publishing via supported APIs, permitted analytics.",
+      "taskId": "TASK-R207",
+      "owner": "social",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T12"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.social_prepare_publish"
+      ]
+    },
+    {
+      "id": "R208",
+      "scope": "Marketing/creative agents: campaign planning, video concepts, short-form assets, platform-specific posts.",
+      "taskId": "TASK-R208",
+      "owner": "marketing",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R209",
+      "scope": "Expanded modular rooms, agent routing/navigation, customization and achievements.",
+      "taskId": "TASK-R209",
+      "owner": "world",
+      "gate": "Gate 9",
+      "acceptance": [
+        "T13"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R210",
+      "scope": "Usage metering, plans, billing, quotas, BYO model credentials where supported.",
+      "taskId": "TASK-R210",
+      "owner": "billing",
+      "gate": "Gate 8A",
+      "acceptance": [
+        "T16"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R301",
+      "scope": "More advanced autonomous A&R intelligence and trend monitoring with scheduled jobs.",
+      "taskId": "TASK-R301",
+      "owner": "research",
+      "gate": "Gate 9",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.ar_discover_music"
+      ]
+    },
+    {
+      "id": "R302",
+      "scope": "Unreal Engine client reusing backend services and appropriate assets.",
+      "taskId": "TASK-R302",
+      "owner": "world",
+      "gate": "Gate 9",
+      "acceptance": [
+        "T13"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R303",
+      "scope": "Custom avatar builder, agent outfits, office marketplace and multi-label administration.",
+      "taskId": "TASK-R303",
+      "owner": "world",
+      "gate": "Gate 9",
+      "acceptance": [
+        "T17"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R304",
+      "scope": "Optional digital twin/business operations beyond music; never claim real employee whereabouts without explicit consent and lawful data collection.",
+      "taskId": "TASK-R304",
+      "owner": "future-operations",
+      "gate": "Gate 9",
+      "acceptance": [
+        "T08"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R111",
+      "scope": "Founder-validated FAST_RELEASE option with UnitedMasters-targeted preparation and mandatory lightweight distribution rights gate.",
+      "taskId": "TASK-R111",
+      "owner": "release",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T02"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.release_fast_prepare"
+      ]
+    },
+    {
+      "id": "R112",
+      "scope": "MANAGED_RELEASE mode with parallel administrative preparation, clear status per rights/royalty organization.",
+      "taskId": "TASK-R112",
+      "owner": "release",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.release_managed_prepare"
+      ]
+    },
+    {
+      "id": "R113",
+      "scope": "Durable post-release follow-up queues for PRO, MLC, SoundExchange, copyright and related eligibility; queues are created even with zero streams and never silently closed.",
+      "taskId": "TASK-R113",
+      "owner": "royalties",
+      "gate": "Gate 3B",
+      "acceptance": [
+        "T02"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.release_fast_prepare",
+        "studio2u.royalties_mlc_followup",
+        "studio2u.royalties_soundexchange_followup"
+      ]
+    },
+    {
+      "id": "R114",
+      "scope": "Canonical verified field provenance; song duration, word-aligned draft lyrics and artist-approved transcript/version history.",
+      "taskId": "TASK-R114",
+      "owner": "catalog",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T04"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.catalog_audio_intake",
+        "studio2u.catalog_lyrics_transcription",
+        "studio2u.editor_hook_selection"
+      ]
+    },
+    {
+      "id": "R115",
+      "scope": "Rights gate covering beats, third-party samples, covers/interpolations, master ownership and consent to distribution; material gaps block external actions.",
+      "taskId": "TASK-R115",
+      "owner": "rights",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T07"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.reviewer_release_qc",
+        "studio2u.rights_clearance_triage"
+      ]
+    },
+    {
+      "id": "R116",
+      "scope": "Distinguish composition splits, master splits, producer points and revenue splits; collect proof and flag disputes.",
+      "taskId": "TASK-R116",
+      "owner": "catalog",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T05"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.catalog_contributor_splits"
+      ]
+    },
+    {
+      "id": "R117",
+      "scope": "Agent skill library with versioned contracts, required inputs/outputs, tools, escalation, tests and evidence.",
+      "taskId": "TASK-R117",
+      "owner": "skills",
+      "gate": "Gate 0A",
+      "acceptance": [
+        "DOC"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.executive_release_director"
+      ]
+    },
+    {
+      "id": "R118",
+      "scope": "Registration-ready status and confirmed filing status are separate across societies and agencies.",
+      "taskId": "TASK-R118",
+      "owner": "royalties",
+      "gate": "Gate 3B",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.release_managed_prepare",
+        "studio2u.rights_copyright_packet"
+      ]
+    },
+    {
+      "id": "R119",
+      "scope": "Client-facing registration/royalty dashboard indicating PREPARED, PENDING, SUBMITTED, CONFIRMED, BLOCKED, NOT_APPLICABLE and UNKNOWN.",
+      "taskId": "TASK-R119",
+      "owner": "royalties",
+      "gate": "Gate 3B",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R120",
+      "scope": "Marketing includes artist identity kit, consent, wardrobe/shoes and reference rights metadata.",
+      "taskId": "TASK-R120",
+      "owner": "creative",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.videographer_concept_storyboard"
+      ]
+    },
+    {
+      "id": "R121",
+      "scope": "Videographer concept, shotlist and storyboard generation with per-shot duration/continuity and approval.",
+      "taskId": "TASK-R121",
+      "owner": "creative",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.videographer_concept_storyboard"
+      ]
+    },
+    {
+      "id": "R122",
+      "scope": "Short-form editor supports timecoded hooks, beat alignment, captions, aspect presets and actual file inspection.",
+      "taskId": "TASK-R122",
+      "owner": "editor",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T10"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.editor_hook_selection",
+        "studio2u.editor_shortform_assembly"
+      ]
+    },
+    {
+      "id": "R123",
+      "scope": "Social publishing lifecycle, content calendar and approved account management; manual handoff when API unavailable.",
+      "taskId": "TASK-R123",
+      "owner": "social",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T12"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.reviewer_creative_social_qc",
+        "studio2u.social_prepare_publish"
+      ]
+    },
+    {
+      "id": "R124",
+      "scope": "Optional n8n and Tally bounded integration connectors; backend remains canonical.",
+      "taskId": "TASK-R124",
+      "owner": "connections",
+      "gate": "Gate 6A",
+      "acceptance": [
+        "T01"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R125",
+      "scope": "Browser/computer assistance evaluated per provider with explicit consent, tenant isolation, domain/action allowlists, provider permission, credentials separation and auditable receipts.",
+      "taskId": "TASK-R125",
+      "owner": "connections",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T08"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R126",
+      "scope": "Brand/marketing KPI learning and source-linked hypothesis testing, without promises of viral success.",
+      "taskId": "TASK-R126",
+      "owner": "marketing",
+      "gate": "Gate 8A",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.ar_viral_record_analysis",
+        "studio2u.marketing_campaign_plan"
+      ]
+    },
+    {
+      "id": "R211",
+      "scope": "Artist/producer conversational beat briefing with original musical characteristics and rights-respecting reference analysis.",
+      "taskId": "TASK-R211",
+      "owner": "producer",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.producer_beat_brief"
+      ]
+    },
+    {
+      "id": "R212",
+      "scope": "Pluggable AI music generation with verified provider rights, provenance, budget caps and track/version handling (Suno candidate).",
+      "taskId": "TASK-R212",
+      "owner": "producer",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.producer_generate_music"
+      ]
+    },
+    {
+      "id": "R213",
+      "scope": "Videographer provider gateway with real asynchronous jobs/receipts and Higgsfield adapter where verified.",
+      "taskId": "TASK-R213",
+      "owner": "creative",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.videographer_higgsfield_generation"
+      ]
+    },
+    {
+      "id": "R214",
+      "scope": "VideoEditorProvider contract with Genjitsu **capability verification required** and first-party/local editor option.",
+      "taskId": "TASK-R214",
+      "owner": "editor",
+      "gate": "Gate 7A",
+      "acceptance": [
+        "T10"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.editor_shortform_assembly"
+      ]
+    },
+    {
+      "id": "R215",
+      "scope": "Source-attributed A&R discovery; comparative viral/nonviral music case studies with time-stamped signals and confounders.",
+      "taskId": "TASK-R215",
+      "owner": "research",
+      "gate": "Gate 8A",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.ar_discover_music",
+        "studio2u.ar_viral_record_analysis"
+      ]
+    },
+    {
+      "id": "R216",
+      "scope": "Approved chart/social underground research; no unapproved scraping or fabricated hashtag access.",
+      "taskId": "TASK-R216",
+      "owner": "research",
+      "gate": "Gate 8A",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.ar_discover_music"
+      ]
+    },
+    {
+      "id": "R217",
+      "scope": "Optional PRO affiliation and publisher intake from shared artist profile; avoid requiring unnecessary reentry per release.",
+      "taskId": "TASK-R217",
+      "owner": "publishing",
+      "gate": "Gate 3B",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.publishing_pro_intake"
+      ]
+    },
+    {
+      "id": "R218",
+      "scope": "Royalty readiness for MLC and SoundExchange with applicability checks; never promise royalties from all streams.",
+      "taskId": "TASK-R218",
+      "owner": "royalties",
+      "gate": "Gate 3B",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.royalties_mlc_followup",
+        "studio2u.royalties_soundexchange_followup"
+      ]
+    },
+    {
+      "id": "R219",
+      "scope": "Platform-specific social exports using versioned presets, not assumptions that all platform limits match.",
+      "taskId": "TASK-R219",
+      "owner": "editor",
+      "gate": "Gate 5A",
+      "acceptance": [
+        "T10"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.editor_shortform_assembly"
+      ]
+    },
+    {
+      "id": "R220",
+      "scope": "Multi-provider connection settings with exact capabilities, costs, feature flags, revocation and token isolation.",
+      "taskId": "TASK-R220",
+      "owner": "connections",
+      "gate": "Gate 6A",
+      "acceptance": [
+        "T08"
+      ],
+      "status": "PLANNED",
+      "skills": []
+    },
+    {
+      "id": "R221",
+      "scope": "Agent evaluations against sample releases, invalid files, missing ownership, provider outages and simulated-but-clearly-marked demo mode.",
+      "taskId": "TASK-R221",
+      "owner": "skills",
+      "gate": "Gate 4A",
+      "acceptance": [
+        "T16"
+      ],
+      "status": "PLANNED",
+      "skills": [
+        "studio2u.reviewer_creative_social_qc",
+        "studio2u.reviewer_release_qc"
+      ]
+    },
+    {
+      "id": "R305",
+      "scope": "(P1b) Separate AI Employees Inbox with per-agent/task/release threads and dedicated navigation, completely isolated from client/engineer booking messages.",
+      "taskId": "TASK-R305",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R306",
+      "scope": "(P1b) Session-authenticated, label-member authorized messaging, server-authorized agent sender, tenant-scoped attachments and participant/read states; no `?email` as Label World identity.",
+      "taskId": "TASK-R306",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R307",
+      "scope": "(P1c) Structured version-bound agent approval cards, review/reject/request-changes, audit, idempotency, and no chat-text-as-approval bypass.",
+      "taskId": "TASK-R307",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R308",
+      "scope": "(P1b/P2) Persistent agent inbox notification queues, unread counts and preferences; realtime transport optional, replaceable and accurately labeled.",
+      "taskId": "TASK-R308",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R309",
+      "scope": "(P1c) PRO/rights/distribution registration packet and human official-site review/submit handoff, with versioned evidence and official source links.",
+      "taskId": "TASK-R309",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R310",
+      "scope": "(P2+) Provider-specific browser assistance only if officially permitted and user-supervised, with scoped session, secrets isolation, pause/stop and no automated legal declarations; otherwise manual handoff.",
+      "taskId": "TASK-R310",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R311",
+      "scope": "(P1c) Separate prepared, reported-submitted, pending verification, official confirmed and rejected statuses for filings/royalty claims.",
+      "taskId": "TASK-R311",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R312",
+      "scope": "(P2 V1 voice) Conversation with chosen agents using text and speech with streaming/turn interruption, text fallback, no lip-sync dependency and verified provider entitlement.",
+      "taskId": "TASK-R312",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R313",
+      "scope": "(P1b/P2) Select, hire, name and configure prebuilt agents from versioned skill templates per tenant; show configured vs executable status truthfully.",
+      "taskId": "TASK-R313",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R314",
+      "scope": "(P1b/P2) Per-skill connection onboarding/capability matrix with approved API keys/OAuth/scoped authorizations, provider costs, revocation and manual fallback.",
+      "taskId": "TASK-R314",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R315",
+      "scope": "(P3) Headless renderer-independent agents allow future Unreal MetaHuman lip-synced avatars without backend rewrite.",
+      "taskId": "TASK-R315",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R316",
+      "scope": "(P1 visual) Preserve existing Carla Researcher and Eric Reviewer Blender rigs as only presently reported 3D character implementations; Executive and Builder mesh/rig pending, backend roles available independent of mesh.",
+      "taskId": "TASK-R316",
+      "owner": "world",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-01"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R317",
+      "scope": "(P2) Royalty Recovery Dashboard for evidence-backed PRO, MLC, SoundExchange and distributor eligibility, missing claims, receipts, reminders and no speculative owed balances.",
+      "taskId": "TASK-R317",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R318",
+      "scope": "(P2) Typed creative handoff among Marketing, Videographer, Higgsfield adapter, Genjitsu/other editor, Reviewer and Social with likeness rights, timecodes, approvals and actual media evidence.",
+      "taskId": "TASK-R318",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R319",
+      "scope": "(P0 continuous) Source/deployment reconciliation records current branch/SHA, remote versus local state, actual tests, Cloudflare environment and whether production changed; no unverified deployment claims.",
+      "taskId": "TASK-R319",
+      "owner": "project-control",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-22"
+      ],
+      "status": "IN_PROGRESS",
+      "skills": []
+    },
+    {
+      "id": "R320",
+      "scope": "(P1b) Regression tests guarantee pre-existing booking messages, unread badges and engineer/customer permissions remain intact.",
+      "taskId": "TASK-R320",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-15"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R321",
+      "scope": "(P2) Voice/microphone consent, session indicators, privacy/retention, accessibility controls, text alternative and no high-risk action approved by speech alone.",
+      "taskId": "TASK-R321",
+      "owner": "inbox",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY",
+      "skills": []
+    },
+    {
+      "id": "R322",
+      "scope": "(P1 visual): One shared accessible React dashboard shell with four approved role-based routes; strict Studio2U main-site styling boundary.",
+      "taskId": "TASK-R322",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-12"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R323",
+      "scope": "(P1 visual): Four high-fidelity dashboard layouts match supplied images; analytics examples and status figures clearly distinguished from live data.",
+      "taskId": "TASK-R323",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-16"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R324",
+      "scope": "(P1 visual): Real Blender headquarters inventories/exports with validated GLB, texture/UV/material fixing, preserved source and deployed room loader.",
+      "taskId": "TASK-R324",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-02"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R325",
+      "scope": "(P1 interaction): Explicit first-person movement and camera control (WASD, pointer lock, Shift, safe spawn, bounds) with collision and touch alternatives.",
+      "taskId": "TASK-R325",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-05"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R326",
+      "scope": "(P1 interaction): Central object/agent/station interaction registry, E/click/tap proximity prompts and permission-aware routing.",
+      "taskId": "TASK-R326",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-07"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R327",
+      "scope": "(P1 interaction): Shared HTML/React overlay opens from 3D, suspends camera, unlocks pointer, restores focus and camera position on close.",
+      "taskId": "TASK-R327",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-11"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R328",
+      "scope": "(P1 interaction): Carla selects Researcher and Eric opens Reviewer tablet; Executive/Builder station fallback when meshes absent.",
+      "taskId": "TASK-R328",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-10"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R329",
+      "scope": "(P1 interaction): Per-character verified animation state registry with idle-only fallback; missing greeting/tablet/walk clips nonblocking.",
+      "taskId": "TASK-R329",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-03"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R330",
+      "scope": "(P1 security): Public sanitized room separate from authenticated private label world; strict per-tenant records/asset authorization.",
+      "taskId": "TASK-R330",
+      "owner": "business-services",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-13"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R331",
+      "scope": "(P1 reliability): WebGL-disabled or broken assets never prevent direct agent dashboards, Inbox, release and provider settings.",
+      "taskId": "TASK-R331",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-12"
+      ],
+      "status": "LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R332",
+      "scope": "(P2 personalization): Stable GLB object/material IDs and backend-scoped settings for cabinets, wall finish, trim with save/revert.",
+      "taskId": "TASK-R332",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-21"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R333",
+      "scope": "(P2 personalization): Evidence-driven per-label achievement/plaque registry with verified metric definition, deduplication and correction.",
+      "taskId": "TASK-R333",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-20"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R334",
+      "scope": "(P2 personalization): Optional congratulation in Agent Inbox and accessible/reduced-motion celebration from verified milestone only.",
+      "taskId": "TASK-R334",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-20"
+      ],
+      "status": "DEFERRED",
+      "skills": []
+    },
+    {
+      "id": "R335",
+      "scope": "(P1 quality): Browser walkthrough for 3D/movement/overlays/permissions and visual screenshot comparisons for all four dashboards.",
+      "taskId": "TASK-R335",
+      "owner": "ui",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-16"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R336",
+      "scope": "(P1 quality): Independent GLB reimport/test-viewer + animation tests, device-recorded performance and asset provenance manifest.",
+      "taskId": "TASK-R336",
+      "owner": "world",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-17"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R337",
+      "scope": "(P1 workflow): 3D contexts and direct-route dashboards share single authoritative label/release/task/approval/Inbox data services.",
+      "taskId": "TASK-R337",
+      "owner": "business-services",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    },
+    {
+      "id": "R338",
+      "scope": "(P1 workflow): Integrate three active coding streams without duplicated work; status reconciled against current branch SHA and live deployment.",
+      "taskId": "TASK-R338",
+      "owner": "project-control",
+      "gate": "v2.2 interaction",
+      "acceptance": [
+        "HQ-22"
+      ],
+      "status": "IN_PROGRESS",
+      "skills": []
+    },
+    {
+      "id": "R339",
+      "scope": "(P2 A&R): Carla metrics/trends provenance, date windows, data connection states, lawful authorized collection, no mock data marked live.",
+      "taskId": "TASK-R339",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-16"
+      ],
+      "status": "PARTIAL_LOCAL_TESTED",
+      "skills": []
+    }
+  ],
+  "nonfunctional": [
+    {
+      "id": "NF1",
+      "taskId": "TASK-NF1",
+      "scope": "Accessibility: keyboard alternatives, reduced motion and semantic panels",
+      "owner": "world",
+      "gate": "Gate 2A",
+      "acceptance": [
+        "T13"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "NF2",
+      "taskId": "TASK-NF2",
+      "scope": "Security: scoped tokens, tenant storage, least privilege, audit and rate limits",
+      "owner": "foundation",
+      "gate": "Gate 1A",
+      "acceptance": [
+        "T01"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "NF3",
+      "taskId": "TASK-NF3",
+      "scope": "Reliability: idempotency, retries, resumable uploads, durable queues and cancellation",
+      "owner": "orchestration",
+      "gate": "Gate 4A",
+      "acceptance": [
+        "T16"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "NF4",
+      "taskId": "TASK-NF4",
+      "scope": "Performance: measured room load/FPS/draw calls, compressed textures and animation LOD",
+      "owner": "world",
+      "gate": "Gate 2A",
+      "acceptance": [
+        "T18"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "NF5",
+      "taskId": "TASK-NF5",
+      "scope": "Compliance: source rights, authorized APIs and owner review",
+      "owner": "rights",
+      "gate": "Gate 3A",
+      "acceptance": [
+        "T07"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "NF6",
+      "taskId": "TASK-NF6",
+      "scope": "Data portability: export catalog, metadata, files and task history",
+      "owner": "catalog",
+      "gate": "Gate 8A",
+      "acceptance": [
+        "T06"
+      ],
+      "status": "PLANNED"
+    }
+  ],
+  "skills": [
+    {
+      "id": "studio2u.ar_discover_music",
+      "version": "1.0.0",
+      "taskId": "SKILL-01",
+      "owner": "ar_researcher",
+      "scope": "Find credible chart, regional and underground opportunities",
+      "source": "skills/ar_discover_music.yaml",
+      "requirements": [
+        "R201",
+        "R215",
+        "R216",
+        "R301"
+      ],
+      "gate": "Gate 8A",
+      "acceptance": [
+        "restricted social feed must not be fabricated",
+        "duplicate artist merged without losing sources"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.ar_viral_record_analysis",
+      "version": "1.0.0",
+      "taskId": "SKILL-02",
+      "owner": "ar_researcher",
+      "scope": "Analyze why comparable songs spread without claiming causal certainty",
+      "source": "skills/ar_viral_record_analysis.yaml",
+      "requirements": [
+        "R126",
+        "R215"
+      ],
+      "gate": "Gate 8A",
+      "acceptance": [
+        "single viral anecdote cannot count as causal proof"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.catalog_audio_intake",
+      "version": "1.0.0",
+      "taskId": "SKILL-03",
+      "owner": "catalog_manager",
+      "scope": "Preserve and inspect original uploaded audio",
+      "source": "skills/catalog_audio_intake.yaml",
+      "requirements": [
+        "R102",
+        "R114"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "uploaded corrupt audio",
+        "two encodings of same track"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.catalog_contributor_splits",
+      "version": "1.0.0",
+      "taskId": "SKILL-04",
+      "owner": "catalog_manager",
+      "scope": "Collect verified credits and distinct split categories",
+      "source": "skills/catalog_contributor_splits.yaml",
+      "requirements": [
+        "R103",
+        "R116"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "master income splits differ from publishing shares"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.catalog_lyrics_transcription",
+      "version": "1.0.0",
+      "taskId": "SKILL-05",
+      "owner": "catalog_manager",
+      "scope": "Create editable time-aligned lyrics with verified review",
+      "source": "skills/catalog_lyrics_transcription.yaml",
+      "requirements": [
+        "R114"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "instrumental track",
+        "code switching and ambiguous words"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.editor_hook_selection",
+      "version": "1.0.0",
+      "taskId": "SKILL-06",
+      "owner": "shortform_editor",
+      "scope": "Extract auditable short-form hook candidates from owned recording",
+      "source": "skills/editor_hook_selection.yaml",
+      "requirements": [
+        "R114",
+        "R122"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "low confidence transcript never declared exact"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.editor_shortform_assembly",
+      "version": "1.0.0",
+      "taskId": "SKILL-07",
+      "owner": "shortform_editor",
+      "scope": "Cut rights-cleared promotional videos into platform exports",
+      "source": "skills/editor_shortform_assembly.yaml",
+      "requirements": [
+        "R122",
+        "R214",
+        "R219"
+      ],
+      "gate": "Gate 5A",
+      "acceptance": [
+        "different platform requirements not assumed identical"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.executive_release_director",
+      "version": "1.0.0",
+      "taskId": "SKILL-08",
+      "owner": "executive",
+      "scope": "Coordinate a real release and promotion project",
+      "source": "skills/executive_release_director.yaml",
+      "requirements": [
+        "R005",
+        "R106",
+        "R117"
+      ],
+      "gate": "Gate 4A",
+      "acceptance": [
+        "missing credits cannot be silently considered complete",
+        "unauthorized release submission rejected"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.marketing_campaign_plan",
+      "version": "1.0.0",
+      "taskId": "SKILL-09",
+      "owner": "marketing_manager",
+      "scope": "Build measurable release-specific promotional campaign",
+      "source": "skills/marketing_campaign_plan.yaml",
+      "requirements": [
+        "R108",
+        "R126"
+      ],
+      "gate": "Gate 5A",
+      "acceptance": [
+        "underage audience restrictions when relevant"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.producer_beat_brief",
+      "version": "1.0.0",
+      "taskId": "SKILL-10",
+      "owner": "producer_builder",
+      "scope": "Translate artist musical taste into original, actionable beat brief",
+      "source": "skills/producer_beat_brief.yaml",
+      "requirements": [
+        "R211"
+      ],
+      "gate": "Gate 5A",
+      "acceptance": [
+        "specific request to clone third-party protected beat handled appropriately"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.producer_generate_music",
+      "version": "1.0.0",
+      "taskId": "SKILL-11",
+      "owner": "producer_builder",
+      "scope": "Generate and review original drafts using authorized music provider",
+      "source": "skills/producer_generate_music.yaml",
+      "requirements": [
+        "R206",
+        "R212"
+      ],
+      "gate": "Gate 7A",
+      "acceptance": [
+        "missing API means no fake music clip"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.publishing_pro_intake",
+      "version": "1.0.0",
+      "taskId": "SKILL-12",
+      "owner": "publishing_admin",
+      "scope": "Prepare accurate PRO composition registration records",
+      "source": "skills/publishing_pro_intake.yaml",
+      "requirements": [
+        "R202",
+        "R217"
+      ],
+      "gate": "Gate 7A",
+      "acceptance": [
+        "PRO affiliation missing",
+        "duplicate composition title"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.release_fast_prepare",
+      "version": "1.0.0",
+      "taskId": "SKILL-13",
+      "owner": "release_manager",
+      "scope": "Produce a fast distributor-ready package and persistent royalty follow-up",
+      "source": "skills/release_fast_prepare.yaml",
+      "requirements": [
+        "R104",
+        "R111",
+        "R113"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "upload does not mean ASCAP registered"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.release_managed_prepare",
+      "version": "1.0.0",
+      "taskId": "SKILL-14",
+      "owner": "release_manager",
+      "scope": "Coordinate distribution with parallel verified publishing preparation",
+      "source": "skills/release_managed_prepare.yaml",
+      "requirements": [
+        "R112",
+        "R118"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "ASCAP not assumed to cover SoundExchange"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.reviewer_creative_social_qc",
+      "version": "1.0.0",
+      "taskId": "SKILL-15",
+      "owner": "reviewer",
+      "scope": "Independently review video and social deliverables",
+      "source": "skills/reviewer_creative_social_qc.yaml",
+      "requirements": [
+        "R105",
+        "R123",
+        "R221"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "copyrighted third-party viral clip must be flagged"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.reviewer_release_qc",
+      "version": "1.0.0",
+      "taskId": "SKILL-16",
+      "owner": "reviewer",
+      "scope": "Audit completeness and integrity of package and release rights checklist",
+      "source": "skills/reviewer_release_qc.yaml",
+      "requirements": [
+        "R105",
+        "R115",
+        "R221"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "missing artwork",
+        "unconfirmed beat license"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.rights_clearance_triage",
+      "version": "1.0.0",
+      "taskId": "SKILL-17",
+      "owner": "rights_admin",
+      "scope": "Identify obvious rights clearance and licensing blockers",
+      "source": "skills/rights_clearance_triage.yaml",
+      "requirements": [
+        "R115",
+        "R203"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "claimed owned beat with conflicting contract"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.rights_copyright_packet",
+      "version": "1.0.0",
+      "taskId": "SKILL-18",
+      "owner": "rights_admin",
+      "scope": "Prepare accurate copyright application information, not legal conclusions",
+      "source": "skills/rights_copyright_packet.yaml",
+      "requirements": [
+        "R203",
+        "R118"
+      ],
+      "gate": "Gate 3A",
+      "acceptance": [
+        "AI-generated component requires nuanced review"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.royalties_mlc_followup",
+      "version": "1.0.0",
+      "taskId": "SKILL-19",
+      "owner": "royalty_admin",
+      "scope": "Track US eligible digital mechanical registration/matching readiness",
+      "source": "skills/royalties_mlc_followup.yaml",
+      "requirements": [
+        "R113",
+        "R218"
+      ],
+      "gate": "Gate 3B",
+      "acceptance": [
+        "existing publisher administrator controls rights"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.royalties_soundexchange_followup",
+      "version": "1.0.0",
+      "taskId": "SKILL-20",
+      "owner": "royalty_admin",
+      "scope": "Track qualifying statutory master-side digital performance royalty registration",
+      "source": "skills/royalties_soundexchange_followup.yaml",
+      "requirements": [
+        "R113",
+        "R218"
+      ],
+      "gate": "Gate 3B",
+      "acceptance": [
+        "interactive Spotify streams not falsely labeled SoundExchange payout"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.social_prepare_publish",
+      "version": "1.0.0",
+      "taskId": "SKILL-21",
+      "owner": "social_media_manager",
+      "scope": "Manage authorized artist social pages from draft to verified publication",
+      "source": "skills/social_prepare_publish.yaml",
+      "requirements": [
+        "R123",
+        "R207"
+      ],
+      "gate": "Gate 7A",
+      "acceptance": [
+        "stale OAuth permissions",
+        "provider returns 429"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.videographer_concept_storyboard",
+      "version": "1.0.0",
+      "taskId": "SKILL-22",
+      "owner": "videographer",
+      "scope": "Produce coherent promo concept, shot list and storyboard",
+      "source": "skills/videographer_concept_storyboard.yaml",
+      "requirements": [
+        "R120",
+        "R121"
+      ],
+      "gate": "Gate 5A",
+      "acceptance": [
+        "third-party photo lacks consent"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    },
+    {
+      "id": "studio2u.videographer_higgsfield_generation",
+      "version": "1.0.0",
+      "taskId": "SKILL-23",
+      "owner": "videographer",
+      "scope": "Render approved clips with provider-neutral video gateway",
+      "source": "skills/videographer_higgsfield_generation.yaml",
+      "requirements": [
+        "R205",
+        "R213"
+      ],
+      "gate": "Gate 7A",
+      "acceptance": [
+        "provider error handled without fake COMPLETED"
+      ],
+      "status": "DESIGNED_NOT_IMPLEMENTED",
+      "runtime": "UNAVAILABLE"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "W1",
+      "scope": "First vertical slice: song to release package and campaign brief",
+      "taskId": "WORKFLOW-W1",
+      "gate": "Gate 3A",
+      "owner": "executive",
+      "acceptance": [
+        "T06"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W2",
+      "scope": "A&R discovery",
+      "taskId": "WORKFLOW-W2",
+      "gate": "Gate 8A",
+      "owner": "executive",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W3",
+      "scope": "Publishing and copyright",
+      "taskId": "WORKFLOW-W3",
+      "gate": "Gate 7A",
+      "owner": "executive",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W4",
+      "scope": "Creative and social",
+      "taskId": "WORKFLOW-W4",
+      "gate": "Gate 7A",
+      "owner": "executive",
+      "acceptance": [
+        "T12"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W5",
+      "scope": "Future connected rooms",
+      "taskId": "WORKFLOW-W5",
+      "gate": "Gate 9",
+      "owner": "executive",
+      "acceptance": [
+        "T13"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W6",
+      "scope": "Founder FAST_RELEASE -> royalty follow-through (v2 priority)",
+      "taskId": "WORKFLOW-W6",
+      "gate": "Gate 3A",
+      "owner": "executive",
+      "acceptance": [
+        "T02"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W7",
+      "scope": "Managed publication",
+      "taskId": "WORKFLOW-W7",
+      "gate": "Gate 3B",
+      "owner": "executive",
+      "acceptance": [
+        "T15"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W8",
+      "scope": "Producer beat collaboration",
+      "taskId": "WORKFLOW-W8",
+      "gate": "Gate 7A",
+      "owner": "executive",
+      "acceptance": [
+        "T09"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W9",
+      "scope": "Videographer -> Short-Form Editor -> Social Manager",
+      "taskId": "WORKFLOW-W9",
+      "gate": "Gate 7A",
+      "owner": "executive",
+      "acceptance": [
+        "T10"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W10",
+      "scope": "A&R research and campaign feedback",
+      "taskId": "WORKFLOW-W10",
+      "gate": "Gate 8A",
+      "owner": "executive",
+      "acceptance": [
+        "T14"
+      ],
+      "status": "PLANNED"
+    },
+    {
+      "id": "W11",
+      "scope": "Agent Inbox messages and action approvals (v2.1)",
+      "taskId": "TASK-W11",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    },
+    {
+      "id": "W12",
+      "scope": "PRO registration guided human submission (v2.1)",
+      "taskId": "TASK-W12",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    },
+    {
+      "id": "W13",
+      "scope": "Artist hires an agent and optionally talks to them (v2.1)",
+      "taskId": "TASK-W13",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    },
+    {
+      "id": "W14",
+      "scope": "Royalty recovery request (v2.1)",
+      "taskId": "TASK-W14",
+      "owner": "business-services",
+      "gate": "v2.1 business utility",
+      "acceptance": [
+        "HQ-19"
+      ],
+      "status": "DESIGNED_ONLY"
+    }
+  ]
+}

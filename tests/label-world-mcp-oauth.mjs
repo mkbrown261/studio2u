@@ -1,0 +1,85 @@
+import assert from 'node:assert/strict'
+import {fixture} from './label-world-api-fixture.mjs'
+import {Hono} from 'hono'
+const {mcpRoutes,challenge,digest,randomSecret}=await import('../src/label-world/mcp/auth.ts')
+const {Client,StreamableHTTPClientTransport}=await import('@modelcontextprotocol/client')
+const f=fixture(),app=new Hono();app.route('/',mcpRoutes);app.route('/',f.app)
+const origin='https://studio.invalid',resource=origin+'/label-world/mcp',verifier=randomSecret(),cookie='studio2u_session=test-session-1'
+async function request(path,method='GET',body,options={}){return app.request(origin+path,{method,headers:{...(options.cookie?{Cookie:options.cookie}:{}),...(options.token?{Authorization:'Bearer '+options.token}:{}),...(method==='POST'?{'Content-Type':options.json?'application/json':'application/x-www-form-urlencoded'}:{}),...(options.origin?{Origin:options.origin}:{})},...(body?{body:options.json?JSON.stringify(body):new URLSearchParams(body)}:{})},f.env)}
+assert.equal((await request('/label-world/mcp')).status,401)
+const anonymous=await request('/label-world/mcp');assert.ok(anonymous.headers.get('WWW-Authenticate').includes('resource_metadata'))
+const meta=await (await request('/.well-known/oauth-authorization-server')).json();assert.ok(meta.code_challenge_methods_supported.includes('S256'));assert.equal(meta.authorization_response_iss_parameter_supported,undefined)
+const registration=await request('/label-world/oauth/register','POST',{client_name:'Codex fixture',redirect_uris:['http://127.0.0.1:54321/callback'],token_endpoint_auth_method:'none'},{json:true});assert.equal(registration.status,201);const client=(await registration.json()).client_id
+assert.equal((await request('/label-world/oauth/register','POST',{redirect_uris:['http://attacker.invalid/callback']},{json:true})).status,400)
+const a=await (await request('/api/label-world/labels','POST',{name:'MCP authorized label'},{cookie,origin,json:true})).json()
+const b=await (await request('/api/label-world/labels','POST',{name:'Other label'},{cookie:'studio2u_session=test-session-2',origin,json:true})).json()
+const r=await (await request(`/api/label-world/labels/${a.id}/releases`,'POST',{title:'OAuth QA release',artist:'QA',releaseType:'single',releaseMode:'FAST_RELEASE'},{cookie,origin,json:true})).json()
+const authQuery=new URLSearchParams({client_id:client,redirect_uri:'http://127.0.0.1:54321/callback',resource,response_type:'code',state:'opaque-state-test',code_challenge:await challenge(verifier),code_challenge_method:'S256',scope:'labels:read releases:read reviews:read research:read messages:read tasks:read knowledge:read offline_access'})
+assert.equal((await request('/label-world/oauth/authorize?'+authQuery+'&redirect_uri=https://evil.invalid')).status,400)
+// RFC 8252: Codex picks a new loopback port each login; same host+path on another port is accepted, other hosts/paths are not.
+{const alt=new URLSearchParams(authQuery);alt.set('redirect_uri','http://127.0.0.1:61234/callback');assert.equal((await request('/label-world/oauth/authorize?'+alt)).status,302)
+for(const bad of ['http://127.0.0.1:61234/other','http://evil.invalid:54321/callback','https://127.0.0.1:54321/callback','http://localhost:54321/callback']){const q=new URLSearchParams(authQuery);q.set('redirect_uri',bad);assert.equal((await request('/label-world/oauth/authorize?'+q)).status,400,bad)}}
+const start=await request('/label-world/oauth/authorize?'+authQuery);assert.equal(start.status,302);assert.ok(start.headers.get('Location').startsWith('/label-world/login?returnTo='))
+const returned=new URL(start.headers.get('Location'),origin).searchParams.get('returnTo')
+const consent=await request(returned,'GET',null,{cookie});assert.equal(consent.status,200);assert.equal(consent.headers.get('Referrer-Policy'),'same-origin');assert.ok(consent.headers.get('Content-Security-Policy').includes('http://127.0.0.1:54321'));const form=await consent.text(),rid=form.match(/name="request" value="([a-f0-9]+)"/)[1],csrf=form.match(/name="csrf" value="([a-f0-9]+)"/)[1]
+assert.equal((await request('/label-world/oauth/consent','POST',{request:rid,csrf,label:a.id,scope:'labels:read',decision:'allow'},{cookie,origin:'https://evil.invalid'})).status,403)
+assert.equal((await request('/label-world/oauth/consent','POST',{request:rid,csrf,label:b.id,scope:'labels:read',decision:'allow'},{cookie,origin})).status,403)
+const payload=new URLSearchParams({request:rid,csrf,label:a.id,decision:'allow'});for(const s of authQuery.get('scope').split(' '))payload.append('scope',s)
+const allowed=await request('/label-world/oauth/consent','POST',payload,{cookie,origin});assert.equal(allowed.status,302);const callback=new URL(allowed.headers.get('Location')),code=callback.searchParams.get('code');assert.equal(callback.searchParams.get('iss'),origin);assert.equal(callback.searchParams.get('state'),'opaque-state-test')
+assert.equal((await request('/label-world/oauth/consent','POST',payload,{cookie,origin})).status,403)
+// Stale browser continuations offer safe recovery without replaying authorization.
+async function assertRecovery(path){const response=await request(path,'GET',null,{cookie});assert.equal(response.status,400);assert.match(response.headers.get('Content-Type'),/text\/html/);const page=await response.text();assert.ok(page.includes('href="/label-world/login"'));assert.ok(page.includes('href="/label-world"'));assert.ok(!page.includes('name="csrf"'));assert.equal(response.headers.get('Cache-Control'),'no-store')}
+await assertRecovery(returned) // already consumed
+await assertRecovery('/label-world/oauth/authorize?request='+'f'.repeat(64))
+await assertRecovery('/label-world/oauth/authorize?request=malformed')
+await assertRecovery(returned+'&request='+rid)
+const expiring=await request('/label-world/oauth/authorize?'+authQuery),expiredPath=new URL(expiring.headers.get('Location'),origin).searchParams.get('returnTo'),expiredId=new URL(expiredPath,origin).searchParams.get('request')
+f.sqlite.prepare("UPDATE lw_mcp_requests SET expires_at='2020-01-01T00:00:00Z' WHERE id=?").run(expiredId)
+await assertRecovery(expiredPath)
+assert.equal((await request('/api/label-world/ai-connections','GET',null,{cookie})).status,200)
+const tokenParams={grant_type:'authorization_code',client_id:client,redirect_uri:'http://127.0.0.1:54321/callback',resource,code,code_verifier:verifier}
+assert.equal((await request('/label-world/oauth/token','POST',{...tokenParams,code_verifier:'a'.repeat(43)})).status,400)
+assert.equal((await request('/label-world/oauth/token','POST',{...tokenParams,resource:origin+'/other'})).status,400)
+const exchange=await request('/label-world/oauth/token','POST',tokenParams);assert.equal(exchange.status,200);const tokens=await exchange.json();assert.equal(tokens.expires_in,600);assert.ok(tokens.refresh_token)
+assert.equal((await request('/label-world/oauth/token','POST',tokenParams)).status,400)
+assert.equal(f.sqlite.prepare('SELECT COUNT(*) AS n FROM lw_mcp_tokens WHERE hash=?').get(tokens.access_token).n,0)
+assert.equal((await request('/label-world/mcp','GET',null,{cookie})).status,401)
+const native=new Client({name:'OAuth SDK fixture',version:'1.0.0'}),transport=new StreamableHTTPClientTransport(new URL(resource),{fetch:(url,opts)=>app.request(new Request(url,{...opts,headers:{...Object.fromEntries(new Headers(opts?.headers)),Authorization:'Bearer '+tokens.access_token}}),{},f.env)})
+await native.connect(transport)
+assert.deepEqual((await native.listTools()).tools.map(t=>t.name).sort(),['studio2u_guide','studio2u_run','studio2u_start']) // compact surface over the real endpoint
+const viaRun=async(tool,args)=>{const r=await native.callTool({name:'studio2u_run',arguments:{tool,args}});return r.isError?{isError:true}:JSON.parse(r.content[0].text)}
+const labels=await viaRun('list_labels',{});assert.deepEqual(labels.items.map(l=>l.id),[a.id])
+const release=await viaRun('get_release',{labelId:a.id,releaseId:r.id});assert.equal(release.release.title,'OAuth QA release')
+assert.equal((await viaRun('get_release',{labelId:b.id,releaseId:r.id})).isError,true)
+assert.equal((await request('/label-world/mcp','GET',null,{token:'a'.repeat(64)})).status,401)
+assert.equal((await request('/label-world/mcp','GET',null,{token:tokens.access_token,origin:'https://evil.invalid'})).status,403)
+f.sqlite.prepare("UPDATE lw_mcp_tokens SET expires_at='2020-01-01T00:00:00Z' WHERE hash=?").run(await digest(tokens.access_token))
+assert.equal((await request('/label-world/mcp','GET',null,{token:tokens.access_token})).status,401)
+const renewed=await request('/label-world/oauth/token','POST',{grant_type:'refresh_token',client_id:client,resource,refresh_token:tokens.refresh_token});assert.equal(renewed.status,200);const next=await renewed.json();assert.notEqual(next.refresh_token,tokens.refresh_token)
+assert.equal((await request('/label-world/oauth/token','POST',{grant_type:'refresh_token',client_id:client,resource,refresh_token:tokens.refresh_token})).status,400)
+assert.equal((await request('/label-world/mcp','GET',null,{token:next.access_token})).status,401)
+// Reconnect with a fresh independent grant; public revocation blocks its current access.
+const consent2=await request('/label-world/oauth/authorize?'+authQuery,'GET',null,{cookie}),form2=await consent2.text()
+const p2=new URLSearchParams({request:form2.match(/name="request" value="([a-f0-9]+)"/)[1],csrf:form2.match(/name="csrf" value="([a-f0-9]+)"/)[1],label:a.id,scope:'labels:read',decision:'allow'})
+const allowed2=await request('/label-world/oauth/consent','POST',p2,{cookie,origin}),code2=new URL(allowed2.headers.get('Location')).searchParams.get('code')
+const tokens2=await (await request('/label-world/oauth/token','POST',{...tokenParams,code:code2})).json()
+assert.ok(tokens2.access_token);assert.equal(tokens2.refresh_token,undefined)
+const managed=await (await request('/api/label-world/ai-connections','GET',null,{cookie})).json();assert.ok(!JSON.stringify(managed).includes(tokens2.access_token));assert.ok(!JSON.stringify(managed).includes(await digest(tokens2.access_token)))
+const grant=managed.connections.find(g=>!g.revoked_at)
+await request('/api/label-world/ai-connections/'+grant.id+'/disconnect','POST',{}, {cookie:'studio2u_session=test-session-2',origin,json:true})
+assert.equal(f.sqlite.prepare('SELECT revoked_at FROM lw_mcp_grants WHERE id=?').get(grant.id).revoked_at,null)
+assert.equal((await request('/label-world/oauth/revoke','POST',{client_id:client,token:tokens2.access_token})).status,200)
+assert.equal((await request('/label-world/mcp','GET',null,{token:tokens2.access_token})).status,401)
+// Brand-new user with no label: friendly retry instead of invalid_request, then label created during consent.
+{const c3='studio2u_session=test-session-3',q3=new URLSearchParams(authQuery);q3.set('state','fresh-user')
+const page=await request('/label-world/oauth/authorize?'+q3,'GET',null,{cookie:c3});assert.equal(page.status,200);const t=await page.text()
+assert.ok(t.includes('name="new_label"'));assert.ok(t.includes('<style>')&&!t.includes('&lt;'));assert.ok(t.includes('Authorize'))
+const rid=t.match(/name="request" value="([a-f0-9]+)"/)[1],csrf=t.match(/name="csrf" value="([a-f0-9]+)"/)[1]
+const empty=await request('/label-world/oauth/consent','POST',{request:rid,csrf,scope:'labels:read',decision:'allow'},{cookie:c3,origin});assert.equal(empty.status,303);assert.ok(empty.headers.get('Location').includes('notice=label'))
+const again=await (await request(empty.headers.get('Location'),'GET',null,{cookie:c3})).text();assert.ok(again.includes('Pick at least one label'))
+const rid2=again.match(/name="request" value="([a-f0-9]+)"/)[1],csrf2=again.match(/name="csrf" value="([a-f0-9]+)"/)[1];assert.equal(rid2,rid)
+const ok=await request('/label-world/oauth/consent','POST',{request:rid,csrf:csrf2,scope:'labels:read',new_label:'Fresh Records',decision:'allow'},{cookie:c3,origin});assert.equal(ok.status,302);assert.ok(new URL(ok.headers.get('Location')).searchParams.get('code'))
+assert.equal(f.sqlite.prepare("SELECT l.name FROM lw_labels l JOIN lw_memberships m ON m.label_id=l.id WHERE m.user_id=3 AND m.role='owner'").get().name,'Fresh Records')}
+await native.close()
+console.log('PASS MCP OAuth B: actual PKCE authorization/explicit selected-label consent, existing session identity, hashed tokens, 10-minute access, rotated refresh/reuse family revocation, issuer/resource/exact redirect binding, consent/code replay, malformed arguments, cookie-only/anonymous/other-label denial and official HTTP client reading stored QA release; no model key.')
+f.sqlite.close()

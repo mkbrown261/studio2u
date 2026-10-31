@@ -1,0 +1,10 @@
+{
+  "name": "studio2u",
+  "version": "0.2.0",
+  "description": "Run your Studio2U label: fill release details, prepare UnitedMasters/ASCAP/SoundExchange forms and work the always-on task queue.",
+  "author": {
+    "name": "Studio2U"
+  },
+  "homepage": "https://studio2u.pages.dev/label-world",
+  "repository": "https://github.com/mkbrown261/studio2u"
+}

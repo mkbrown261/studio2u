@@ -1,3 +1,6 @@
+import {mcpRoutes} from './label-world/mcp/auth'
+import {isScenePage,sceneContentSecurityPolicy} from './label-world/scene-security'
+import { labelWorldRoutes } from './routes/label-world'
 import { Hono } from 'hono'
 import { csrf } from 'hono/csrf'
 import { secureHeaders } from 'hono/secure-headers'
@@ -72,6 +75,7 @@ import { PrivacyPage } from './pages/privacy'
 import { SecurityPolicyPage } from './pages/security-policy'
 import { RefundPolicyPage } from './pages/refund-policy'
 import { PricingPage } from './pages/pricing'
+import { LabelWorldLanding } from './pages/label-world-landing'
 import { authRoutes } from './routes/auth'
 import { dashboardRoutes } from './routes/dashboard'
 import { engineersRoutes } from './routes/engineers'
@@ -96,6 +100,14 @@ app.route('/', stripeWebhookRoutes)
 // - secureHeaders: sets CSP, X-Frame-Options, HSTS, etc. CSP is scoped to the actual
 //   third-party origins this app loads (Tailwind CDN, jsDelivr, Google Fonts, unpkg
 //   for Leaflet, SoundCloud/YouTube portfolio embeds) rather than left wide open.
+// Wrap the existing security middleware so its post-response headers cannot
+// overwrite the scene-only policy needed for embedded glTF image blobs.
+app.use(async(c,next)=>{
+  await next()
+  if(isScenePage(c.req.path))c.res.headers.set('Content-Security-Policy',sceneContentSecurityPolicy)
+})
+// MCP bearer/PKCE routes enforce their own authorization and consent CSRF.
+app.route('/',mcpRoutes)
 app.use(csrf())
 app.use(
   secureHeaders({
@@ -120,6 +132,7 @@ app.use(
   })
 )
 
+app.route('/', labelWorldRoutes)
 app.use(renderer)
 
 app.route('/', authRoutes)
@@ -150,11 +163,20 @@ app.get('/', async (c) => {
   })
 })
 
+// Label World marketing page (the app itself lives under /label-world).
+app.get('/label', async (c) => {
+  const user = await getSessionUser(c.env.DB, c.req.raw)
+  return c.render(<LabelWorldLanding signedIn={Boolean(user)} />, {
+    title: 'Label World: Run Your Own Label',
+    description: 'Run your own record label with AI employees. Release on UnitedMasters, register with ASCAP and SoundExchange, and recover the royalties you are owed.'
+  })
+})
+
 // ---------- SEO: sitemap + robots ----------
 app.get('/sitemap.xml', async (c) => {
   const origin = new URL(c.req.url).origin
   const engineers = await getPublishedEngineersForSitemap(c.env.DB)
-  const staticPaths = ['/', '/engineers', '/pricing', '/terms', '/privacy', '/security', '/refund-policy', '/consent']
+  const staticPaths = ['/', '/label', '/engineers', '/pricing', '/terms', '/privacy', '/security', '/refund-policy', '/consent']
   const urls = [
     ...staticPaths.map((p) => `<url><loc>${origin}${p}</loc></url>`),
     ...engineers.map((e) => `<url><loc>${origin}/engineers/${e.id}</loc></url>`)

@@ -85,12 +85,13 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
       </head>
       <body class="bg-ink text-cream font-sans antialiased">
         <header id="site-header" class="fixed top-0 left-0 right-0 z-50 border-b border-gold/10 bg-ink/80 backdrop-blur-md">
-          <nav class="max-w-6xl mx-auto flex items-center justify-between px-5 py-4">
-            <a href="/" class="flex items-center gap-2 group">
+          <nav class="max-w-6xl mx-auto flex items-center justify-between gap-2 px-4 sm:px-5 py-4">
+            <a href="/" class="flex items-center gap-2 group shrink-0">
               <img src="/static/brand/header-badge.png" alt="Studio2U" class="w-9 h-9 object-contain" />
               <span class="font-display text-lg tracking-wide">Studio<span class="text-gold">2</span>U</span>
             </a>
             <div class="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
+              <a href="/label" class="lw-nav-btn relative inline-flex items-center gap-1.5 text-ink font-bold pl-4 pr-5 py-2 mr-2 rounded-full text-sm transition hover:scale-[1.04]" style="background:linear-gradient(135deg,#e8bf6b,#3ED8CC);box-shadow:0 0 18px rgba(62,216,204,.35)"><i class="fa-solid fa-crown text-xs"></i> Label World<span class="absolute -top-2.5 -right-3 bg-wine text-cream text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ring-2 ring-ink">New</span></a>
               <a href="/engineers" class="hover:text-gold transition">Engineers</a>
               <a href="/#pricing" class="hover:text-gold transition">Pricing</a>
               <a href="/pricing" class="hover:text-gold transition">Engineer Plans</a>
@@ -98,7 +99,8 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
               <a href="/#faq" class="hover:text-gold transition">FAQ</a>
               <a href="/status" class="hover:text-gold transition">My Bookings</a>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
+              <a href="/label" aria-label="Label World" title="Label World" class="md:hidden inline-flex items-center justify-center w-10 h-10 shrink-0 text-ink rounded-full" style="background:linear-gradient(135deg,#e8bf6b,#3ED8CC);box-shadow:0 0 14px rgba(62,216,204,.35)"><i class="fa-solid fa-crown"></i></a>
               {sessionUser ? (
                 <a href="/dashboard" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-gold/20">
                   <i class="fa-solid fa-gauge text-xs"></i> Dashboard
@@ -108,7 +110,7 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
                   <a href="/login" class="hidden sm:inline-flex items-center text-sm font-medium text-muted hover:text-gold transition px-3 py-2.5">
                     Log In
                   </a>
-                  <a href="/signup" class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-ink font-semibold px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-gold/20">
+                  <a href="/signup" class="inline-flex items-center gap-2 whitespace-nowrap bg-gold hover:bg-gold-light text-ink font-semibold px-4 sm:px-5 py-2.5 rounded-full text-sm transition shadow-lg shadow-gold/20">
                     Sign Up <i class="fa-solid fa-arrow-right text-xs"></i>
                   </a>
                 </>
@@ -127,6 +129,7 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
           </nav>
           <div id="mobile-nav-menu" class="hidden md:hidden border-t border-gold/10 bg-ink/95 backdrop-blur-md">
             <div class="max-w-6xl mx-auto px-5 py-4 flex flex-col gap-1 text-sm font-medium text-muted">
+              <a href="/label" class="py-2.5 font-bold text-teal-light flex items-center gap-2"><i class="fa-solid fa-crown"></i> Label World <span class="bg-wine text-cream text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full">New</span></a>
               <a href="/engineers" class="py-2.5 hover:text-gold transition">Engineers</a>
               <a href="/#pricing" class="py-2.5 hover:text-gold transition">Pricing</a>
               <a href="/pricing" class="py-2.5 hover:text-gold transition">Engineer Plans</a>
@@ -163,6 +166,7 @@ export const renderer = jsxRenderer(async ({ children, title, description, jsonL
             <div>
               <h4 class="font-semibold text-cream mb-3 text-sm uppercase tracking-wider">Book</h4>
               <ul class="space-y-2 text-sm text-muted">
+                <li><a href="/label" class="hover:text-gold transition">Label World: Run Your Label</a></li>
                 <li><a href="/engineers" class="hover:text-gold transition">Find an Engineer</a></li>
                 <li><a href="/status" class="hover:text-gold transition">Check Booking Status</a></li>
                 <li><a href="/signup" class="hover:text-gold transition">Become an Engineer</a></li>

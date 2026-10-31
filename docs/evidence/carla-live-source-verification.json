@@ -1,0 +1,13 @@
+{
+  "deployment": "https://2095f412.studio2u.pages.dev",
+  "commit": "15ba0341172293db1616d413b21e86663754b3b4",
+  "youtube_request": "LIVE_PASS",
+  "observations": 10,
+  "report_download_matches_private_checksum": true,
+  "report_sha256": "4762cc0b1bb9d201c57423c4b04d14a86732580edf14541dc3407b79d161fe11",
+  "csv_preview_mapping_commit": "LIVE_PASS_SYNTHETIC_TEST",
+  "csv_duplicate_preview": 1,
+  "secret_exposed_in_report": false,
+  "raw_public_api_data_in_git": false,
+  "scheduled_expiration_worker": "DEPLOYED; future trigger execution not yet observed"
+}

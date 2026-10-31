@@ -1,0 +1,48 @@
+id: "studio2u.social_prepare_publish"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "social_media_manager"
+goal: "Manage authorized artist social pages from draft to verified publication"
+trigger: "approved campaign content"
+inputs:
+  - "campaignId"
+  - "connectedAccountId"
+  - "approvedAssets"
+  - "schedule"
+tools:
+  - "social.capabilities"
+  - "social.draft"
+  - "social.schedule"
+  - "social.publish"
+  - "social.get_receipt"
+steps:
+  - "Check tenant-specific account and platform permissions."
+  - "Adapt caption, mentions, hashtags, vertical edit and CTA to current platform rules."
+  - "Present preview and request explicit publication approval."
+  - "If supported, schedule/publish via authorized API; otherwise provide export/manual handoff."
+  - "Store actual post URL and provider receipt; read permitted analytics."
+outputs:
+  - "postDrafts"
+  - "scheduleRecords"
+  - "providerReceipts"
+validations:
+  - "POSTED only with provider acknowledgement."
+  - "No username/password pasted into prompts."
+approval_gates:
+  - "public publishing"
+failure_and_escalation:
+  - "API unavailable -> READY_FOR_MANUAL_POST"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "verifiedPosts"
+  - "engagementBySource"
+test_scenarios:
+  - "stale OAuth permissions"
+  - "provider returns 429"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

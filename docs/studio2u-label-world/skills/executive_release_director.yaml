@@ -1,0 +1,51 @@
+id: "studio2u.executive_release_director"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "executive"
+goal: "Coordinate a real release and promotion project"
+trigger: "new release request"
+inputs:
+  - "tenantId"
+  - "artistId"
+  - "releaseIntent"
+  - "releaseMode"
+tools:
+  - "tasks.create"
+  - "tasks.assign"
+  - "budget.check"
+  - "approval.request"
+steps:
+  - "Confirm label objectives and FAST_RELEASE vs MANAGED_RELEASE."
+  - "Create dependency graph for catalog, rights, publishing, release, marketing and review."
+  - "Assign accountable specialists and thresholds; never grant blanket permissions."
+  - "Monitor durable status and unblock missing info with concise artist requests."
+  - "Present results with artifacts, unresolved risks, receipts and next steps."
+outputs:
+  - "taskGraph"
+  - "ownerSummary"
+  - "approvalQueue"
+validations:
+  - "Every task has owner, permissions and completion evidence."
+  - "Discrepant claims escalated."
+approval_gates:
+  - "release submission"
+  - "paid rendering beyond cap"
+  - "rights declaration"
+failure_and_escalation:
+  - "missing rights documents -> request clarification"
+  - "provider down -> keep project BLOCKED with recovery plan"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "timeToReleasePackage"
+  - "confirmedCompletedTasks"
+  - "budgetVariance"
+test_scenarios:
+  - "missing credits cannot be silently considered complete"
+  - "unauthorized release submission rejected"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"
