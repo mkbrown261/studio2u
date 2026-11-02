@@ -1,0 +1,48 @@
+id: "studio2u.producer_generate_music"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "producer_builder"
+goal: "Generate and review original drafts using authorized music provider"
+trigger: "artist approves beat brief"
+inputs:
+  - "beatBriefId"
+  - "providerPreference"
+  - "approvedBudget"
+tools:
+  - "providers.music.capabilities"
+  - "providers.music.submit"
+  - "providers.music.status"
+  - "assets.store"
+steps:
+  - "Verify provider account, capabilities, entitlements, price and rights."
+  - "Submit original beat-generation request when authorized."
+  - "Poll asynchronous job and persist checkpoints."
+  - "Save output, prompt, provider license, model version and costs."
+  - "Request owner musical review; never claim unique copyright ownership."
+outputs:
+  - "beatVariants"
+  - "generationProvenance"
+  - "costReceipt"
+validations:
+  - "Only actual generated files count as completed."
+  - "Sound quality and brief fit flagged as human judgment."
+approval_gates:
+  - "provider spending"
+  - "external use license signoff"
+failure_and_escalation:
+  - "unsupported provider -> output ready-to-use manual prompt only"
+  - "provider fails -> retry safe idempotent job"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "completedVariants"
+  - "generationCost"
+  - "artistSelectionRate"
+test_scenarios:
+  - "missing API means no fake music clip"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

@@ -1,0 +1,321 @@
+{
+  "product": "Studio2U Label World",
+  "version": "2.2.0",
+  "date": "2026-10-12",
+  "base_archive": "Studio2U_Label_World_Master_Plan_UPDATED_v2_1.zip",
+  "original_v2_1_files": 58,
+  "original_canonical_skills": 23,
+  "proposed_skill_extensions_unchanged": 4,
+  "new_v2_2_requirement_ids": [
+    "R322",
+    "R323",
+    "R324",
+    "R325",
+    "R326",
+    "R327",
+    "R328",
+    "R329",
+    "R330",
+    "R331",
+    "R332",
+    "R333",
+    "R334",
+    "R335",
+    "R336",
+    "R337",
+    "R338",
+    "R339"
+  ],
+  "previous_requirement_ids_preserved": true,
+  "code_or_deployment_changed_by_this_package": false,
+  "last_inspected_branch_commit": "feature/label-world-foundation @ 02848fc (historical: must recheck)",
+  "latest_engineering_report": "Parallel export, dashboard, Inbox work STARTED, completion not verified",
+  "approved_ui_images": [
+    "01_Carla_Researcher_A_and_R.png",
+    "02_Eric_Reviewer_Tablet.png",
+    "03_Executive_Command_Center.png",
+    "04_Builder_Producer_Workspace.png"
+  ],
+  "files": {
+    "3D_HEADQUARTERS_AND_INTERACTIONS.md": {
+      "sha256": "be7401f9934fca78cd157e530b7aa96033ab7a00d6b1792611cc68770334c8fb",
+      "status": "added"
+    },
+    "ACCEPTANCE_TESTS.md": {
+      "sha256": "044c1d7199e397e6e2afed9e8c210ea085a0f56d1c4d5dee847429beb438f767",
+      "status": "unchanged_from_v2_1"
+    },
+    "ADOPTION_AND_TEST_MATRIX.md": {
+      "sha256": "024b4bd48e1b472a81b4495e6bad1ea42eef5b3a3220c5d8f2721537ec9cdaa5",
+      "status": "unchanged_from_v2_1"
+    },
+    "AGENT_INBOX_SPEC.md": {
+      "sha256": "d4f951cce7077a65db94396f549558fc0cf7887a66b9d0ac50961aaedefff970",
+      "status": "unchanged_from_v2_1"
+    },
+    "AGENT_ROLES.md": {
+      "sha256": "8acba695ba3c8696270ba9df0d42c3873a2f5173fae284d86e9c7c1d77916211",
+      "status": "unchanged_from_v2_1"
+    },
+    "AGENT_SKILL_SYSTEM.md": {
+      "sha256": "5325976b15ddaf1581ed307fba0c0ec87989520f09eb6a4d104d9542425d3da0",
+      "status": "unchanged_from_v2_1"
+    },
+    "APPROVAL_AND_BROWSER_HANDOFF.md": {
+      "sha256": "129b986ac054f7c105720705a5b68afc63e3eec232533abe2972501f49748fb7",
+      "status": "unchanged_from_v2_1"
+    },
+    "ARCHITECTURE.md": {
+      "sha256": "c37cd59dc50c4faaffdd84a38fc623136d5642f31d805ebeb7a98c36f1dc4d5f",
+      "status": "updated"
+    },
+    "BLENDER_EXPORT_AND_ANIMATIONS.md": {
+      "sha256": "7d828adfbca3499bb50718bcd0f6320e1fb1eba7870e1dbf075e9cda953bba3a",
+      "status": "added"
+    },
+    "BROWSER_ACCESS_SECURITY.md": {
+      "sha256": "36528589aa6db64669ae134832099ff35326bcca3d0cf32aeba990d603cae00e",
+      "status": "unchanged_from_v2_1"
+    },
+    "BUILD_STATUS.md": {
+      "sha256": "fb3c70f6f8f3e730c3a44c8010fb7a3f54e0e8b974f49f91d727fd07b5a13694",
+      "status": "updated"
+    },
+    "CHANGELOG.md": {
+      "sha256": "043376da8fc7035ba166ef88a3be1f773f0ae620c114e705e659e0c803652978",
+      "status": "updated"
+    },
+    "CLI_HANDOFF.md": {
+      "sha256": "9c6c7da3a484cf2fc3ba97172d3134ba92fd6602abb015bb68fbdecad4a760f4",
+      "status": "unchanged_from_v2_1"
+    },
+    "CREATIVE_VIDEO_PIPELINE.md": {
+      "sha256": "03ab6fdf71f298ed74814ea89ab1dc99e02f926038f0a3df807e9b1e57e08c7e",
+      "status": "unchanged_from_v2_1"
+    },
+    "CUSTOMIZATION_AND_ACHIEVEMENTS.md": {
+      "sha256": "216d30709b14a69847655f336642fdb8c221a3ce4adbbecbbf8b149b82abf892",
+      "status": "added"
+    },
+    "DASHBOARD_OVERLAY_CONTRACT.md": {
+      "sha256": "800f150fe80bc6baad6245b5cc5ed5dcca8ff43018a99396a3ada850fcbbd9c4",
+      "status": "added"
+    },
+    "DATA_MODEL.md": {
+      "sha256": "d88a408921343bb0eba28959ef261c29bc9fd86622a2a1a8248877aae638aa32",
+      "status": "unchanged_from_v2_1"
+    },
+    "DECISIONS.md": {
+      "sha256": "9946c5d8685b9e3535d903296df00f87d54e00b4d9b3c93a0bbf202896a2c560",
+      "status": "updated"
+    },
+    "GITHUB_MESSAGING_CODE_REVIEW.md": {
+      "sha256": "2888fdb331756d895e0035fdc70fadcd5a1b4bf3fcaa2bcda5ba1583cb0fcdd2",
+      "status": "unchanged_from_v2_1"
+    },
+    "INTEGRATIONS.md": {
+      "sha256": "48e14bba953ad64ed3feebbb35f5a4334bb74bb23d85acc6ce23c25a98c71933",
+      "status": "unchanged_from_v2_1"
+    },
+    "NEXT_CLI_DIRECTIVE.md": {
+      "sha256": "41acf10d52322d73db39ad259dbfaedfb16857e86a66948a4aaa69a1f16e9d66",
+      "status": "updated"
+    },
+    "ONE_PROMPT_FOR_CODING_AGENT.md": {
+      "sha256": "73180d885bb76416763c3a99a195d54ed50fca836f5e0f2b030ad734f5ef2bed",
+      "status": "added"
+    },
+    "PRODUCT_VISION.md": {
+      "sha256": "b896fe0c4f1cf6029c33bbcb8e82291315d7cca41a9195d392f94d9b054dd191",
+      "status": "unchanged_from_v2_1"
+    },
+    "README.md": {
+      "sha256": "e1f07adae1f76bb644fa2ce7cfb7fe22e9787dfc46783bb1c43348d8e7d0eaaa",
+      "status": "updated"
+    },
+    "RELEASE_DATA_SPEC.md": {
+      "sha256": "35f3b475b49f5a6f3f4d3848488d027d8432fbae42a86d2e6561def273ad16e1",
+      "status": "unchanged_from_v2_1"
+    },
+    "RELEASE_OPERATIONS.md": {
+      "sha256": "8c19bec4f24a37a6cb27080b573ebcfd8b3eee3db212b7b3bdf80d9cb7b62b00",
+      "status": "unchanged_from_v2_1"
+    },
+    "REQUIREMENTS.md": {
+      "sha256": "5073b858d5ecaf66757daea3d4608b2c894c0ae942d2180a9bd6d1e2e3d4bb02",
+      "status": "updated"
+    },
+    "ROADMAP.md": {
+      "sha256": "adcecc0c4f041d34cf1b93bf3c957d3b3765f691fd56bc999a2f8454d18e1f13",
+      "status": "updated"
+    },
+    "ROYALTY_RECOVERY_AND_CREATIVE_HANDOFF.md": {
+      "sha256": "6347d66f2f5485b3e97e20d0313dd3b5c467ea22bb5339d5ef780087ad8fae85",
+      "status": "unchanged_from_v2_1"
+    },
+    "SKILL_CATALOG.md": {
+      "sha256": "744a9568372dc3072a1e28c8cd954855e6c652b42905d50dac1c55b137a44850",
+      "status": "unchanged_from_v2_1"
+    },
+    "SOCIAL_A_AND_R_INTELLIGENCE.md": {
+      "sha256": "8d591e7d5e3c87d275b133972150d05f447b4ab5eb406e8a64325f28dd459b8f",
+      "status": "unchanged_from_v2_1"
+    },
+    "START_HERE.md": {
+      "sha256": "a53f457b516212f58fb8a242112a7d64c04318055591d624c4165964d6e89ee7",
+      "status": "updated"
+    },
+    "START_HERE_v2_2.md": {
+      "sha256": "91e80c0dbac076d79f3895d869dcda2960919b19a9b13d4114f2c42e3c45c8a4",
+      "status": "added"
+    },
+    "V2_2_ACCEPTANCE_TESTS.md": {
+      "sha256": "30c034b253905186158fccaf0193ff10e1a91500cf0708a7a1d44a8d0c02139b",
+      "status": "added"
+    },
+    "V2_2_TRACEABILITY.csv": {
+      "sha256": "54599eac685121c2455bd58644452cbe8414ca89874846e4ae4454c4fcbc51b5",
+      "status": "added"
+    },
+    "VOICE_AVATARS_AND_AGENT_CREATION.md": {
+      "sha256": "e50aa99588659760565677b8c28648b8fabf0945b6f39419e1f562aefd4efb3b",
+      "status": "unchanged_from_v2_1"
+    },
+    "WORKFLOWS.md": {
+      "sha256": "e31ec84ca8ad4b9a9018a28f2c2cd1b677a148ca925f3683069e68c17d24952d",
+      "status": "unchanged_from_v2_1"
+    },
+    "proposed_skills/agent_inbox_notify.yaml": {
+      "sha256": "20500112b28be8de502f289412a2a28698c34820b069256810297df1e86138ca",
+      "status": "unchanged_from_v2_1"
+    },
+    "proposed_skills/agent_voice_session.yaml": {
+      "sha256": "76580d6d4bb3cc6f38494648c69eea98954e3762ea0efda68a879989b844532f",
+      "status": "unchanged_from_v2_1"
+    },
+    "proposed_skills/publishing_browser_handoff.yaml": {
+      "sha256": "5c30696c2af550e7267a6f2705e65283ab14ba995c4c238530f069f3863f074d",
+      "status": "unchanged_from_v2_1"
+    },
+    "proposed_skills/royalty_recovery_triage.yaml": {
+      "sha256": "23fca646d2887251317ab15f687c9ea01e0724ccf4f33d324679e44b2cdccc1f",
+      "status": "unchanged_from_v2_1"
+    },
+    "reference_ui/01_Carla_Researcher_A_and_R.png": {
+      "sha256": "d17224d5670750279ca966b08a5c02a9204fe139514d0bf3671d061ae4a49148",
+      "status": "added"
+    },
+    "reference_ui/02_Eric_Reviewer_Tablet.png": {
+      "sha256": "d23fb304902d0eb09c593c25046869d374cec22afb37cc354afbd31228391f0c",
+      "status": "added"
+    },
+    "reference_ui/03_Executive_Command_Center.png": {
+      "sha256": "94adf6f5b466c76f34d064842ee182764a373d840a3753e7384c03a1ba121449",
+      "status": "added"
+    },
+    "reference_ui/04_Builder_Producer_Workspace.png": {
+      "sha256": "0f8ef4927f7a5415fbdd18790eaf0d998895316cd7bac1ed3a3e2636c3c610df",
+      "status": "added"
+    },
+    "reference_ui/README.md": {
+      "sha256": "314d5673829a4969a8bc99bdf41d232b479d81661911f5f7b6224b48cd27a891",
+      "status": "added"
+    },
+    "schemas/release_intake.example.json": {
+      "sha256": "dcbbb4f7d5da7389da5dd9f3536cbe4e60dd2628330d0d8409edb800188813b6",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/ar_discover_music.yaml": {
+      "sha256": "9d22d6886ca2841e4b3329b2960cec20a1125dffcc083999c4fed78273620542",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/ar_viral_record_analysis.yaml": {
+      "sha256": "23e8b92721cabeb38a8930709218b408b63e11b937306923dd54640492dba46c",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/catalog_audio_intake.yaml": {
+      "sha256": "6c50aac78a0d84e0a7d89fa476e67d4aacd5b24c42e53e76d635c3675b92a3f5",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/catalog_contributor_splits.yaml": {
+      "sha256": "7c2646a7a9687bf1831d48aec7ef46d994ff08578ba924d86d55011285109ac7",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/catalog_lyrics_transcription.yaml": {
+      "sha256": "d9e2e35c4d35cf95e8364113e4f5b14f44f0c2ce6524b5dff51f5a893ab0df15",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/editor_hook_selection.yaml": {
+      "sha256": "5cf20b95969683bad87bd1b4e02ea3b87e93a4928e4fddc0ce7908f33e2ec492",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/editor_shortform_assembly.yaml": {
+      "sha256": "53d3350fc47bf1aab8320a7003782801f231cc6897e449e46ee1d7a7eef8bd0d",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/executive_release_director.yaml": {
+      "sha256": "a5c24faf0cfe70a43b1a3ba611fdb1737a1ea589537ee4b352697a36627fd257",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/marketing_campaign_plan.yaml": {
+      "sha256": "2b366dad80b454498557466e1017471fd0ea1ecfa0fb1943a96c964986e62a42",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/producer_beat_brief.yaml": {
+      "sha256": "289938ccd422f5088282153f8bfaa163eda6710e89e281400aa61db85bd19291",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/producer_generate_music.yaml": {
+      "sha256": "efdc12760446da1355ee4c075b286c456102e9ca1631a4d187ab0844f12c4118",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/publishing_pro_intake.yaml": {
+      "sha256": "92aa067732ab2e109e5bea53fc44ad188c73daa18d25ffda875e78cbd0f3610e",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/release_fast_prepare.yaml": {
+      "sha256": "8aeae18e09df38cbad7b6cb400f7d35ef494dc24c06fcc6d64fc50068c690722",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/release_managed_prepare.yaml": {
+      "sha256": "0df73ab51e6cf2779606a95bdf0558e2ba1579d868af4ab34f310516f5a783d9",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/reviewer_creative_social_qc.yaml": {
+      "sha256": "76690b9e015f6f15ffb6ce7caa22ce9aa9543b7f2e03f914df696683796c1c5b",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/reviewer_release_qc.yaml": {
+      "sha256": "9eef2345a99cdea2f0ce9b7a19ee115ace1d41efb17baec4ec241866081c34de",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/rights_clearance_triage.yaml": {
+      "sha256": "e055deda7ea06542379d5c970e2103b8eecaa8ee5719cb777ec7d41afa6a66a8",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/rights_copyright_packet.yaml": {
+      "sha256": "645f069bbea44c44fc727dc7bb9ecb7a8180c53bec07f07e2b16008d8be8b934",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/royalties_mlc_followup.yaml": {
+      "sha256": "bf3b8292166911b75689ec981d529d0282f46d491f96d6ddfe2f657f8619622e",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/royalties_soundexchange_followup.yaml": {
+      "sha256": "989e67b9dca8f72d6edbf7852d209f2e8d3e77ae356c843442ad442e20d5709f",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/social_prepare_publish.yaml": {
+      "sha256": "42ee663fbed6158fb533593bbc1a6c6f084dbaa14d2a191e21f32b3e944a806b",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/videographer_concept_storyboard.yaml": {
+      "sha256": "ce2a30bc78ae30b819879f53608fa96819eb60f547e68ee8ec00648921014e48",
+      "status": "unchanged_from_v2_1"
+    },
+    "skills/videographer_higgsfield_generation.yaml": {
+      "sha256": "5a8948c63b91dfd3740fc572714857c03bae7b68774c0fcc074660aa22e2534f",
+      "status": "unchanged_from_v2_1"
+    }
+  }
+}

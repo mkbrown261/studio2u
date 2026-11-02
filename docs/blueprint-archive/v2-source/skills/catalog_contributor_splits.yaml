@@ -1,0 +1,44 @@
+id: "studio2u.catalog_contributor_splits"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "catalog_manager"
+goal: "Collect verified credits and distinct split categories"
+trigger: "release credits missing"
+inputs:
+  - "recordingId"
+  - "compositionId"
+  - "collaboratorIntake"
+tools:
+  - "contributors.lookup"
+  - "agreements.store"
+  - "splits.validate"
+steps:
+  - "Collect primary/featured artists and producer/mix/mastering roles separately."
+  - "Collect songwriting contributors and composition ownership data."
+  - "Collect master owners and any distributor revenue splits separately."
+  - "Request documents or collaborator verification for disputed shares."
+  - "Flag missing affiliations, IPI and legal names; never invent."
+outputs:
+  - "creditMatrix"
+  - "splitMatrix"
+  - "missingEvidence"
+validations:
+  - "All shares scoped to explicit right/type."
+  - "Known inconsistencies not auto-corrected."
+approval_gates:
+  - "legally significant ownership confirmation"
+failure_and_escalation:
+  - "contributors disagree -> DISPUTED and BLOCK"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "verifiedCreditCoverage"
+  - "splitConflicts"
+test_scenarios:
+  - "master income splits differ from publishing shares"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

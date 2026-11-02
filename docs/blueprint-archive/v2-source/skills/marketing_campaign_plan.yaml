@@ -1,0 +1,48 @@
+id: "studio2u.marketing_campaign_plan"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "marketing_manager"
+goal: "Build measurable release-specific promotional campaign"
+trigger: "release has draft or approved metadata"
+inputs:
+  - "releaseId"
+  - "targetMarkets"
+  - "genre"
+  - "budget"
+  - "brandVoice"
+tools:
+  - "campaign.create"
+  - "research.retrieve"
+  - "calendar.plan"
+  - "hooks.list"
+steps:
+  - "Gather audience and release context."
+  - "Propose staged prelaunch, launch and postlaunch content themes."
+  - "Define CTA, creative assets, channels and permitted use of hashtags."
+  - "Set explicit testable KPI hypotheses, posting calendar and budget caps."
+  - "Coordinate Videographer and Social Manager tasks."
+outputs:
+  - "campaignPlan"
+  - "briefs"
+  - "contentCalendar"
+  - "measurementPlan"
+validations:
+  - "Do not guarantee virality or fabricate historical metrics."
+approval_gates:
+  - "campaign budget"
+  - "public claims"
+failure_and_escalation:
+  - "insufficient audience data -> flag assumptions"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "approvedCampaignRate"
+  - "measuredCampaignKpis"
+test_scenarios:
+  - "underage audience restrictions when relevant"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

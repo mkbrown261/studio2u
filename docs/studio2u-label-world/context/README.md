@@ -1,0 +1,2 @@
+# Context layer
+Developer entry: root AGENTS.md / CLAUDE.md → ROUTER.md → CURRENT_STATE.md → selected department. Runtime: validated CONTEXT_MANIFEST.json → server-only generated registry → scoped D1 evidence → selected provider. Runtime never reads developer files or arbitrary paths. Run npm run context:compile and npm run test:label-world:context. No external official knowledge rules are newly certified by these routing files.

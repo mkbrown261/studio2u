@@ -1,0 +1,11 @@
+{
+  "bucket": "studio2u-uploads",
+  "key": "label-world/source/headquarters/e8acb27fc4f59a197d04c43a60bf8ad1d9afbce22e30c9bfdf7c21a9670b5e40.blend",
+  "sha256": "e8acb27fc4f59a197d04c43a60bf8ad1d9afbce22e30c9bfdf7c21a9670b5e40",
+  "bytes": 178640250,
+  "local_editable_copy": "/Users/masonbrown/Documents/New project/studio2u/assets/blender/export_copies/Headquarters_Doorway_Clearance_20261012.blend",
+  "original_preserved": "/Users/masonbrown/Documents/New project/studio2u/assets/blender/Studio2U_Headquarters.blend",
+  "visibility": "private R2; no public source download route",
+  "uploaded_at": "2026-10-12",
+  "purpose": "Editable source recovery; includes doorway seat clearance; public GLBs are separately versioned"
+}

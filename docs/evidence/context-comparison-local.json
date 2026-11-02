@@ -1,0 +1,74 @@
+{
+  "baselineSha": "737e860e95e851a152ef5344d3d06e238a630678",
+  "dataset": "12 synthetic saved research notes, no releases; 4 employees; 10 local D1-interface fixture assemblies per employee",
+  "measurement": "Characters and ceil(chars/4) estimates, not provider tokenization. SQLite local assembly latency only; no LLM call.",
+  "cases": [
+    {
+      "employee": "reviewer",
+      "baselineChars": 14039,
+      "routedChars": 4617,
+      "baselineApproxTokens": 3510,
+      "routedApproxTokens": 1155,
+      "baselineMedianAssemblyMs": 2.0395829999999933,
+      "routedMedianAssemblyMs": 2.073750000000018,
+      "baselineContainsUnrelatedResearch": true,
+      "routedContainsUnrelatedResearch": false,
+      "routedInstructionHashes": 9,
+      "mandatoryPoliciesPresent": true
+    },
+    {
+      "employee": "researcher",
+      "baselineChars": 14041,
+      "routedChars": 19232,
+      "baselineApproxTokens": 3511,
+      "routedApproxTokens": 4808,
+      "baselineMedianAssemblyMs": 0.43783299999995506,
+      "routedMedianAssemblyMs": 1.7772500000000946,
+      "baselineContainsUnrelatedResearch": false,
+      "routedContainsUnrelatedResearch": false,
+      "routedInstructionHashes": 9,
+      "mandatoryPoliciesPresent": true
+    },
+    {
+      "employee": "executive",
+      "baselineChars": 14040,
+      "routedChars": 5117,
+      "baselineApproxTokens": 3510,
+      "routedApproxTokens": 1280,
+      "baselineMedianAssemblyMs": 0.30854199999998855,
+      "routedMedianAssemblyMs": 0.37762499999985266,
+      "baselineContainsUnrelatedResearch": true,
+      "routedContainsUnrelatedResearch": false,
+      "routedInstructionHashes": 9,
+      "mandatoryPoliciesPresent": true
+    },
+    {
+      "employee": "builder",
+      "baselineChars": 14038,
+      "routedChars": 4892,
+      "baselineApproxTokens": 3510,
+      "routedApproxTokens": 1223,
+      "baselineMedianAssemblyMs": 0.23458400000004076,
+      "routedMedianAssemblyMs": 0.10245800000006966,
+      "baselineContainsUnrelatedResearch": true,
+      "routedContainsUnrelatedResearch": false,
+      "routedInstructionHashes": 9,
+      "mandatoryPoliciesPresent": true
+    }
+  ],
+  "liveModelAccuracy": "NOT_TESTED",
+  "providerLatency": "NOT_TESTED",
+  "providerCost": "NOT_MEASURED; no paid calls",
+  "observedImprovements": [
+    "Deterministic employee/skill routing",
+    "Unrelated research excluded from other roles",
+    "Mandatory policies never silently truncated",
+    "Versioned instruction hashes and user-scoped metadata traces"
+  ],
+  "limitations": [
+    "Does not prove generated explanations are accurate",
+    "Small sparse requests can require more instruction tokens",
+    "Live comparison requires explicitly connected model",
+    "No complete autonomous skills or business execution added"
+  ]
+}

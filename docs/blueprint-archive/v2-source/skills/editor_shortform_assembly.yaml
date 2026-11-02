@@ -1,0 +1,46 @@
+id: "studio2u.editor_shortform_assembly"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "shortform_editor"
+goal: "Cut rights-cleared promotional videos into platform exports"
+trigger: "approved footage and song hooks ready"
+inputs:
+  - "sourceClips"
+  - "recordingId"
+  - "hookTimecodes"
+  - "platformPresets"
+tools:
+  - "editing.provider_capabilities"
+  - "editing.render"
+  - "video.inspect"
+steps:
+  - "Verify clips/track have distribution and promo use rights."
+  - "Prefer verified Genjitsu adapter if supported; otherwise use controlled local editing pipeline."
+  - "Make beat-synced cuts, captions, hook variants and framing."
+  - "Export versioned platform presets; inspect ratio, resolution, codec, safe areas and audio alignment."
+  - "Send final files to reviewer with provenance."
+outputs:
+  - "shortFormExports"
+  - "technicalReport"
+  - "editDecisionList"
+validations:
+  - "9:16 exports pass measured checks."
+  - "Do not misrepresent unverified Genjitsu API."
+approval_gates:
+  - "external provider spend"
+  - "final publishing"
+failure_and_escalation:
+  - "render fails -> preserve edit plan and retry safely"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "qualifiedExports"
+  - "revisionCount"
+test_scenarios:
+  - "different platform requirements not assumed identical"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

@@ -1,0 +1,40 @@
+{
+  "production": {
+    "id": "068d738e-3918-4006-875c-af7bf969f3df",
+    "url": "https://068d738e.studio2u.pages.dev",
+    "aliases": null,
+    "environment": "production",
+    "source": {
+      "branch": "main",
+      "commit_hash": "737e860e95e851a152ef5344d3d06e238a630678",
+      "commit_message": "Connect employee dashboards to current records",
+      "commit_dirty": true
+    },
+    "stage": {
+      "name": "deploy",
+      "started_on": null,
+      "ended_on": "2026-10-13T07:39:40.649796Z",
+      "status": "success"
+    }
+  },
+  "connectorPreview": {
+    "id": "43b21835-e789-4303-9318-a4b82a960507",
+    "url": "https://43b21835.studio2u.pages.dev",
+    "aliases": [
+      "https://feature-label-world-foundati.studio2u.pages.dev"
+    ],
+    "environment": "preview",
+    "source": {
+      "branch": "feature/label-world-foundation",
+      "commit_hash": "d80584bf445434ded9e18add2fe58490c5ec798a",
+      "commit_message": "Add native connector setup UI, packages and verified client evidence",
+      "commit_dirty": true
+    },
+    "stage": {
+      "name": "deploy",
+      "started_on": null,
+      "ended_on": "2026-10-13T10:30:44.559845Z",
+      "status": "success"
+    }
+  }
+}

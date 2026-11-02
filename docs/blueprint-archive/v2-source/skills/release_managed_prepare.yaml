@@ -1,0 +1,43 @@
+id: "studio2u.release_managed_prepare"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "release_manager"
+goal: "Coordinate distribution with parallel verified publishing preparation"
+trigger: "MANAGED_RELEASE chosen"
+inputs:
+  - "releaseId"
+  - "targetDistributor"
+tools:
+  - "release.manifest"
+  - "tasks.assign"
+  - "approval.request"
+steps:
+  - "Start full verified contributor/publisher intake alongside package."
+  - "Queue PRO, MLC and SoundExchange eligibility workflows."
+  - "Resolve legal blockers and assemble current distributor package."
+  - "Get owner approvals and only execute approved submissions."
+  - "Deliver status dashboard separating each external process."
+outputs:
+  - "managedReleasePlan"
+  - "package"
+  - "registrationReadiness"
+validations:
+  - "Each registration independently confirmed."
+approval_gates:
+  - "external submission"
+  - "legal declarations"
+failure_and_escalation:
+  - "submission integration absent -> manual handoff"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "readyToDeliverTime"
+  - "registrationBacklog"
+test_scenarios:
+  - "ASCAP not assumed to cover SoundExchange"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

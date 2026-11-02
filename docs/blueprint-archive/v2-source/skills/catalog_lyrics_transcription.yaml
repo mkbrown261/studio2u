@@ -1,0 +1,47 @@
+id: "studio2u.catalog_lyrics_transcription"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "catalog_manager"
+goal: "Create editable time-aligned lyrics with verified review"
+trigger: "vocal track ingested"
+inputs:
+  - "recordingId"
+  - "audioAssetId"
+  - "languageHint"
+tools:
+  - "audio.transcribe"
+  - "audio.align_words"
+  - "lyrics.version_create"
+  - "approval.request"
+steps:
+  - "Detect vocals and generate draft transcription if authorized engine available."
+  - "Save words and line timestamps relative to measured audio."
+  - "Mark unclear words with confidence and highlight."
+  - "Invite artist to correct lyrics, names, slurs and explicit sections."
+  - "Save approved version and do not silently overwrite it."
+outputs:
+  - "timedLyricDraft"
+  - "uncertainSpans"
+  - "approvedLyricVersionWhenConfirmed"
+validations:
+  - "Transcribed lyrics never marked official before human approval."
+  - "Instrumental allowed; store no-lyrics status."
+approval_gates:
+  - "final lyrics approval"
+failure_and_escalation:
+  - "no model -> request supplied lyrics"
+  - "alignment low confidence -> user check"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "transcriptionCorrectionRate"
+  - "approvedTranscriptCoverage"
+test_scenarios:
+  - "instrumental track"
+  - "code switching and ambiguous words"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

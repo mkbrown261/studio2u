@@ -1,0 +1,45 @@
+id: "studio2u.agent_voice_session"
+version: "0.1.0"
+status: "PROPOSED_NOT_REGISTERED"
+owner_role: "executive"
+goal: "Allow tenant owner to speak to a chosen agent without requiring a lip-synced avatar"
+trigger: "authenticated user explicitly starts voice session"
+inputs:
+  - "labelId"
+  - "agentId"
+  - "userId"
+  - "consentSettings"
+tools:
+  - "voice.connect_authorized_provider"
+  - "agent.dispatch_verified_skill"
+  - "agent_inbox.summarize_session"
+steps:
+  - "Validate user/label/agent rights and consent."
+  - "Start a provider-compliant voice session with explicit audio indicator."
+  - "Allow interrupt, silence, cancel and text fallback."
+  - "Route tool actions through scoped backend gateway and human approvals."
+  - "Persist only allowed transcript or summary and verified task refs."
+outputs:
+  - "voiceSessionId"
+  - "messageRefs"
+  - "taskRefs"
+validations:
+  - "Spoken instruction alone cannot authorize legally binding/high-cost action."
+  - "No browser raw API key, confidential recording without consent or implied universal provider voice API."
+approval_gates:
+  - "external action"
+  - "regulated/financial spend"
+failure_and_escalation:
+  - "voice provider unavailable -> text agent thread"
+permissions:
+  - "tenant_scope_enforced"
+  - "provider_capability_verified"
+  - "audit_logged"
+metrics:
+  - "sessionCompletions"
+  - "taskAccuracy"
+test_scenarios:
+  - "voice not enabled returns text fallback"
+  - "stale approval via spoken yes rejected"
+knowledge_sources:
+  - "VOICE_AVATARS_AND_AGENT_CREATION.md"

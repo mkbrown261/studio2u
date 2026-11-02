@@ -1,0 +1,45 @@
+id: "studio2u.rights_copyright_packet"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "rights_admin"
+goal: "Prepare accurate copyright application information, not legal conclusions"
+trigger: "owner asks copyright registration"
+inputs:
+  - "compositionId"
+  - "recordingId"
+  - "rightsDocuments"
+  - "jurisdiction"
+tools:
+  - "rights.check"
+  - "forms.prepare"
+  - "approval.request"
+steps:
+  - "Distinguish composition vs sound recording claim."
+  - "Assess likely applicant, authors, work/publication dates, deposit requirements."
+  - "Flag uncertainty, AI-generated material, derivative works and agreements."
+  - "Prepare draft with current official fee/eligibility source for artist review."
+  - "Store authorized official submission receipt and status."
+outputs:
+  - "copyrightPacket"
+  - "riskList"
+  - "filingStatus"
+validations:
+  - "Copyright exists independently of registration where legally applicable."
+  - "No assumption registration is free."
+approval_gates:
+  - "federal submission and paid fee"
+  - "legal attestations"
+failure_and_escalation:
+  - "ownership disputed -> legal professional escalation"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "completePreparedPackets"
+test_scenarios:
+  - "AI-generated component requires nuanced review"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

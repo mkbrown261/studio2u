@@ -1,0 +1,46 @@
+id: "studio2u.videographer_higgsfield_generation"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "videographer"
+goal: "Render approved clips with provider-neutral video gateway"
+trigger: "storyboard approved"
+inputs:
+  - "approvedStoryboardId"
+  - "providerPreference"
+  - "approvedBudget"
+tools:
+  - "providers.video.capabilities"
+  - "providers.video.submit"
+  - "providers.video.status"
+  - "assets.store"
+steps:
+  - "Verify current Higgsfield or alternate provider entitlement, rates and commercial scope."
+  - "Submit references, safe prompts and planned clips under a budget cap."
+  - "Persist async job ID, status and checkpoints."
+  - "Retrieve actual output, record model, asset refs, costs and limitations."
+  - "Send outputs for editorial and visual QC."
+outputs:
+  - "generatedClipIds"
+  - "providerJobReceipts"
+  - "provenance"
+validations:
+  - "No fabricated clip on missing API."
+  - "No paid request without approval where required."
+approval_gates:
+  - "spend approval"
+  - "commercial use rights"
+failure_and_escalation:
+  - "API missing -> prepared storyboard/manual prompt"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "renderSuccessRate"
+  - "unitCost"
+test_scenarios:
+  - "provider error handled without fake COMPLETED"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"
