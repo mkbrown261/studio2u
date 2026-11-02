@@ -66,7 +66,9 @@ export function createStudioMcp(db:any,caller:McpCaller,validateGrant:()=>Promis
      queuedTasks:await q("SELECT COUNT(*) n FROM lw_tasks WHERE label_id=? AND status='QUEUED' AND (run_after IS NULL OR run_after<=datetime('now'))"),
      openCases:await q("SELECT COUNT(*) n FROM lw_cases WHERE label_id=? AND status NOT IN ('RESOLVED','CLOSED')"),
      songs:await q("SELECT COUNT(*) n FROM lw_catalog_tracks WHERE label_id=?"),
-     knownPct:(await (await import('../autonomy/discovery')).getDossier(db,l.id,caller.userId).catch(()=>({completeness:0}))).completeness})
+     knownPct:(await (await import('../autonomy/discovery')).getDossier(db,l.id,caller.userId).catch(()=>({completeness:0}))).completeness,
+     paused:Boolean(((await db.prepare('SELECT paused FROM lw_agent_control WHERE label_id=?').bind(l.id).first().catch(()=>null)) as any)?.paused),
+     waitingOnOwner:await q("SELECT COUNT(*) n FROM lw_checkpoints WHERE label_id=? AND status='PENDING'")})
    }
    const write=caller.scopes.some(s=>s.endsWith(':write'))
    const next:string[]=[]

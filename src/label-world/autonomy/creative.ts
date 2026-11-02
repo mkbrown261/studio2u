@@ -125,5 +125,6 @@ export async function brandKickoff(db: any, label: string, actor: number | null,
   if (actor != null) await requireEditor(db, label, actor)
   const id: any = await db.prepare('SELECT artist_name FROM lw_label_identity WHERE label_id=?').bind(label).first()
   if (!id?.artist_name) throw new ServiceError('Save your artist name first (Know me) so Ben knows whose brand to build.', 409)
+  if (force) { const { openTask } = await import('./engine'); if (await openTask(db, label, 'BRAND_KICKOFF')) return true }
   return enqueueFn({ label, kind: 'BRAND_KICKOFF', role: 'business_partner', capability: 'ANY', title: `Ben: build ${id.artist_name}'s brand and first merch`, input: { artist: id.artist_name }, dedupe: force ? `brand:${label}:${Date.now()}` : `brand:${label}` })
 }

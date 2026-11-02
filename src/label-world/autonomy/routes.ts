@@ -159,6 +159,7 @@ export function installAutonomyRoutes(app: any) {
   app.get(base + '/releases/:releaseId/artwork/:assetId', wrap(async c => new Response(await creative.assetImage(E(c), L(c), c.req.param('releaseId'), c.req.param('assetId')), { headers: { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' } })))
   app.get(base + '/releases/:releaseId/package.zip', wrap(async c => { const z = await creative.packageZip(E(c), L(c), c.req.param('releaseId')); return new Response(z.bytes, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${z.filename}"`, 'Cache-Control': 'no-store' } }) }))
   app.post(base + '/creative', wrap(async c => c.json(await creative.creativeTask(c.env.DB, L(c), U(c), await body(c), (t: any) => enqueue(c.env.DB, t)), 201)))
+  app.get(base + '/team', wrap(async c => { const t = await import('./team'); return c.json(await t.teamSetup(c.env.DB, L(c), U(c), new URL(c.req.url).origin)) }))
   app.get(base + '/reach', wrap(async c => { const r = await import('./reach'); return c.json(await r.reachOverview(c.env.DB, L(c), U(c))) }))
   app.post(base + '/reach/setup', wrap(async c => { const r = await import('./reach'); return c.json(await r.requestReachSetup(c.env.DB, L(c), U(c), (t: any) => enqueue(c.env.DB, t)), 201) }))
   app.post(base + '/merch/shop/setup', wrap(async c => c.json(await partner.requestShopSetup(c.env.DB, L(c), U(c), (t: any) => enqueue(c.env.DB, t)), 201)))

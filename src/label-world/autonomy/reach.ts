@@ -83,6 +83,8 @@ export async function queueReachSetup(db: any, label: string, enqueueFn: (t: any
 }
 export async function requestReachSetup(db: any, label: string, actor: number, enqueueFn: (t: any) => Promise<boolean>) {
   await requireEditor(db, label, actor)
+  { const { isPaused } = await import('./checkpoints'); if (await isPaused(db, label)) throw new ServiceError('Your agents are stopped (STOP is on). Tap Resume first.', 423) }
+  if (await db.prepare("SELECT 1 FROM lw_tasks WHERE label_id=? AND kind='SETUP_REACH' AND status IN ('QUEUED','RUNNING')").bind(label).first()) return { queued: true, say: 'Already on it: your agent installs/checks Agent Reach on its next run.' }
   if (!(await queueReachSetup(db, label, enqueueFn, new Date(), true))) throw new ServiceError('Your agents are stopped (STOP is on). Tap Resume first.', 423)
   return { queued: true, say: 'Your agent installs Agent Reach on your computer (free, read-only) and checks every channel. From then on it reads Instagram, X, Reddit, YouTube and the rest through it, and uses screen control only when a channel is down.' }
 }

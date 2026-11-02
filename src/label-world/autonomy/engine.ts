@@ -16,6 +16,10 @@ import { decryptKey } from '../providers/vault'
 
 export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST', 'PARTNER_POST', 'PARTNER_SETUP', 'CREATIVE_TOOL', 'BRAND_KICKOFF', 'SETUP_SHOP', 'MAKE_IMAGE', 'SETUP_REACH'] as const
 export type TaskKind = typeof taskKinds[number]
+/** Kinds that only ever need one open job per label. */
+export const SINGLE_OPEN: string[] = ['KNOW_ARTIST', 'BRAND_KICKOFF', 'SETUP_SHOP', 'SETUP_REACH']
+/** Is there already an open job of this kind for the label? */
+export async function openTask(db: any, label: string, kind: string) { return Boolean(await db.prepare("SELECT 1 FROM lw_tasks WHERE label_id=? AND kind=? AND status IN ('QUEUED','RUNNING')").bind(label, kind).first()) }
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
 const later = (ms: number) => new Date(Date.now() + ms).toISOString()
@@ -64,9 +68,12 @@ export async function refreshSubmissions(db: any, label: string, releaseId: stri
 /** Idempotent task creation keyed by dedupe_key. Returns true if a new task was queued. */
 export async function enqueue(db: any, t: { label: string; release?: string | null; kind: TaskKind; role: string; capability?: 'ANY' | 'SCREEN_CONTROL' | 'HUMAN'; title: string; input: Record<string, unknown>; dedupe: string; runAfter?: string | null }) {
   const id = crypto.randomUUID()
+  // Setup-type jobs: never more than one open per label (no pile-up across weeks/months).
+  const single = SINGLE_OPEN.includes(t.kind) ? 1 : 0
   const r = await db.prepare(`INSERT INTO lw_tasks(id,label_id,release_id,agent_role,status,input_json,kind,capability,title,dedupe_key,run_after)
-    SELECT ?,?,?,?,'QUEUED',?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM lw_agent_control WHERE label_id=? AND paused=1) ON CONFLICT DO NOTHING`)
-    .bind(id, t.label, t.release ?? null, t.role, JSON.stringify(t.input), t.kind, t.capability ?? 'ANY', t.title.slice(0, 200), t.dedupe, t.runAfter ?? null, t.label).run()
+    SELECT ?,?,?,?,'QUEUED',?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM lw_agent_control WHERE label_id=? AND paused=1)
+      AND NOT (? = 1 AND EXISTS (SELECT 1 FROM lw_tasks WHERE label_id=? AND kind=? AND status IN ('QUEUED','RUNNING'))) ON CONFLICT DO NOTHING`)
+    .bind(id, t.label, t.release ?? null, t.role, JSON.stringify(t.input), t.kind, t.capability ?? 'ANY', t.title.slice(0, 200), t.dedupe, t.runAfter ?? null, t.label, single, t.label, t.kind).run()
   if (r.meta.changes) await db.prepare('INSERT INTO lw_task_events(label_id,task_id,status,payload_json) VALUES (?,?,?,?)').bind(t.label, id, 'QUEUED', JSON.stringify({ kind: t.kind, by: 'engine' })).run()
   return Boolean(r.meta.changes)
 }
@@ -251,7 +258,12 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
   const reports = await scheduledReports(db, opts.labelIds, new Date(started)).catch(() => [] as string[])
   summary.reports = reports.length
   for (const label of reports) await notify(db, { label, kind: 'MONDAY_REPORT', title: 'Your weekly label report is ready', body: 'Money on file, deadlines, what the team did, and what needs you this week.', link: '/label-world/money#report', dedupe: `report:${label}:${started.slice(0, 10)}` })
+  // Wake the owner's cloud task for ANY label with runnable work (not only work queued this pass).
+  { const due = (await db.prepare(`SELECT DISTINCT label_id FROM lw_tasks WHERE status='QUEUED' AND kind<>'GENERIC' AND (run_after IS NULL OR run_after<=?) AND (? IS NULL OR label_id IN (SELECT value FROM json_each(?))) LIMIT 200`).bind(started, opts.labelIds ? 1 : null, JSON.stringify(opts.labelIds ?? [])).all().catch(() => ({ results: [] }))).results as any[]
+    for (const d of due) labelsWithWork.add(d.label_id) }
   for (const label of labelsWithWork) if ((await wakeAgents(db, env, label, opts.fetcher)) === 'WOKEN') summary.woken = Number(summary.woken) + 1
+  // Nobody is running the team while work piles up: tell the owner once a day.
+  { const { idleNotices } = await import('./team'); summary.idleNotices = await idleNotices(db, opts.labelIds, new Date(started)).catch(() => 0) }
   await db.prepare('UPDATE lw_engine_runs SET finished_at=?,summary_json=? WHERE id=?').bind(now(), JSON.stringify(summary), run.id).run()
   return summary
 }

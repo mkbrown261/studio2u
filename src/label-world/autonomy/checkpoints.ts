@@ -84,6 +84,7 @@ export async function decideCheckpoint(db: any, label: string, actor: number, id
   const r = await db.prepare("UPDATE lw_checkpoints SET status=?,decided_by=?,decided_at=CURRENT_TIMESTAMP,owner_note=? WHERE id=? AND label_id=? AND status='PENDING'").bind(decision, actor, str(b?.note, 'note', 500), id, label).run()
   if (!r.meta.changes) throw new ServiceError('That checkpoint was already answered or expired', 409)
   await db.prepare('INSERT INTO lw_audit_events(id,label_id,actor_id,action,payload_json) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(), label, actor, 'checkpoint.' + decision.toLowerCase(), JSON.stringify({ id })).run()
+  await db.prepare("UPDATE lw_tasks SET run_after=NULL,updated_at=CURRENT_TIMESTAMP WHERE label_id=? AND status='QUEUED' AND json_extract(input_json,'$.checkpointId')=?").bind(label, id).run()
   return { ...row(await db.prepare('SELECT * FROM lw_checkpoints WHERE id=?').bind(id).first()), say: decision === 'APPROVED' ? 'Approved. Your agent goes ahead on its next step.' : 'Denied. Your agent will not do it.' }
 }
 export async function controlStatus(db: any, label: string, actor: number) {
@@ -92,5 +93,7 @@ export async function controlStatus(db: any, label: string, actor: number) {
   const pending = ((await db.prepare("SELECT * FROM lw_checkpoints WHERE label_id=? AND status='PENDING' ORDER BY created_at LIMIT 30").bind(label).all()).results as any[]).map(row)
   const recent = ((await db.prepare("SELECT * FROM lw_checkpoints WHERE label_id=? AND status<>'PENDING' ORDER BY COALESCE(decided_at,created_at) DESC LIMIT 10").bind(label).all()).results as any[]).map(row)
   const working: any = await db.prepare("SELECT COUNT(*) n FROM lw_tasks WHERE label_id=? AND status='RUNNING'").bind(label).first()
-  return { role, paused: await isPaused(db, label), pending, recent, running: working?.n ?? 0 }
+  const { teamHealth } = await import('./team')
+  const team = await teamHealth(db, label).catch(() => null)
+  return { role, paused: await isPaused(db, label), pending, recent, running: working?.n ?? 0, team: team ? { state: team.state, say: team.say, queued: team.queued } : null }
 }

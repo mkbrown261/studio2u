@@ -408,6 +408,8 @@ export async function queueShopSetup(db: any, label: string, enqueueFn: (t: any)
 export async function requestShopSetup(db: any, label: string, actor: number, enqueueFn: (t: any) => Promise<boolean>) {
   await requireEditor(db, label, actor)
   if (await db.prepare('SELECT 1 FROM lw_merch_shops WHERE label_id=?').bind(label).first()) return { queued: false, say: 'Your Fourthwall shop is already connected.' }
+  { const { isPaused } = await import('./checkpoints'); if (await isPaused(db, label)) throw new ServiceError('Your agents are stopped (STOP is on). Tap Resume first.', 423) }
+  if (await db.prepare("SELECT 1 FROM lw_tasks WHERE label_id=? AND kind='SETUP_SHOP' AND status IN ('QUEUED','RUNNING')").bind(label).first()) return { queued: true, say: 'Already on it: your agent sets up the Fourthwall shop on its next run.' }
   const q = await queueShopSetup(db, label, enqueueFn, null, new Date(), true)
   if (!q) throw new ServiceError('Your agents are stopped (STOP is on). Tap Resume first.', 423)
   return { queued: true, say: 'Your agent sets up your free Fourthwall shop in your browser and connects it here. If Fourthwall asks for a code or your payout details, that one step is yours.' }

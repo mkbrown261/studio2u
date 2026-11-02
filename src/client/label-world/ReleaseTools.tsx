@@ -198,7 +198,7 @@ export function ControlBar({labelId, notify}: {labelId: string, notify: N}) {
   const verb: Record<string, string> = {SUBMIT: 'Submit', PUBLISH: 'Publish', POST: 'Post', SELL: 'Sell', SEND: 'Send', SPEND: 'Spend', DELETE: 'Delete', OTHER: 'Do'}
   return <div id="checkpoints" className={`lw-control ${d.paused ? 'paused' : ''}`}>
     <div className="lw-control-head">
-      <b>{d.paused ? '⏸ Your agents are stopped' : d.pending.length ? `${d.pending.length} thing(s) waiting for your OK` : d.running ? `Your agents are working (${d.running})` : 'Your agents ask you here before anything big happens'}</b>
+      <b>{d.paused ? '⏸ Your agents are stopped' : d.pending.length ? `${d.pending.length} thing(s) waiting for your OK` : d.running ? `Your agents are working (${d.running})` : d.team && ['STALLED', 'NEVER_RAN', 'NOT_CONNECTED'].includes(d.team.state) ? <a href="/label-world/agents/executive#team">{d.team.say}</a> : 'Your agents ask you here before anything big happens'}</b>
       {d.paused ? (owner && <Button gold disabled={busy === 'resume'} onClick={() => act('resume', 'control/resume', {})}>Resume</Button>) : (editor && <button className="lw-stop" disabled={busy === 'stop'} onClick={() => confirm('Stop every agent on this label right now?') && act('stop', 'control/stop', {})}>STOP</button>)}
     </div>
     {d.pending.map((c: any) => <div key={c.id} className="lw-checkpoint">
@@ -225,5 +225,33 @@ export function ReachPanel({labelId, role, notify}: {labelId: string, role: stri
     <div className="lw-tag-row">{d.routes.filter((r: any) => r.platform !== 'web').map((r: any) => <span key={r.platform} title={r.why}><Badge tone={tone[r.use]}>{r.platform}: {label[r.use]}</Badge></span>)}</div>
     {d.checkedAt && <small className="lw-muted">Last checked {new Date(String(d.checkedAt).replace(' ', 'T') + 'Z').toLocaleString()}</small>}
     {role !== 'viewer' && <div className="lw-partner-row"><Button disabled={busy} onClick={setup}>{d.status === 'UNKNOWN' ? 'Install it now' : 'Check it again'}</Button><a className="lw-button" href={d.repo} target="_blank" rel="noreferrer noopener">About Agent Reach</a></div>}
+  </div>
+}
+
+/** Keep my team running: is the owner's agent actually working, and one paste to make it run on its own. */
+export function TeamPanel({labelId, role, notify}: {labelId: string, role: string, notify: N}) {
+  const [d, setD] = useState<any>(null), [url, setUrl] = useState(''), [token, setToken] = useState(''), [busy, setBusy] = useState(false)
+  const load = () => labelId ? api(`/labels/${labelId}/team`).then(setD).catch(() => setD(null)) : Promise.resolve()
+  useEffect(() => { setD(null); load() }, [labelId])
+  if (!labelId || !d) return null
+  async function copy(text: string, what: string) { try { await navigator.clipboard.writeText(text); notify(`${what} copied.`) } catch { notify('Select the text and copy it.') } }
+  async function saveWake(e: React.FormEvent) { e.preventDefault(); setBusy(true); try { await api(`/labels/${labelId}/agents/claude-routine`, {url: url.trim(), token: token.trim()}); setUrl(''); setToken(''); notify('Saved. Studio2U wakes your cloud task whenever work is waiting.'); chime(); await load() } catch (e) { notify((e as Error).message) } finally { setBusy(false) } }
+  const tone: Record<string, 'cyan' | 'gold' | 'red' | 'muted'> = {WORKING: 'cyan', IDLE: 'gold', STALLED: 'red', NEVER_RAN: 'red', NOT_CONNECTED: 'red'}
+  const word: Record<string, string> = {WORKING: 'Working', IDLE: 'Idle', STALLED: 'Stalled', NEVER_RAN: 'Never ran', NOT_CONNECTED: 'Not connected'}
+  return <div id="team" className="lw-release-tool lw-team">
+    <p><b>Your team</b> <Badge tone={tone[d.state]}>{word[d.state] ?? d.state}</Badge> <small className="lw-muted">{d.queued} job(s) waiting · {d.waitingOnYou} waiting on you{d.lastActive ? ` · last worked ${new Date(String(d.lastActive).replace(' ', 'T') + (/Z$/.test(d.lastActive) ? '' : 'Z')).toLocaleString()}` : ''}</small></p>
+    <p>{d.say}</p>
+    {role !== 'viewer' && <>
+      <h4>Make it run on its own (one paste)</h4>
+      <ol className="lw-needs-list">
+        <li><b>Claude Desktop</b> (recommended): paste this into a chat. It creates an hourly task on your computer that can use your browser and Agent Reach. Keep the app open and turn on Keep computer awake. <div className="lw-partner-row"><Button gold onClick={() => copy(d.scheduleAsk, 'Request')}>Copy for Claude Desktop</Button></div></li>
+        <li><b>Codex app</b>: Automations, then New automation, every hour, paste the shift. <div className="lw-partner-row"><Button onClick={() => copy(d.runPrompt, 'Shift instructions')}>Copy shift instructions</Button></div></li>
+        <li><b>Run one now</b>: paste the same shift into Claude or Codex once to see it work.</li>
+      </ol>
+      <details><summary>Computer off? Claude cloud wake-up {d.cloudWakeConfigured ? '(set up)' : ''}</summary>
+        <small className="lw-muted">At claude.ai/code/routines create a task with the shift instructions and the Studio2U connector, add an API trigger, then paste its URL and token here. Studio2U wakes it whenever work is waiting. Cloud runs cannot use your screen or Agent Reach, so they handle desk work (messages, drafts, plans, checks) and leave browser jobs for your computer.</small>
+        {role === 'owner' && <form className="lw-stacked-form" onSubmit={saveWake}><input placeholder="https://api.anthropic.com/v1/claude_code/routines/trig_.../fire" value={url} onChange={e => setUrl(e.target.value)} maxLength={300}/><input type="password" placeholder="sk-ant-oat01-... (only starts that one task)" value={token} onChange={e => setToken(e.target.value)} maxLength={400} autoComplete="off"/><Button disabled={busy || !url || !token} type="submit">Save wake-up</Button></form>}
+      </details>
+    </>}
   </div>
 }
