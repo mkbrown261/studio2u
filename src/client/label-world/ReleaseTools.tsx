@@ -208,3 +208,22 @@ export function ControlBar({labelId, notify}: {labelId: string, notify: N}) {
     </div>)}
   </div>
 }
+
+/** Agent Reach: the first way your agents READ social media; screen control is the fallback. */
+export function ReachPanel({labelId, role, notify}: {labelId: string, role: string, notify: N}) {
+  const [d, setD] = useState<any>(null), [busy, setBusy] = useState(false)
+  const load = () => labelId ? api(`/labels/${labelId}/reach`).then(setD).catch(() => setD(null)) : Promise.resolve()
+  useEffect(() => { setD(null); load() }, [labelId])
+  if (!labelId || !d) return null
+  async function setup() { setBusy(true); try { const r = await api(`/labels/${labelId}/reach/setup`, {}); notify(r.say); chime(); await load() } catch (e) { notify((e as Error).message) } finally { setBusy(false) } }
+  const label: Record<string, string> = {AGENT_REACH: 'Agent Reach', TRY_AGENT_REACH: 'Agent Reach (checking)', SCREEN: 'Screen control'}
+  const tone: Record<string, 'cyan' | 'gold' | 'muted'> = {AGENT_REACH: 'cyan', TRY_AGENT_REACH: 'gold', SCREEN: 'muted'}
+  const head = d.status === 'OK' ? 'Working on every channel' : d.status === 'PARTIAL' ? 'Working on some channels' : d.status === 'DOWN' ? 'Down: using screen control' : d.status === 'NOT_INSTALLED' ? 'Not installed: using screen control' : 'Your agent installs it on its next run'
+  return <div className="lw-release-tool lw-reach">
+    <p><b>Agent Reach</b> <Badge tone={d.status === 'OK' ? 'cyan' : d.status === 'PARTIAL' || d.status === 'UNKNOWN' ? 'gold' : 'red'}>{head}</Badge></p>
+    <small className="lw-muted">Free and read-only. Your agents read Instagram, X, Reddit, Facebook, YouTube and LinkedIn through it first. If a channel is down they switch to screen control on their own. Posting always goes through screen control, and they ask you first.</small>
+    <div className="lw-tag-row">{d.routes.filter((r: any) => r.platform !== 'web').map((r: any) => <span key={r.platform} title={r.why}><Badge tone={tone[r.use]}>{r.platform}: {label[r.use]}</Badge></span>)}</div>
+    {d.checkedAt && <small className="lw-muted">Last checked {new Date(String(d.checkedAt).replace(' ', 'T') + 'Z').toLocaleString()}</small>}
+    {role !== 'viewer' && <div className="lw-partner-row"><Button disabled={busy} onClick={setup}>{d.status === 'UNKNOWN' ? 'Install it now' : 'Check it again'}</Button><a className="lw-button" href={d.repo} target="_blank" rel="noreferrer noopener">About Agent Reach</a></div>}
+  </div>
+}

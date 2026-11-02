@@ -14,7 +14,7 @@ import { buildPacket, derivedStatus, targets, type Target, type ReleaseRow, type
 import type { Intake } from './intake'
 import { decryptKey } from '../providers/vault'
 
-export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST', 'PARTNER_POST', 'PARTNER_SETUP', 'CREATIVE_TOOL', 'BRAND_KICKOFF', 'SETUP_SHOP', 'MAKE_IMAGE'] as const
+export const taskKinds = ['COLLECT_INTAKE', 'PREPARE_SUBMISSION', 'FILL_PROVIDER_FORM', 'VERIFY_SUBMISSION', 'REGISTRATION_FOLLOW_UP', 'CASE_STEP', 'REGISTER_WORK', 'SX_RECORDING', 'KNOW_ARTIST', 'PARTNER_POST', 'PARTNER_SETUP', 'CREATIVE_TOOL', 'BRAND_KICKOFF', 'SETUP_SHOP', 'MAKE_IMAGE', 'SETUP_REACH'] as const
 export type TaskKind = typeof taskKinds[number]
 const LEASE_MINUTES = 15
 const now = () => new Date().toISOString()
@@ -232,6 +232,11 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     const t = await dailyTrends(env, opts.labelIds).catch(() => ({ ran: 0, answered: 0 }))
     summary.trends = t.ran; summary.trendAnswers = t.answered
   }
+  // Agent Reach (free, read-only social reading) is the first route: install once, re-check weekly or when down.
+  summary.reachChecks = 0
+  { const { queueReachSetup } = await import('./reach')
+    const lbls = (await db.prepare(`SELECT DISTINCT label_id FROM lw_memberships WHERE role='owner' AND (? IS NULL OR label_id IN (SELECT value FROM json_each(?))) LIMIT 200`).bind(opts.labelIds ? 1 : null, JSON.stringify(opts.labelIds ?? [])).all().catch(() => ({ results: [] }))).results as any[]
+    for (const l of lbls) if (await queueReachSetup(db, l.label_id, (t: any) => enqueue(db, t), new Date(started)).catch(() => false)) summary.reachChecks = Number(summary.reachChecks) + 1 }
   // Ben starts on the brand for every known artist who never had a kickoff (once per label).
   summary.brandKickoffs = 0
   const fresh = (await db.prepare(`SELECT i.label_id,i.artist_name FROM lw_label_identity i WHERE i.artist_name IS NOT NULL AND (? IS NULL OR i.label_id IN (SELECT value FROM json_each(?)))

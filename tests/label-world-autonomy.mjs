@@ -172,7 +172,7 @@ const b = await connect(2, ['lab-b'], [...mcpScopes], 'Codex')
 assert.ok((await b.call('get_intake', { labelId: 'lab-a', releaseId: R })).error)
 assert.ok((await b.call('update_intake', { labelId: 'lab-a', releaseId: R, patch: { genre: 'x' } })).error)
 const bClaim = await b.call('claim_next_task', { canControlScreen: true })
-assert.equal(bClaim.task, null, 'label B agent never sees label A work')
+assert.ok(!bClaim.task || bClaim.task.labelId === 'lab-b', 'label B agent never sees label A work (it may get its own label\'s setup tasks)')
 // A grant that names a label the user is NOT a member of is refused.
 const forged = await connect(2, ['lab-a'], [...mcpScopes])
 assert.ok((await forged.call('create_release', { labelId: 'lab-a', artist: 'x', title: 'y' })).error)

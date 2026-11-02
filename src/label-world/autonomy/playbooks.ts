@@ -474,6 +474,7 @@ export const PLAYBOOKS: Playbook[] = [
 /** When agents may use the user's screen. Screen sessions are expensive (screenshots are
  *  thousands of tokens each), so they are a last resort, not a default. */
 export const SCREEN_POLICY = [
+  'Reading social media (Instagram, X, Reddit, Facebook, YouTube, LinkedIn, the web): use Agent Reach first (agent-reach <channel> <action>; context.reach.routes says which platforms work). If a channel fails or is not covered (TikTok, Threads), report_reach and use the screen. Agent Reach never posts: posting is screen control with an approved checkpoint.',
   'Use Studio2U tools and public web pages first. Use the screen only when there is no API: provider forms (UnitedMasters, ASCAP, SoundExchange, BMI, MLC), the user\'s own analytics (Instagram, TikTok, YouTube Studio), Suno/creative tools, or the user asks.',
   'Prefer reading the page structure (accessibility snapshot / DOM text) over screenshots; take screenshots only to confirm a step, small (JPEG, ~1000px wide).',
   'One focused session per task. Do not leave the browser polling or re-check pages on a loop; save what you read with Studio2U tools and close the tab.',

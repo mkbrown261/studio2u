@@ -2,6 +2,7 @@
 // Stop pauses everything. Accounts are created by the owner and handed over with a handle.
 import React, {useEffect, useState} from 'react'
 import {api, chime, Badge, Button, Panel, Icon} from './ui'
+import {ReachPanel} from './ReleaseTools'
 import type {WorkspaceProps} from './workspaces'
 
 const day = (d: string) => new Date(d + 'T12:00:00Z').toLocaleDateString([], {weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC'})
@@ -70,6 +71,7 @@ export function PartnerWorkspace(p: WorkspaceProps) {
 
     <Shows labelId={p.labelId} owner={owner} editor={editor} notify={p.notify}/>
 
+    <Panel title="How Ben reads your socials" icon="link"><ReachPanel labelId={p.labelId} role={d.role} notify={p.notify}/></Panel>
     <Panel title="Accounts he runs" icon="people">
       <p className="lw-muted">Already have accounts? Type the handle and tap "Ben runs it", or just say "my instagram is @yourname" in any chat. Ben keeps your profile as is and posts only what you approved. Your agent also finds the accounts you are logged in to when it builds your brand.</p>
       <div className="lw-partner-channels">{d.channels.map((c: any) => <div key={c.platform} className="lw-partner-channel">

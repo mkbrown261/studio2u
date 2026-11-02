@@ -62,6 +62,10 @@ export async function ownerCommand(db: any, label: string, actor: number, text: 
     const r = await tryDo('brand', () => brandKickoff(db, label, actor, q, true))
     if (r !== null) say.push(haveAccounts ? 'Got it. Your agent checks which accounts you are logged in to, takes them over (no new accounts), reads your posts to learn how you talk, then builds your brand story, merch and posts. It asks before anything goes public.' : r ? 'Ben is on it: brand story, merch designs and a week of posts in your voice. He asks before anything goes public.' : 'Your agents are stopped. Say "resume" first.')
   }
+  if (/\bagent[\s-]?reach\b/i.test(t)) {
+    const { requestReachSetup } = await import('./reach')
+    const r = await tryDo('reach', () => requestReachSetup(db, label, actor, q)); if (r) say.push(r.say)
+  }
   if (/\b(set ?up|connect|make|create)\b[^.]{0,20}\b(shop|store)\b/i.test(t) && !did.includes('merch')) {
     const r = await tryDo('shop', () => partner.requestShopSetup(db, label, actor, q)); if (r) say.push(r.say)
   }
