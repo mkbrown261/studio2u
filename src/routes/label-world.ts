@@ -223,6 +223,15 @@ labelWorldRoutes.post('/label-world/agent-upload/:token',async c=>{
 labelWorldRoutes.get('/label-world',c=>headquartersPage(c))
 labelWorldRoutes.get('/label-world/inbox',c=>headquartersPage(c,true))
 labelWorldRoutes.get('/label-world/money',c=>headquartersPage(c,true))
+labelWorldRoutes.get('/label-world/today',c=>headquartersPage(c,true))
+// The cron engine pings this every 5 minutes: phone/email alerts + waking the owner's cloud task
+// (this side holds the secrets). Shared-secret only; no session, no body.
+labelWorldRoutes.post('/label-world/engine/deliver',async c=>{
+  const {engineAuthorized,deliveryPass}=await import('../label-world/autonomy/alerts')
+  c.header('Cache-Control','no-store')
+  if(!engineAuthorized(c.env,c.req.header('X-Engine-Secret')))return c.json({error:'Not authorized'},401)
+  return c.json(await deliveryPass(c.env))
+})
 labelWorldRoutes.get('/label-world/agents/:agent',c=>{
   if(!['researcher','reviewer','executive','builder','partner'].includes(c.req.param('agent')))return c.notFound()
   return headquartersPage(c,true)

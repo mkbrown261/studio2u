@@ -15,7 +15,7 @@ export function KnowMe({labelId, editable, notify, onAsk}: {labelId: string, edi
   useEffect(() => { setD(null); load() }, [labelId])
   if (!d) return <div className="lw-mf-empty"><p>Loading…</p></div>
   async function discover() { setBusy(true); try { const r = await api(`/labels/${labelId}/know-me/discover`, {}); notify(r.say); load() } catch (e) { notify((e as Error).message) } finally { setBusy(false) } }
-  async function decide(id: string, decision: 'CONFIRMED' | 'NOT_ME') { try { await api(`/labels/${labelId}/know-me/links/${id}`, {decision}); load() } catch (e) { notify((e as Error).message) } }
+  async function decide(id: string, decision: 'CONFIRMED' | 'NOT_ME') { try { const r = await api(`/labels/${labelId}/know-me/links/${id}`, {decision}); if (r?.catalog?.say) notify(r.catalog.say); load() } catch (e) { notify((e as Error).message) } }
   async function addLink() { try { await api(`/labels/${labelId}/know-me/links`, {url: link.trim()}); setLink(''); load() } catch (e) { notify((e as Error).message) } }
   async function saveAnswers() {
     const facts: Record<string, any> = {}

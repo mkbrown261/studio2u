@@ -239,6 +239,8 @@ export async function runEngine(env: any, opts: { fetcher?: typeof fetch; maxRel
     const t = await dailyTrends(env, opts.labelIds).catch(() => ({ ran: 0, answered: 0 }))
     summary.trends = t.ran; summary.trendAnswers = t.answered
   }
+  // Close jobs nobody will come back to (30+ days, or parked on a No/expired question).
+  { const { sweepStale } = await import('./quickfill'); const sw = await sweepStale(db, opts.labelIds).catch(() => ({ expired: 0, orphaned: 0 })); summary.expired = sw.expired + sw.orphaned }
   // Agent Reach (free, read-only social reading) is the first route: install once, re-check weekly or when down.
   summary.reachChecks = 0
   { const { queueReachSetup } = await import('./reach')

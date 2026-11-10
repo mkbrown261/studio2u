@@ -6,7 +6,10 @@ import { runEngine } from '../src/label-world/autonomy/engine'
 
 export default {
   async scheduled(_event: any, env: any, ctx: any) {
-    ctx.waitUntil(runEngine(env).then(summary => console.log(JSON.stringify({ operation: 'label-world-engine', ...summary }))).catch(error => console.error(JSON.stringify({ operation: 'label-world-engine', error: String(error?.message ?? error) }))))
+    ctx.waitUntil(runEngine(env).then(summary => console.log(JSON.stringify({ operation: 'label-world-engine', ...summary }))).catch(error => console.error(JSON.stringify({ operation: 'label-world-engine', error: String(error?.message ?? error) })))
+      // Then ask the Pages app (which holds the secrets) to send phone/email alerts and wake cloud tasks.
+      .then(() => env.ENGINE_SHARED_SECRET ? fetch((env.PAGES_ORIGIN || 'https://studio2u.pages.dev') + '/label-world/engine/deliver', { method: 'POST', headers: { 'X-Engine-Secret': env.ENGINE_SHARED_SECRET, 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.json()).then(d => console.log(JSON.stringify({ operation: 'label-world-deliver', ...d }))) : null)
+      .catch(error => console.error(JSON.stringify({ operation: 'label-world-deliver', error: String(error?.message ?? error) }))))
   },
   // Health check only; never runs the engine from an unauthenticated request.
   async fetch(_req: Request, env: any) {

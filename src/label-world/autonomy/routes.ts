@@ -57,7 +57,7 @@ export function installAutonomyRoutes(app: any) {
   app.post(base + '/know-me/facts', wrap(async c => c.json(await know.saveFacts(c.env.DB, L(c), U(c), (await body(c)).facts, 'OWNER', 'owner'))))
   app.post(base + '/know-me/facts/:key/confirm', wrap(async c => c.json(await know.confirmFact(c.env.DB, L(c), U(c), c.req.param('key'), Boolean((await body(c)).confirm)))))
   app.post(base + '/know-me/links', wrap(async c => c.json(await know.addLink(c.env.DB, L(c), U(c), await body(c), 'OWNER', 'owner'))))
-  app.post(base + '/know-me/links/:id', wrap(async c => c.json(await know.decideLink(c.env.DB, L(c), U(c), c.req.param('id'), String((await body(c)).decision ?? '')))))
+  app.post(base + '/know-me/links/:id', wrap(async c => { const q = await import('./quickfill'); return c.json(await q.decideAndFill(c.env.DB, L(c), U(c), c.req.param('id'), String((await body(c)).decision ?? ''))) }))
   app.get(base + '/soundexchange', wrap(async c => c.json({ ...(await sx.getSxAccount(c.env.DB, L(c), U(c))), queue: await sx.sxQueue(c.env.DB, L(c), U(c), 60) })))
   app.post(base + '/soundexchange/account', wrap(async c => c.json(await sx.saveSxAccount(c.env.DB, L(c), U(c), await body(c)))))
   app.post(base + '/soundexchange/contact-update', wrap(async c => c.json(await sx.prepareContactUpdate(c.env.DB, L(c), U(c), await body(c)))))
@@ -159,6 +159,14 @@ export function installAutonomyRoutes(app: any) {
   app.get(base + '/releases/:releaseId/artwork/:assetId', wrap(async c => new Response(await creative.assetImage(E(c), L(c), c.req.param('releaseId'), c.req.param('assetId')), { headers: { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' } })))
   app.get(base + '/releases/:releaseId/package.zip', wrap(async c => { const z = await creative.packageZip(E(c), L(c), c.req.param('releaseId')); return new Response(z.bytes, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${z.filename}"`, 'Cache-Control': 'no-store' } }) }))
   app.post(base + '/creative', wrap(async c => c.json(await creative.creativeTask(c.env.DB, L(c), U(c), await body(c), (t: any) => enqueue(c.env.DB, t)), 201)))
+  // Today: one screen for what needs you, what the team did and what is stuck.
+  app.get(base + '/today', wrap(async c => { const t = await import('./today'); return c.json(await t.today(c.env.DB, L(c), U(c))) }))
+  app.post(base + '/today/seen', wrap(async c => { const t = await import('./today'); return c.json(await t.markSeen(c.env.DB, L(c), U(c))) }))
+  app.post(base + '/tasks/:taskId/answer', wrap(async c => { const q = await import('./quickfill'); return c.json(await q.answerTask(c.env.DB, L(c), U(c), c.req.param('taskId'), await body(c))) }))
+  // Phone/email alerts are per person (not per label).
+  app.get('/api/label-world/alerts', wrap(async c => { const a = await import('./alerts'); return c.json(await a.getAlerts(c.env.DB, U(c), c.env)) }))
+  app.post('/api/label-world/alerts', wrap(async c => { const a = await import('./alerts'); return c.json(await a.setAlerts(c.env.DB, U(c), await body(c), c.env)) }))
+  app.post('/api/label-world/alerts/test', wrap(async c => { const a = await import('./alerts'); return c.json(await a.testAlert(c.env, U(c))) }))
   app.get(base + '/team', wrap(async c => { const t = await import('./team'); return c.json(await t.teamSetup(c.env.DB, L(c), U(c), new URL(c.req.url).origin)) }))
   app.get(base + '/reach', wrap(async c => { const r = await import('./reach'); return c.json(await r.reachOverview(c.env.DB, L(c), U(c))) }))
   app.post(base + '/reach/setup', wrap(async c => { const r = await import('./reach'); return c.json(await r.requestReachSetup(c.env.DB, L(c), U(c), (t: any) => enqueue(c.env.DB, t)), 201) }))
