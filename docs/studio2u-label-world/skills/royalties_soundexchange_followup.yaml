@@ -1,0 +1,43 @@
+id: "studio2u.royalties_soundexchange_followup"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "royalty_admin"
+goal: "Track qualifying statutory master-side digital performance royalty registration"
+trigger: "recording released or registration task assigned"
+inputs:
+  - "recordingId"
+  - "featuredPerformers"
+  - "masterRightsHolders"
+tools:
+  - "royalties.sx_rules"
+  - "forms.prepare"
+  - "tasks.schedule"
+steps:
+  - "Collect master rightsholder and featured artist information separately."
+  - "Check available official registration/account status."
+  - "Create work/recording info packet with identifiers."
+  - "Present eligibility and any supporting requirements."
+  - "Maintain actual submission receipts and pending status."
+outputs:
+  - "sxReadiness"
+  - "registrationPacket"
+  - "evidenceLog"
+validations:
+  - "Do not claim all streams pay SoundExchange royalties."
+approval_gates:
+  - "external registration/claim"
+failure_and_escalation:
+  - "unsupported access -> guided handoff"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "verifiedCoverage"
+  - "pendingTasksAge"
+test_scenarios:
+  - "interactive Spotify streams not falsely labeled SoundExchange payout"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

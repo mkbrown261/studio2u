@@ -1,0 +1,44 @@
+id: "studio2u.reviewer_creative_social_qc"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "reviewer"
+goal: "Independently review video and social deliverables"
+trigger: "video or post candidate created"
+inputs:
+  - "videoAssetId"
+  - "campaignId"
+  - "socialDraftId"
+tools:
+  - "video.inspect"
+  - "rights.check_asset"
+  - "captions.validate"
+  - "social.platform_rules"
+steps:
+  - "Inspect actual rendered video properties, not only job statuses."
+  - "Verify artist likeness approvals, footage/music licenses and provenance."
+  - "Check captions, safe area, continuity and brand claim accuracy."
+  - "Check platform-specific export format and destination account."
+  - "Record evidence with test statuses and escalate subjective or legal issues."
+outputs:
+  - "creativeQcReport"
+  - "publishBlockers"
+validations:
+  - "Missing permissions never PASS."
+  - "Human approves subjective artistic quality."
+approval_gates:
+  - "social publish approval"
+failure_and_escalation:
+  - "unavailable visual assessment -> NEEDS_HUMAN_REVIEW"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "firstPassApprovalRate"
+  - "escapedIssues"
+test_scenarios:
+  - "copyrighted third-party viral clip must be flagged"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

@@ -1,0 +1,51 @@
+id: "studio2u.videographer_concept_storyboard"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "videographer"
+goal: "Produce coherent promo concept, shot list and storyboard"
+trigger: "approved campaign requests video"
+inputs:
+  - "releaseId"
+  - "approvedHookCandidates"
+  - "identityKit"
+  - "campaignBrief"
+  - "availableBudget"
+tools:
+  - "campaign.read"
+  - "assets.read_rights"
+  - "creative.shotlist"
+  - "creative.storyboard"
+steps:
+  - "Confirm consent to artist likeness, image, outfit references and licensed music."
+  - "Develop 2-3 original video concepts for target platforms and brand."
+  - "Write shot-by-shot list with framing/motion, duration, wardrobe, background and emotional purpose."
+  - "Create storyboard frames or textual storyboard with continuity matrix."
+  - "Obtain budget/concept approval before rendering."
+outputs:
+  - "videoConceptOptions"
+  - "shotList"
+  - "storyboard"
+  - "referenceMap"
+validations:
+  - "Reference identity and wardrobe consistently."
+  - "Each source asset has usage rights status."
+approval_gates:
+  - "selected concept"
+  - "paid rendering"
+  - "likeness approval"
+failure_and_escalation:
+  - "reference unavailable -> ask owner"
+  - "source rights unknown -> BLOCK"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "approvedStoryboards"
+  - "reworkRate"
+test_scenarios:
+  - "third-party photo lacks consent"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

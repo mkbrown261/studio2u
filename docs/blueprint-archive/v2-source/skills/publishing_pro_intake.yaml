@@ -1,0 +1,47 @@
+id: "studio2u.publishing_pro_intake"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "publishing_admin"
+goal: "Prepare accurate PRO composition registration records"
+trigger: "composition requires work registration"
+inputs:
+  - "compositionId"
+  - "writerParties"
+  - "publisherParties"
+  - "proAffiliations"
+tools:
+  - "publishing.validate"
+  - "forms.prepare"
+  - "approval.request"
+steps:
+  - "Identify each writer/publisher and PRO membership/territory."
+  - "Validate applicable shares and registered identities; distinguish IPI vs ISWC."
+  - "Prepare society-specific checklist from current official guidance."
+  - "Request owner confirmation of declarations and uncertain fields."
+  - "Track prepared/submitted/acknowledged/confirmed separately."
+outputs:
+  - "proRegistrationPacket"
+  - "missingFields"
+  - "registrationTask"
+validations:
+  - "UPC/ISRC not universally presumed mandatory for PRO registration."
+  - "No official success claim absent receipt."
+approval_gates:
+  - "PRO filing"
+  - "ownership declarations"
+failure_and_escalation:
+  - "no approved portal automation -> guided manual action"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "approvedPackets"
+  - "confirmedReceipts"
+test_scenarios:
+  - "PRO affiliation missing"
+  - "duplicate composition title"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

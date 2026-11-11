@@ -1,0 +1,46 @@
+id: "studio2u.catalog_audio_intake"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "catalog_manager"
+goal: "Preserve and inspect original uploaded audio"
+trigger: "audio uploaded"
+inputs:
+  - "tenantId"
+  - "originalAudioAssetId"
+tools:
+  - "storage.preserve"
+  - "audio.probe"
+  - "audio.hash"
+  - "audio.detect_duplicates"
+steps:
+  - "Check file permissions and authorized upload."
+  - "Store original immutably and checksum it."
+  - "Probe measured duration, codec, sample rate, channels and bitrate/bit depth when available."
+  - "Check duplicates and alternate versions without deleting files."
+  - "Create recording metadata draft with provenance."
+outputs:
+  - "recordingDraft"
+  - "technicalReport"
+  - "duplicateCandidates"
+validations:
+  - "No inferred author or master owner accepted as verified."
+  - "Duration comes from measurable audio."
+approval_gates:
+failure_and_escalation:
+  - "corrupt input -> FAIL with preserved original"
+  - "ambiguous duplicates -> report not merge"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "filesInspected"
+  - "trueDuplicatesFound"
+  - "ingestErrorRate"
+test_scenarios:
+  - "uploaded corrupt audio"
+  - "two encodings of same track"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

@@ -1,0 +1,164 @@
+{
+  "verifiedAt": "2026-10-13",
+  "baseline": "c693ba3436adc7532af5bfabc9356c769b960ac2",
+  "codexVersion": "0.160.1",
+  "nativeOAuth": "PASSED",
+  "nativeToolsRead": 9,
+  "knowledgeResourcesRead": [
+    "reviewer",
+    "researcher"
+  ],
+  "reviewFinding": {
+    "check": "artwork.technical",
+    "status": "FAIL",
+    "width": 64,
+    "height": 64
+  },
+  "research": {
+    "source": "csv:other",
+    "metric": {
+      "test_count": "17"
+    },
+    "provenance": "USER_IMPORTED_NOT_INDEPENDENTLY_VERIFIED",
+    "observedAt": "2026-10-13T09:23:58.682Z",
+    "sourceUrl": "https://example.invalid/qa"
+  },
+  "nativeDisconnect": "AUTH_REQUIRED_AT_INITIALIZATION",
+  "claude": "NOT_INSTALLED_NOT_VERIFIED",
+  "inspector": {
+    "tools": 9,
+    "resources": 5,
+    "errors": 0,
+    "portabilityWarnings": 19,
+    "notes": "Legal nullable JSON Schema type arrays and intentionally open persisted-record extensions; no Codex interoperability failure."
+  },
+  "tests": {
+    "regression": {
+      "passed": [
+        "PASS: all 94 requirements + 6 nonfunctional requirements, 14 workflows, all 23 YAML skill contracts, v1 preservation and explicit unavailable runtime statuses",
+        "PASS: terminal states, approval resumption and release validation",
+        "PASS: migration, membership scope, duplicate membership, task status, cross-label asset/task/approval references",
+        "PASS: additive migration preserves old drafts, backfills four independent follow-ups, cross-tenant foreign keys, uniqueness and no fabricated official confirmation",
+        "PASS: registration queue survives database close/reopen with no streams or browser dependency",
+        "PASS: authenticated two-tenant API isolation, RBAC, both modes, durable independent queues, rights blockers, unverified receipts, optimistic edits, immutable audit, branding, profiles, CSRF and atomic rollback",
+        "PASS: five provider request/response adapters; current-catalog filtering/pagination; AES-GCM encryption/AAD isolation; auth/CSRF/RBAC; personal-key isolation; preference persistence; sanitized errors/timeouts; rate limits; disconnect cascade. Mock HTTP only, no live LLM calls.",
+        "PASS workspace: tenant isolation, histories, missing-provider persistence, viewer scope, research revisions, creative drafts, mocked provider reasoning with bounded tenant context and sanitized failure; no live model call",
+        "PASS: public sanitized bootstrap, all four authenticated direct routes, scoped sign-in return, invalid role 404, redirect allowlist, script-safe user name",
+        "PASS: real password verification, shared secure session cookie, selected-workspace redirect and failed-login rate limiting using synthetic account",
+        "PASS: embedded-texture security policy applies only to the Label World scene pages, not legacy routes",
+        "PASS: direct employee inbox is protected and preserves its sign-in destination",
+        "PASS: three-room bounds; studio/lobby and lobby/conference door thresholds; no conference/studio passage",
+        "PASS: furniture/wall/closed-door collisions, sprint tunneling, moved-sofa clearance, open-door crossings, safe spawns, registry proximity and role targets",
+        "PASS: actual-clip registry and nonblocking missing animation/model fallbacks",
+        "PASS studio embedded GLB 17930948 bytes 255 mesh groups 0 clips",
+        "PASS lobby embedded GLB 11354012 bytes 166 mesh groups 0 clips",
+        "PASS conference embedded GLB 12941516 bytes 384 mesh groups 0 clips",
+        "PASS carla embedded GLB 1932912 bytes 1 mesh groups 1 clips",
+        "PASS eric embedded GLB 8331112 bytes 2 mesh groups 1 clips",
+        "PASS: exported rigs, embedded textures/normals, sampled wrist continuity and Pages asset limits. Visual animation quality remains a browser check.",
+        "PASS: original booking messages, sender/read flags, engineer/customer unread scopes, separate employee persistence and no query-email authentication bypass"
+      ],
+      "kind": "LOCAL_FIXTURE_OR_BUILT_WORKER"
+    },
+    "reviewer": {
+      "passed": [
+        "PASS: actual generated PCM WAV and PNG bytes; truncated WAV, undersized artwork and corrupted PNG rejected; checksums generated. No storage/task integration claimed.",
+        "PASS: API uploads store actual bytes; task/results/report/inbox/notifications persisted atomically; idempotent repeat; deliberate failure fixed in new review; old history retained; correction persists; cross-label and same-label other-user report access denied; report corruption detected. Local SQLite and R2-interface fixture, not deployed R2."
+      ],
+      "kind": "LOCAL_FIXTURE_OR_BUILT_WORKER"
+    },
+    "research": {
+      "passed": [
+        "PASS Carla context: authorized stored YouTube/CSV observations, raw counts, identity/source limitations, task checkpoints, expired source excluded before deletion",
+        "PASS: mocked official YouTube endpoints, missing metrics/artist identity truthful, secret never exposed, persistent observations/report/inbox, idempotency, CSV quote/mapping/preview/authorization/dedup and tenant isolation. Live connector test still required."
+      ],
+      "kind": "LOCAL_FIXTURE_OR_BUILT_WORKER"
+    },
+    "context": {
+      "passed": [
+        "PASS context foundation: four routes, unchanged 23 canonical contracts, path confinement, missing files, cycles, duplicate IDs, hashes, policy/capability and file budgets",
+        "PASS: actual generated PCM WAV and PNG bytes; truncated WAV, undersized artwork and corrupted PNG rejected; checksums generated. No storage/task integration claimed.",
+        "PASS runtime context: actual WAV/PNG review pilot, immutable findings, stale snapshots, authorized metadata trace, prompt injection as data, role routing, budgets, five provider mappings without tools/fallback, private histories and structured explanation references. Mock reasoning, not live accuracy proof."
+      ],
+      "kind": "LOCAL_FIXTURE_OR_BUILT_WORKER"
+    },
+    "worker": {
+      "passed": [
+        "PASS: built production worker preserves scoped texture CSP after global security middleware; original login policy unchanged; anonymous private API denied",
+        "PASS: Pages serves all scene JS/CSS/GLBs statically while authenticated HTML/APIs remain routed through worker"
+      ],
+      "kind": "LOCAL_FIXTURE_OR_BUILT_WORKER"
+    },
+    "mcp": {
+      "passed": [
+        "PASS MCP A: official modern HTTP SDK client, initialization/discovery, nine read-only tools, five approved knowledge resources, scoped persisted release, unknown arguments and other-label denial, live grant validation. OAuth/native CLI not yet claimed.",
+        "PASS MCP OAuth B: actual PKCE authorization/explicit selected-label consent, existing session identity, hashed tokens, 10-minute access, rotated refresh/reuse family revocation, issuer/resource/exact redirect binding, consent/code replay, malformed arguments, cookie-only/anonymous/other-label denial and official HTTP client reading stored QA release; no model key."
+      ],
+      "kind": "LOCAL_HTTP_SDK_AUTHORIZATION"
+    }
+  },
+  "usage": [
+    {
+      "test": "native-client",
+      "nativeClientUsage": {
+        "input_tokens": 95653,
+        "cached_input_tokens": 84480,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1107,
+        "reasoning_output_tokens": 74
+      }
+    },
+    {
+      "test": "native-provenance",
+      "nativeClientUsage": {
+        "input_tokens": 69590,
+        "cached_input_tokens": 59648,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 357,
+        "reasoning_output_tokens": 0
+      }
+    },
+    {
+      "test": "native-revoked",
+      "nativeClientUsage": {
+        "input_tokens": 31738,
+        "cached_input_tokens": 28800,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 161,
+        "reasoning_output_tokens": 23
+      }
+    }
+  ],
+  "limitations": [
+    "No website subscription inference demonstrated",
+    "No token/cost improvement claim",
+    "Marketplace approval pending",
+    "Website ICM live comparison pending",
+    "Hosted client proof uses isolated QA records; canonical production app unchanged"
+  ],
+  "hostedPreview": {
+    "url": "https://feature-label-world-foundati.studio2u.pages.dev",
+    "deploymentId": "43b21835-e789-4303-9318-a4b82a960507",
+    "sourceSha": "d80584bf445434ded9e18add2fe58490c5ec798a",
+    "nativeOAuth": "PASSED",
+    "nativeToolReads": "PASSED",
+    "findings": "Current persisted review: credits.complete FAIL, rights.declaration FAIL, package.integrity NOT_TESTED",
+    "research": "Existing public YouTube observations and user-imported CSV returned with timestamps/provenance; no new collection or inferred metrics",
+    "separateStudioLlmKey": "NOT_REQUIRED",
+    "disconnect": "AUTH_REQUIRED_AT_NATIVE_INITIALIZATION",
+    "audienceMetadata": "EXACT_PREVIEW_RESOURCE",
+    "anonymous": "HTTP401"
+  },
+  "dependencyAudit": {
+    "total": 10,
+    "moderate": 3,
+    "high": 7,
+    "critical": 0,
+    "note": "Same vulnerability counts as baseline; no unrelated npm audit fix applied"
+  },
+  "schemaMigrations": {
+    "0024": "APPLIED_ADDITIVE_ONLY",
+    "0025": "APPLIED",
+    "backup": "Private SQL export mode0600; never committed"
+  }
+}

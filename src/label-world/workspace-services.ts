@@ -1,0 +1,65 @@
+import {loadContext,explanation,ContextError} from './context/loader'
+import type { Hono } from 'hono'
+import type { AppEnv } from '../types'
+import type { SessionUser } from '../lib/session'
+import { generate, providerId, endpointConfig } from './providers/adapters'
+import { decryptKey, keyContext } from './providers/vault'
+import { spendGuard, recordSpend } from './providers/budget'
+import { runTrends, TREND_INTENT } from './research/trends'
+import { checkinText, PARTNER_INTENT } from './autonomy/partner'
+type Env = AppEnv & { Variables: { lwUser: SessionUser; lwRole: string } }
+const agents = ['researcher','reviewer','executive','builder','partner']
+const base = '/api/label-world/labels/:labelId'
+function field(value:unknown,max:number,required=false){if(typeof value!=='string'||value.length>max||(required&&!value.trim()))throw new Error('Invalid input');return value.trim()}
+export function installWorkspaceRoutes(app:Hono<Env>){
+ const privateRequest=async(c:any,next:any)=>{c.header('Cache-Control','no-store');if(c.req.method!=='GET'&&c.req.header('Origin')!==new URL(c.req.url).origin&&c.req.header('Sec-Fetch-Site')!=='same-origin')return c.json({error:'Same-origin request required'},403);await next()}
+ for(const suffix of ['/inbox/*','/research/*','/tasks','/releases/:releaseId/workspace'])app.use(base+suffix,privateRequest)
+ const safe=(fn:any)=>async(c:any)=>{try{return await fn(c)}catch{return c.json({error:'Workspace request failed or invalid input'},400)}}
+ const history=async(c:any)=> (await c.env.DB.prepare('SELECT id,agent_id,release_id,role,content,status,reply_to,created_at,review_id,research_report_id FROM lw_employee_messages WHERE label_id=? AND user_id=? AND agent_id=? ORDER BY created_at DESC,rowid DESC LIMIT 100').bind(c.req.param('labelId'),c.get('lwUser').id,c.req.param('agentId')).all()).results.reverse()
+ app.get(base+'/inbox/:agentId/messages',safe(async(c:any)=>{if(!agents.includes(c.req.param('agentId')))return c.json({error:'Employee not found'},404);return c.json({messages:await history(c),executionCapability:'REASONING_ONLY'})}))
+ app.post(base+'/inbox/:agentId/messages',safe(async(c:any)=>{
+  const label=c.req.param('labelId'),agent=c.req.param('agentId'),user=c.get('lwUser').id
+  if(!agents.includes(agent))return c.json({error:'Employee not found'},404)
+  const body=await c.req.json(),content=field(body.content,8000,true),releaseId=body.releaseId==null?null:field(body.releaseId,100,true)
+  const release=releaseId?await c.env.DB.prepare('SELECT id,title,artist,version,state,workflow_state FROM lw_releases WHERE label_id=? AND id=?').bind(label,releaseId).first():null
+  if(releaseId&&!release)return c.json({error:'Release not found'},404)
+  if(body.messageId!=null&&(typeof body.messageId!=='string'||!/^[-a-zA-Z0-9]{16,80}$/.test(body.messageId)))throw new Error('Invalid message ID')
+  const id=body.messageId??crypto.randomUUID()
+  const existing=await c.env.DB.prepare('SELECT status,content,release_id,agent_id FROM lw_employee_messages WHERE id=? AND label_id=? AND user_id=?').bind(id,label,user).first()
+  if(existing){if(existing.content!==content||existing.release_id!==releaseId||existing.agent_id!==agent)return c.json({error:'Message ID already used'},409);return c.json({messages:await history(c),status:existing.status,replayed:true})}
+  const preference=await c.env.DB.prepare('SELECT provider,model FROM lw_reasoning_preferences WHERE label_id=? AND user_id=?').bind(label,user).first()
+  await c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,release_id,role,content,status) VALUES (?,?,?,?,?,'user',?,'WAITING_FOR_PROVIDER')").bind(id,label,user,agent,releaseId,content).run()
+  // Carla answers "what's hot" from live public charts right away: no AI key, no tokens.
+  if(agent==='researcher'&&TREND_INTENT.test(content)){try{await runTrends(c.env,label,user,{text:content,replyTo:id});return c.json({messages:await history(c),status:'COMPLETED'},201)}catch{/* fall through to the model */}}
+  // The Business Partner answers money/plan/post questions instantly from the facts (no AI key, no tokens).
+  if(agent==='partner'&&(PARTNER_INTENT.test(content)||!preference)){try{const text=await checkinText(c.env,label,user);await c.env.DB.batch([c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,role,content,status,reply_to,provider,model) VALUES (?,?,?,'partner','assistant',?,'COMPLETED',?,'studio2u','money-desk')").bind(crypto.randomUUID(),label,user,text,id),c.env.DB.prepare("UPDATE lw_employee_messages SET status='COMPLETED' WHERE id=?").bind(id)]);return c.json({messages:await history(c),status:'COMPLETED'},201)}catch{/* fall through */}}
+  const conn=preference?await c.env.DB.prepare('SELECT encrypted_key,endpoint_config FROM lw_provider_connections WHERE user_id=? AND provider=?').bind(user,preference.provider).first():null
+  if(!conn)return c.json({messages:await history(c),status:'WAITING_FOR_PROVIDER',message:'Connect a personal provider and select a model. Your message has been saved.'},201)
+  try{
+   const window=new Date().toISOString().slice(0,16)
+   const limit=await c.env.DB.prepare('INSERT INTO lw_provider_rate_limits(user_id,window,requests) VALUES (?,?,1) ON CONFLICT(user_id,window) DO UPDATE SET requests=requests+1 WHERE requests<6 RETURNING requests').bind(user,window).first()
+   if(!limit)throw new Error('Rate limit')
+   await spendGuard(c.env.DB,user)
+   await c.env.DB.prepare("UPDATE lw_employee_messages SET status='GENERATING' WHERE id=?").bind(id).run()
+   const context=await loadContext(c.env.DB,{userId:user,labelId:label,employeeId:agent,releaseId,operation:'explain',messageId:id},await history(c))
+   await c.env.DB.prepare("INSERT INTO lw_context_traces(message_id,label_id,user_id,trace_json,stage) VALUES (?,?,?,?,'LOADED')").bind(id,label,user,JSON.stringify(context.trace)).run()
+   const started=Date.now()
+   const provider=providerId(preference.provider),key=await decryptKey(c.env.LLM_KEY_ENCRYPTION_SECRET,conn.encrypted_key,keyContext(user,provider,conn.endpoint_config))
+   const result=await generate(provider,key,endpointConfig(provider,JSON.parse(conn.endpoint_config)),preference.model,context.prompt,{instructions:context.instructions})
+   await recordSpend(c.env.DB,user,provider,result.model,result.usage)
+   await c.env.DB.prepare('UPDATE lw_context_traces SET usage_json=?,latency_ms=? WHERE message_id=?').bind(JSON.stringify(result.usage),Date.now()-started,id).run()
+   const responseText=explanation(result.text,context.trace.evidenceRefs)
+   await c.env.DB.batch([c.env.DB.prepare("INSERT INTO lw_employee_messages(id,label_id,user_id,agent_id,release_id,role,content,status,reply_to,provider,model) VALUES (?,?,?,?,?,'assistant',?,'COMPLETED',?,?,?)").bind(crypto.randomUUID(),label,user,agent,releaseId,responseText,id,provider,result.model),c.env.DB.prepare("UPDATE lw_employee_messages SET status='COMPLETED' WHERE id=?").bind(id),c.env.DB.prepare("UPDATE lw_context_traces SET stage='COMPLETED',usage_json=?,latency_ms=? WHERE message_id=?").bind(JSON.stringify(result.usage),Date.now()-started,id)])
+   return c.json({messages:await history(c),status:'COMPLETED',executionCapability:'REASONING_ONLY'},201)
+  }catch(error){await c.env.DB.batch([c.env.DB.prepare("UPDATE lw_employee_messages SET status='FAILED' WHERE id=?").bind(id),c.env.DB.prepare("UPDATE lw_context_traces SET stage='FAILED' WHERE message_id=?").bind(id)]);return c.json({messages:await history(c),status:'FAILED',message:error instanceof ContextError?'Message saved. Context or explanation could not be validated; select a release or narrow the request. No action was executed.':(error as any)?.status===402?`Message saved. ${(error as Error).message}`:'Message saved. Provider response failed; no action was executed.'},201)}
+ }))
+ app.get(base+'/inbox/:agentId/context-traces',safe(async(c:any)=>{if(!agents.includes(c.req.param('agentId')))return c.json({error:'Employee not found'},404);return c.json({traces:(await c.env.DB.prepare('SELECT t.message_id,t.trace_json,t.stage,t.usage_json,t.latency_ms,t.created_at FROM lw_context_traces t JOIN lw_employee_messages m ON m.id=t.message_id WHERE t.label_id=? AND t.user_id=? AND m.agent_id=? ORDER BY t.created_at DESC LIMIT 30').bind(c.req.param('labelId'),c.get('lwUser').id,c.req.param('agentId')).all()).results})}))
+ app.get(base+'/tasks',safe(async(c:any)=>c.json({tasks:(await c.env.DB.prepare('SELECT id,release_id,agent_role,status,attempts,created_at,updated_at FROM lw_tasks WHERE label_id=? ORDER BY created_at DESC LIMIT 100').bind(c.req.param('labelId')).all()).results,workerStatus:'RUNNING_EVERY_5_MINUTES',workerScope:'General orchestration and scheduled retry worker',implementedProcessors:['reviewer_technical','research_youtube','research_csv']})))
+ app.get(base+'/research/:kind',safe(async(c:any)=>{if(!['watchlist','notes'].includes(c.req.param('kind')))return c.json({error:'Unknown record kind'},404);return c.json({records:(await c.env.DB.prepare('SELECT id,title,content,source_url,status,revision,created_by,created_at,updated_at FROM lw_research_records WHERE label_id=? AND kind=? ORDER BY updated_at DESC LIMIT 100').bind(c.req.param('labelId'),c.req.param('kind')).all()).results,provenance:'USER_RECORDED'})}))
+ const record=(body:any)=>{const title=field(body.title,200,true),content=field(body.content??'',12000),source=body.sourceUrl?field(body.sourceUrl,2000):null;if(source&&(!/^https:\/\//.test(source)||new URL(source).username||new URL(source).password))throw new Error('Invalid source');return {title,content,source}}
+ app.post(base+'/research/:kind',safe(async(c:any)=>{const kind=c.req.param('kind');if(!['watchlist','notes'].includes(kind))return c.json({error:'Unknown record kind'},404);const r=record(await c.req.json()),id=crypto.randomUUID();await c.env.DB.prepare('INSERT INTO lw_research_records(id,label_id,kind,title,content,source_url,created_by) VALUES (?,?,?,?,?,?,?)').bind(id,c.req.param('labelId'),kind,r.title,r.content,r.source,c.get('lwUser').id).run();return c.json({id,status:'SAVED',revision:1},201)}))
+ app.patch(base+'/research/:kind/:id',safe(async(c:any)=>{const body=await c.req.json(),r=record(body);if(!Number.isInteger(body.revision))throw new Error('Revision required');const result=await c.env.DB.prepare('UPDATE lw_research_records SET title=?,content=?,source_url=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE label_id=? AND kind=? AND id=? AND revision=?').bind(r.title,r.content,r.source,c.req.param('labelId'),c.req.param('kind'),c.req.param('id'),body.revision).run();return result.meta.changes?c.json({status:'SAVED',revision:body.revision+1}):c.json({error:'Record changed or not found'},409)}))
+ app.delete(base+'/research/:kind/:id',safe(async(c:any)=>{const result=await c.env.DB.prepare('DELETE FROM lw_research_records WHERE label_id=? AND kind=? AND id=?').bind(c.req.param('labelId'),c.req.param('kind'),c.req.param('id')).run();return result.meta.changes?c.json({status:'DELETED'}):c.json({error:'Record not found'},404)}))
+ app.get(base+'/releases/:releaseId/workspace',safe(async(c:any)=>{const release=await c.env.DB.prepare('SELECT id FROM lw_releases WHERE label_id=? AND id=?').bind(c.req.param('labelId'),c.req.param('releaseId')).first();if(!release)return c.json({error:'Release not found'},404);return c.json({workspace:await c.env.DB.prepare('SELECT brief,lyrics,catalog,revision,updated_at FROM lw_release_workspace WHERE label_id=? AND release_id=?').bind(c.req.param('labelId'),c.req.param('releaseId')).first()})}))
+ app.put(base+'/releases/:releaseId/workspace',safe(async(c:any)=>{const body=await c.req.json(),label=c.req.param('labelId'),release=c.req.param('releaseId');if(!Number.isInteger(body.revision)||body.revision<0)throw new Error('Revision required');const brief=field(body.brief??'',8000),lyrics=field(body.lyrics??'',24000),catalog=field(body.catalog??'',2000);const found=await c.env.DB.prepare('SELECT id FROM lw_releases WHERE label_id=? AND id=?').bind(label,release).first();if(!found)return c.json({error:'Release not found'},404);const row=await c.env.DB.prepare('SELECT revision FROM lw_release_workspace WHERE label_id=? AND release_id=?').bind(label,release).first();if((row?.revision??0)!==body.revision)return c.json({error:'Workspace changed; reload first'},409);let result;if(!row)result=await c.env.DB.prepare('INSERT INTO lw_release_workspace(label_id,release_id,brief,lyrics,catalog,updated_by) VALUES (?,?,?,?,?,?)').bind(label,release,brief,lyrics,catalog,c.get('lwUser').id).run();else result=await c.env.DB.prepare('UPDATE lw_release_workspace SET brief=?,lyrics=?,catalog=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE label_id=? AND release_id=? AND revision=?').bind(brief,lyrics,catalog,c.get('lwUser').id,label,release,body.revision).run();return result.meta.changes?c.json({status:'DRAFT_SAVED',revision:body.revision+1,releaseApprovalUnaffected:'Creative drafts are not approved delivery metadata'}):c.json({error:'Workspace changed'},409)}))
+}

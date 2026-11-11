@@ -37,6 +37,30 @@ export function HomePage({ services, stats }: { services: Service[]; stats?: Pla
         </div>
       </section>
 
+      {/* LABEL WORLD PROMO */}
+      <section class="max-w-6xl mx-auto px-5 -mt-10 relative z-10">
+        <a href="/label" class="group block rounded-3xl p-[1px]" style="background:linear-gradient(135deg,#e8bf6b,#3ED8CC 55%,#a46bff)">
+          <div class="rounded-[calc(1.5rem-1px)] bg-ink grid md:grid-cols-[1.1fr_1fr] overflow-hidden">
+            <div class="p-8 md:p-10">
+              <p class="inline-flex items-center gap-2 text-teal-light text-xs font-semibold uppercase tracking-[0.2em] mb-4"><i class="fa-solid fa-crown"></i> New: Label World</p>
+              <h2 class="font-display text-3xl md:text-4xl font-bold leading-tight mb-3">Recorded it? Now <span class="text-gold">own it.</span></h2>
+              <p class="text-cream/75 mb-5">Run your own label with AI employees. Release on UnitedMasters, collect your ASCAP and SoundExchange money, and recover royalties you didn't know you were owed.</p>
+              <div class="flex flex-wrap gap-2 mb-6 text-xs">
+                <span class="border border-gold/30 rounded-full px-3 py-1">UnitedMasters</span>
+                <span class="border border-gold/30 rounded-full px-3 py-1">ASCAP</span>
+                <span class="border border-gold/30 rounded-full px-3 py-1">SoundExchange</span>
+                <span class="border border-gold/30 rounded-full px-3 py-1">Royalty recovery</span>
+              </div>
+              <span class="inline-flex items-center gap-2 bg-gold group-hover:bg-gold-light text-ink font-bold px-6 py-3 rounded-full transition">Enter Label World <i class="fa-solid fa-arrow-right text-xs transition group-hover:translate-x-1"></i></span>
+            </div>
+            <div class="relative min-h-[220px]">
+              <img src="/static/label-world/hq-lobby.jpg" alt="Label World 3D headquarters" class="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-105" loading="lazy" />
+              <div class="absolute inset-0 bg-gradient-to-r from-ink via-ink/30 to-transparent"></div>
+            </div>
+          </div>
+        </a>
+      </section>
+
       {/* HOW IT WORKS */}
       <section class="max-w-6xl mx-auto px-5 py-20">
         <div class="text-center max-w-2xl mx-auto mb-14">

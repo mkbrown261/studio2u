@@ -1,0 +1,97 @@
+{
+  "studio": {
+    "imported_meshes": 261,
+    "imported_armatures": 0,
+    "actions": [],
+    "mesh_dimensions": [],
+    "images": 18
+  },
+  "lobby": {
+    "imported_meshes": 543,
+    "imported_armatures": 0,
+    "actions": [],
+    "mesh_dimensions": [],
+    "images": 8,
+    "doorway_update": {
+      "sha256": "327de58a3302a5188eb14d9260387eb0ba2987ebf213d5b2b40b139dc8d33b9f",
+      "seats": [
+        {
+          "name": "Lobby \u2022 emerald sofa seat",
+          "x": -1.899999976158142
+        },
+        {
+          "name": "Lobby \u2022 emerald sofa seat.001",
+          "x": -0.25
+        }
+      ],
+      "independent_reimport": "PASS"
+    }
+  },
+  "conference": {
+    "imported_meshes": 384,
+    "imported_armatures": 0,
+    "actions": [],
+    "mesh_dimensions": [],
+    "images": 10
+  },
+  "carla": {
+    "imported_meshes": 2,
+    "imported_armatures": 1,
+    "actions": [
+      "Animation"
+    ],
+    "mesh_dimensions": [
+      [
+        "Icosphere",
+        [
+          1.9021157026290894,
+          1.9999998807907104,
+          2.0
+        ]
+      ],
+      [
+        "Object_6",
+        [
+          0.615942120552063,
+          0.40666455030441284,
+          2.149801731109619
+        ]
+      ]
+    ],
+    "images": 2
+  },
+  "eric": {
+    "imported_meshes": 3,
+    "imported_armatures": 1,
+    "actions": [
+      "Animation"
+    ],
+    "mesh_dimensions": [
+      [
+        "Eric \u2022 fitted tablet",
+        [
+          0.21000003814697266,
+          0.22075724601745605,
+          0.22019803524017334
+        ]
+      ],
+      [
+        "Icosphere",
+        [
+          1.9021157026290894,
+          1.9999998807907104,
+          2.0
+        ]
+      ],
+      [
+        "Object_6.001",
+        [
+          0.8739575743675232,
+          0.7003183364868164,
+          2.299999713897705
+        ]
+      ]
+    ],
+    "images": 6
+  }
+}

@@ -1,0 +1,42 @@
+id: "studio2u.producer_beat_brief"
+version: "1.0.0"
+status: "DESIGNED_NOT_IMPLEMENTED"
+owner_role: "producer_builder"
+goal: "Translate artist musical taste into original, actionable beat brief"
+trigger: "artist asks producer for beat"
+inputs:
+  - "artistCreativeRequest"
+  - "optionalReferenceTracks"
+  - "genrePreferences"
+  - "tempoPreferences"
+tools:
+  - "audio.inspect"
+  - "knowledge.retrieve"
+  - "creative.brief_create"
+steps:
+  - "Ask about energy, instrumentation, tempo, structure and vocal space only if needed."
+  - "Analyze authorized references at feature level; avoid copying melodies or stems without rights."
+  - "Create original composition brief with sonic references described by traits."
+  - "Offer up to three distinct arrangements and obtain artist preference."
+outputs:
+  - "beatBrief"
+  - "promptVariants"
+  - "rightsWarnings"
+validations:
+  - "Explicitly distinguish genre inspiration from imitation of a protected recording."
+approval_gates:
+  - "purchase or generation costs"
+failure_and_escalation:
+  - "unlicensed reference audio -> only descriptive analysis if permitted"
+permissions:
+  - "tenant_scope_enforced"
+  - "only_whitelisted_tools"
+  - "no_secrets_in_prompts"
+  - "audit_logged"
+metrics:
+  - "briefAcceptanceRate"
+test_scenarios:
+  - "specific request to clone third-party protected beat handled appropriately"
+knowledge_sources:
+  - "founder_release_workflow_v2"
+  - "official_provider_docs_must_be_verified_before_activation"

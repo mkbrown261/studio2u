@@ -144,3 +144,47 @@ Mobile recording session booking marketplace. "We bring the studio to you."
 - **⚠️ Action needed before engineers can get booked**: every engineer (including the seeded Mason Brown profile) must click "Connect with Stripe" on `/dashboard/payments` and complete Stripe's hosted onboarding form (identity, bank account, ToS) — Stripe requires this real hosted-UI step for Express accounts and blocks it from being completed via API, even in test mode. Until an engineer finishes it, `stripe_charges_enabled` stays `0` and they won't appear as bookable.
 - **Stripe API version**: Uses Stripe's Accounts v2 API (`stripe.v2.core.accounts`, `stripe.v2.core.accountLinks`) — the current, non-deprecated Connect account-creation surface (v1 `stripe.accounts.create()` is blocked by Stripe for new Connect platforms). See `src/lib/stripe.ts` for details.
 - **Admin password**: Set as the `ADMIN_PASSWORD` Cloudflare secret (not stored in code/repo). Rotate anytime with `wrangler pages secret put ADMIN_PASSWORD --project-name studio2u`.
+
+## Label World — Autonomous Agents (Claude / Codex on your regular subscription)
+
+**How it works:** Studio2U is the always-on "back office". Your regular Claude or Codex plan does the thinking by connecting over MCP. No API key is needed.
+
+| Piece | Where it runs | Stops when laptop closes? |
+|---|---|---|
+| Engine (refresh packets, queue tasks, recover stuck tasks, follow-ups, notifications) | Cloudflare cron worker `studio2u-label-world-engine` (every 5 min, no AI) | No |
+| Thinking + filling in info | Your Claude / Codex via MCP connector `/label-world/mcp` | Only if you run it locally |
+| Unattended thinking | **Claude Code scheduled tasks** (claude.ai/code/routines) or **ChatGPT/Codex scheduled tasks**: both run in their cloud on your plan | No |
+| Screen control (filling official forms) | Claude computer use / Codex on your machine, while you watch | Yes, needs your screen |
+| Log in, MFA, legal checkboxes, **Submit** | **You** | n/a |
+
+### Connect
+- Claude (web/desktop): Settings → Connectors → Add custom connector → `https://studio2u.pages.dev/label-world/mcp`
+- Claude Code: `claude mcp add --transport http studio2u https://studio2u.pages.dev/label-world/mcp`, then `/mcp`
+- Codex: `codex mcp add studio2u --url https://studio2u.pages.dev/label-world/mcp`
+
+On the consent screen, select your label and keep `releases:write`, `submissions:write`, `tasks:write` and `offline_access` ticked.
+
+### Run it
+Use the MCP prompt **`run_label_shift`**, or just say: *"Do my Studio2U tasks."* The agent loops `claim_next_task → follow instructions → complete_task`.
+
+To keep agents working with your laptop closed, create a Claude Code scheduled task (hourly) or a ChatGPT scheduled task with the same prompt and the Studio2U connector. Optional: paste that Claude task's API-trigger URL + token into `POST /api/label-world/labels/:id/agents/claude-routine` (stored encrypted), and the engine wakes it whenever new work is queued (max once per 30 min).
+
+### MCP tools (21)
+Read: `whoami`, `list_labels`, `list_releases`, `get_release`, `get_review`, `get_intake`, `get_submission_packet`, `list_submissions`, `list_parties`, `list_notifications`, `queue_status`, plus research/messages/task status.
+Write (scope-gated, same validation and audit as the website): `create_release`, `update_intake`, `save_party`, `report_submission`, `claim_next_task`, `complete_task`.
+
+### Providers (field maps checked 2026-10-23 against each provider's official guide)
+- **UnitedMasters**: release title/genre/label, re-release + UPC, cover art + 3rd-party license, audio, track details (3rd-party audio, explicit/radio edit, instrumental, ISRC, songwriter legal names, features, producers), release date (3+ weeks warning).
+- **ASCAP**: work title, alternate titles, writers with IPI. Splits are converted to ASCAP's 50% writer / 50% publisher shares. Applies only when a writer is ASCAP.
+- **SoundExchange**: artist, title, ISRC; claim basis, %, rights begin/end; release with UPC + label.
+
+The artist is asked each fact **once**, even when several providers need it. `SUBMITTED` requires a confirmation; `VERIFIED` requires evidence seen on the provider's site. Editing after a filing flags `NEEDS_CORRECTION`.
+
+### Deploy steps (not yet done)
+1. `npm run db:migrate:prod` (applies `0018`–`0026`; back up D1 first)
+2. `npm run deploy` (Pages app)
+3. `npx wrangler secret put LLM_KEY_ENCRYPTION_SECRET -c wrangler.label-world-engine.jsonc` (same value as Pages), then `npm run deploy:engine`
+4. `npm run check:live-agent https://studio2u.pages.dev` (synthetic QA account)
+
+### Tests
+`npm run test:label-world`, `npm run test:label-world:mcp` (includes `tests/label-world-autonomy.mjs`), `npm run build`.

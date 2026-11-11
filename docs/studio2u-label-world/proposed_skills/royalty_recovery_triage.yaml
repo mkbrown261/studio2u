@@ -1,0 +1,43 @@
+id: "studio2u.royalty_recovery_triage"
+version: "0.1.0"
+status: "PROPOSED_NOT_REGISTERED"
+owner_role: "royalty_admin"
+goal: "Identify evidence-backed missing royalty collection setup or possible claims without promising earnings"
+trigger: "artist requests catalog royalty audit or scheduled follow-up"
+inputs:
+  - "labelId"
+  - "catalogRecordingIds"
+  - "collectionProfile"
+tools:
+  - "catalog.read_authorized"
+  - "royalties.assess_eligibility"
+  - "registration.find_evidence"
+  - "agent_inbox.send_internal_message"
+steps:
+  - "Separate recording master royalties from composition, mechanical and statutory performance pathways."
+  - "Reconcile applicable parties, verified IDs and status evidence."
+  - "Prepare per-provider gaps, missing documents and official follow-up steps."
+  - "Request user confirmation and keep uncertain balances unknown."
+outputs:
+  - "royaltyReadinessReport"
+  - "followUpTaskIds"
+  - "evidenceGaps"
+validations:
+  - "No unsupported unclaimed-money estimate or guaranteed payout."
+  - "SoundExchange not inferred from ordinary interactive on-demand stream counts."
+approval_gates:
+  - "official claim submission"
+failure_and_escalation:
+  - "insufficient eligibility evidence -> manual review"
+permissions:
+  - "tenant_scope_enforced"
+  - "authorized_catalog_only"
+  - "audit_logged"
+metrics:
+  - "gapsTriaged"
+  - "confirmedCollections"
+test_scenarios:
+  - "unverified source yields UNKNOWN not owed amount"
+  - "tenant B recording cannot be included"
+knowledge_sources:
+  - "ROYALTY_RECOVERY_AND_CREATIVE_HANDOFF.md"

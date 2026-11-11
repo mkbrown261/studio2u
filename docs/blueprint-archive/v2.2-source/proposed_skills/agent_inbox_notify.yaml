@@ -1,0 +1,44 @@
+id: "studio2u.agent_inbox_notify"
+version: "0.1.0"
+status: "PROPOSED_NOT_REGISTERED"
+owner_role: "executive"
+goal: "Deliver factual task updates and actionable questions to the owner through a tenant-scoped agent thread"
+trigger: "verified task or registration event requires owner attention"
+inputs:
+  - "labelId"
+  - "agentId"
+  - "taskId"
+  - "eventId"
+  - "recipientUserIds"
+tools:
+  - "agent_inbox.create_or_get_thread"
+  - "agent_inbox.send_internal_message"
+  - "notifications.enqueue"
+steps:
+  - "Authorize tenant, agent role, source event and recipients."
+  - "Resolve or create scoped task/agent thread and dedupe on eventId."
+  - "Attach factual task status, approved references and required next action."
+  - "Persist message and enqueue bounded notification."
+outputs:
+  - "threadId"
+  - "messageId"
+  - "notificationIds"
+validations:
+  - "No model-authored success unsupported by persisted task evidence."
+  - "Never copy provider credentials into message."
+approval_gates: []
+failure_and_escalation:
+  - "notification delivery error -> persist unread message and retry within limits"
+permissions:
+  - "tenant_scope_enforced"
+  - "server_authorized_agent_sender_only"
+  - "audit_logged"
+metrics:
+  - "deliveredMessages"
+  - "duplicateSuppressionRate"
+test_scenarios:
+  - "cross-tenant attempt rejected"
+  - "same event retried does not duplicate message"
+knowledge_sources:
+  - "GITHUB_MESSAGING_CODE_REVIEW.md"
+  - "AGENT_INBOX_SPEC.md"

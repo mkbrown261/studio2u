@@ -1,0 +1,2 @@
+# Studio2U Context Router
+Read CURRENT_STATE.md; inspect Git and tests. Route release quality to departments/reviewer/ROUTE.md, research to departments/researcher/ROUTE.md, coordination to departments/executive/ROUTE.md, preparation to departments/builder/ROUTE.md. The canonical 23 skills remain in ../skills; discover by ../SKILL_CATALOG.md. Load only the selected route. Manifest references are a whitelist, not execution permission.

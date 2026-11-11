@@ -1,0 +1,847 @@
+{
+  "source": "/Users/masonbrown/Documents/New project/studio2u/assets/blender/export_copies/Headquarters_Recovery_20261012.blend",
+  "source_sha256": "eabfdf8e310e30dc1a123ac112b34e98d1d8557c65b25ed13294583ce964cb92",
+  "objects": 1315,
+  "materials": [
+    {
+      "name": "Akai_Mpk",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Base",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "BASE_COLOR",
+      "procedural": false,
+      "users": 5
+    },
+    {
+      "name": "Black leather",
+      "procedural": true,
+      "users": 22
+    },
+    {
+      "name": "BOTTOM_LINE",
+      "procedural": false,
+      "users": 5
+    },
+    {
+      "name": "Brown iris",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Champagne brass",
+      "procedural": true,
+      "users": 181
+    },
+    {
+      "name": "Charcoal acoustic fabric",
+      "procedural": false,
+      "users": 6
+    },
+    {
+      "name": "Conference \u2022 ceiling strip",
+      "procedural": false,
+      "users": 2
+    },
+    {
+      "name": "Conference \u2022 leather PBR",
+      "procedural": false,
+      "users": 32
+    },
+    {
+      "name": "Conference \u2022 paper",
+      "procedural": false,
+      "users": 19
+    },
+    {
+      "name": "Conference \u2022 polished dark walnut",
+      "procedural": true,
+      "users": 1,
+      "color": "baked"
+    },
+    {
+      "name": "Conference \u2022 print",
+      "procedural": false,
+      "users": 171
+    },
+    {
+      "name": "Conference \u2022 woven charcoal carpet",
+      "procedural": true,
+      "users": 1
+    },
+    {
+      "name": "Console graphite",
+      "procedural": true,
+      "users": 140
+    },
+    {
+      "name": "Cyan light",
+      "procedural": false,
+      "users": 2
+    },
+    {
+      "name": "Display glass",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Eyeglass frame",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "FRAME",
+      "procedural": false,
+      "users": 5
+    },
+    {
+      "name": "Ivory key",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Lobby \u2022 emerald upholstery",
+      "procedural": false,
+      "users": 8
+    },
+    {
+      "name": "Lobby \u2022 flower 0",
+      "procedural": false,
+      "users": 20
+    },
+    {
+      "name": "Lobby \u2022 flower 1",
+      "procedural": false,
+      "users": 20
+    },
+    {
+      "name": "Lobby \u2022 flower 2",
+      "procedural": false,
+      "users": 15
+    },
+    {
+      "name": "Lobby \u2022 foliage",
+      "procedural": false,
+      "users": 420
+    },
+    {
+      "name": "Lobby \u2022 midnight painted plaster",
+      "procedural": false,
+      "users": 14
+    },
+    {
+      "name": "Lobby \u2022 oak PBR",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Lobby \u2022 polished black veined stone",
+      "procedural": true,
+      "users": 4,
+      "color": "baked"
+    },
+    {
+      "name": "Material.001",
+      "procedural": false,
+      "users": 2
+    },
+    {
+      "name": "Material.002",
+      "procedural": false,
+      "users": 3
+    },
+    {
+      "name": "Material.003",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Material_15",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Material_16",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Material_28_Slot_3",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Material_28_Slot_3_0",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Material_28_Slot_3_1",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Material_28_Slot_3_2",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Material_28_Slot_3_3",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Material_28_Slot_3_4",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Material_29",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Material_30",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Material_56",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Material_57",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "New rooms \u2022 warm light",
+      "procedural": false,
+      "users": 11
+    },
+    {
+      "name": "Ocean",
+      "procedural": true,
+      "users": 1,
+      "color": "baked"
+    },
+    {
+      "name": "Pads_Slot_3",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Pads_Slot_3_0",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Pads_Slot_3_1",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Pads_Slot_3_2",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Pads_Slot_3_3",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Pads_Slot_3_4",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Pads_Slot_3_5",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Pupil",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Researcher dark curls",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Researcher leather satchel",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Researcher varsity blue",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Researcher warm brown",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Reviewer blazer",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Reviewer polo stripes",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Reviewer skin",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "rp_carla_rigged_001_mat",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "rp_eric_rigged_001_mat",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Scarlett_MTL",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Shirt and shoes",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Smoked walnut",
+      "procedural": true,
+      "users": 43,
+      "color": "baked"
+    },
+    {
+      "name": "Studio2U \u2022 Monitor screen OFF",
+      "procedural": false,
+      "users": 5
+    },
+    {
+      "name": "Sunset sky",
+      "procedural": true,
+      "users": 1,
+      "color": "baked"
+    },
+    {
+      "name": "Sunset sun",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Tablet readable screen",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "tangent",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "TAngent",
+      "procedural": false,
+      "users": 1
+    },
+    {
+      "name": "Trouser navy",
+      "procedural": false,
+      "users": 0
+    },
+    {
+      "name": "Warm strip",
+      "procedural": false,
+      "users": 43
+    }
+  ],
+  "doors": [
+    {
+      "name": "Conference \u2022 CONFERENCE door brass handle",
+      "position": [
+        -2.9686412811279297,
+        -5.460272312164307,
+        1.149999976158142
+      ],
+      "dimensions": [
+        0.034999996423721313,
+        0.034999996423721313,
+        0.2800000011920929
+      ]
+    },
+    {
+      "name": "Conference \u2022 CONFERENCE door brass handle.001",
+      "position": [
+        -3.019355535507202,
+        -5.351515293121338,
+        1.149999976158142
+      ],
+      "dimensions": [
+        0.034999996423721313,
+        0.034999996423721313,
+        0.2800000011920929
+      ]
+    },
+    {
+      "name": "Conference \u2022 CONFERENCE door hinge",
+      "position": [
+        -4.0,
+        -5.875,
+        0.0
+      ],
+      "dimensions": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Conference \u2022 CONFERENCE door jamb",
+      "position": [
+        -4.0,
+        -5.875,
+        1.2999999523162842
+      ],
+      "dimensions": [
+        0.06499999761581421,
+        0.17000000178813934,
+        2.5999999046325684
+      ]
+    },
+    {
+      "name": "Conference \u2022 CONFERENCE door jamb.001",
+      "position": [
+        -4.0,
+        -4.625,
+        1.2999999523162842
+      ],
+      "dimensions": [
+        0.06499999761581421,
+        0.17000000178813934,
+        2.5999999046325684
+      ]
+    },
+    {
+      "name": "Conference \u2022 CONFERENCE door leaf",
+      "position": [
+        -3.4335575103759766,
+        -5.61086368560791,
+        1.2999999523162842
+      ],
+      "dimensions": [
+        1.2499998807907104,
+        0.06499999016523361,
+        2.5399999618530273
+      ]
+    },
+    {
+      "name": "Conference \u2022 CONFERENCE door lintel",
+      "position": [
+        -4.0,
+        -5.25,
+        2.634999990463257
+      ],
+      "dimensions": [
+        1.3799999952316284,
+        0.17000000178813934,
+        0.07000000029802322
+      ]
+    },
+    {
+      "name": "Lobby \u2022 conference door header",
+      "position": [
+        -4.0,
+        -5.25,
+        3.299999952316284
+      ],
+      "dimensions": [
+        0.18000000715255737,
+        1.25,
+        1.399999976158142
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door brass handle",
+      "position": [
+        1.8543336391448975,
+        -4.587706565856934,
+        1.149999976158142
+      ],
+      "dimensions": [
+        0.03500000014901161,
+        0.03500000014901161,
+        0.2800000011920929
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door brass handle.001",
+      "position": [
+        1.9702446460723877,
+        -4.556648254394531,
+        1.149999976158142
+      ],
+      "dimensions": [
+        0.03500000014901161,
+        0.03500000014901161,
+        0.2800000011920929
+      ]
+    },
+    {
+      "name": "Lobby \u2022 studio door header",
+      "position": [
+        2.25,
+        -3.5,
+        3.299999952316284
+      ],
+      "dimensions": [
+        1.25,
+        0.18000000715255737,
+        1.399999976158142
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door hinge",
+      "position": [
+        1.625,
+        -3.5,
+        0.0
+      ],
+      "dimensions": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door jamb",
+      "position": [
+        1.625,
+        -3.5,
+        1.2999999523162842
+      ],
+      "dimensions": [
+        0.06499999761581421,
+        0.17000000178813934,
+        2.5999999046325684
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door jamb.001",
+      "position": [
+        2.875,
+        -3.5,
+        1.2999999523162842
+      ],
+      "dimensions": [
+        0.06499999761581421,
+        0.17000000178813934,
+        2.5999999046325684
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door leaf",
+      "position": [
+        1.7867618799209595,
+        -4.103703498840332,
+        1.2999999523162842
+      ],
+      "dimensions": [
+        1.25,
+        0.06499999761581421,
+        2.5399999618530273
+      ]
+    },
+    {
+      "name": "Lobby \u2022 STUDIO door lintel",
+      "position": [
+        2.25,
+        -3.5,
+        2.634999990463257
+      ],
+      "dimensions": [
+        1.3799999952316284,
+        0.17000000178813934,
+        0.07000000029802322
+      ]
+    }
+  ],
+  "lights": [
+    {
+      "name": "Conference \u2022 table warm wash",
+      "position": [
+        -7.0,
+        -9.699999809265137,
+        3.200000047683716
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 200.0
+    },
+    {
+      "name": "Conference \u2022 table warm wash.001",
+      "position": [
+        -7.0,
+        -7.5,
+        3.200000047683716
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 200.0
+    },
+    {
+      "name": "Conference \u2022 table warm wash.002",
+      "position": [
+        -7.0,
+        -5.300000190734863,
+        3.200000047683716
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 200.0
+    },
+    {
+      "name": "Cyan room fill",
+      "position": [
+        -3.0,
+        1.0,
+        3.0
+      ],
+      "type": "AREA",
+      "color": [
+        0.07999999821186066,
+        0.6000000238418579,
+        1.0
+      ],
+      "energy": 700.0
+    },
+    {
+      "name": "Lobby \u2022 shelf grazing",
+      "position": [
+        -2.4000000953674316,
+        -8.0,
+        3.4000000953674316
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 180.0
+    },
+    {
+      "name": "Lobby \u2022 warm downlight.001",
+      "position": [
+        0.0,
+        -10.0,
+        3.75
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 180.0
+    },
+    {
+      "name": "Lobby \u2022 warm downlight.003",
+      "position": [
+        0.0,
+        -8.0,
+        3.75
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 180.0
+    },
+    {
+      "name": "Lobby \u2022 warm downlight.005",
+      "position": [
+        0.0,
+        -6.0,
+        3.75
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 180.0
+    },
+    {
+      "name": "Lobby \u2022 warm downlight.007",
+      "position": [
+        0.0,
+        -4.300000190734863,
+        3.75
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.6499999761581421,
+        0.3499999940395355
+      ],
+      "energy": 180.0
+    },
+    {
+      "name": "Soft key",
+      "position": [
+        0.0,
+        -2.0,
+        5.0
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.699999988079071,
+        0.4399999976158142
+      ],
+      "energy": 500.0
+    },
+    {
+      "name": "Sunset window",
+      "position": [
+        0.0,
+        3.0999999046325684,
+        2.5999999046325684
+      ],
+      "type": "AREA",
+      "color": [
+        1.0,
+        0.44999998807907104,
+        0.17000000178813934
+      ],
+      "energy": 950.0
+    },
+    {
+      "name": "Violet room fill",
+      "position": [
+        3.0,
+        0.0,
+        3.0
+      ],
+      "type": "AREA",
+      "color": [
+        0.5,
+        0.12999999523162842,
+        1.0
+      ],
+      "energy": 600.0
+    }
+  ],
+  "exports": {
+    "studio": {
+      "objects": 261,
+      "bytes": 17930948,
+      "meshes": 255,
+      "images": 18,
+      "skins": 0,
+      "animation_clips": 0,
+      "sha256": "393a9cb4c02fb7a09df1f6858946ade48e0252689c718d4363929f6a1e34cb3b"
+    },
+    "lobby": {
+      "objects": 545,
+      "bytes": 11354012,
+      "meshes": 166,
+      "images": 8,
+      "skins": 0,
+      "animation_clips": 0,
+      "sha256": "327de58a3302a5188eb14d9260387eb0ba2987ebf213d5b2b40b139dc8d33b9f"
+    },
+    "conference": {
+      "objects": 393,
+      "bytes": 12941516,
+      "meshes": 384,
+      "images": 10,
+      "skins": 0,
+      "animation_clips": 0,
+      "sha256": "0bfbbd5d8aaee15b265f03eb6060f695bfd08b90c0304731e13a159f5abdd579"
+    },
+    "carla": {
+      "objects": 6,
+      "bytes": 1932912,
+      "action": "Carla_Relaxed_Idle_v3.002",
+      "meshes": 1,
+      "images": 2,
+      "skins": 1,
+      "animation_clips": 1,
+      "sha256": "1b3e78fb2616092c634b00aa1cdbec11a5cc16d55e6c6bde13373b2aebdcbba5"
+    },
+    "eric": {
+      "objects": 7,
+      "bytes": 8331112,
+      "action": "Eric_Stable_Scroll_Final.001",
+      "meshes": 2,
+      "images": 6,
+      "skins": 1,
+      "animation_clips": 1,
+      "sha256": "1ea778d33bbb72c261164ed0df632c37a22bad8317344082aafb809925be5ad0"
+    }
+  },
+  "baked_normal_materials": [
+    "Black leather",
+    "Champagne brass",
+    "Conference \u2022 polished dark walnut",
+    "Conference \u2022 woven charcoal carpet",
+    "Console graphite",
+    "Ocean",
+    "Smoked walnut"
+  ],
+  "doorway_clearance": {
+    "source_copy": "/Users/masonbrown/Documents/New project/studio2u/assets/blender/export_copies/Headquarters_Doorway_Clearance_20261012.blend",
+    "source_sha256": "e8acb27fc4f59a197d04c43a60bf8ad1d9afbce22e30c9bfdf7c21a9670b5e40",
+    "delta_x": -1.2,
+    "objects": [
+      "Lobby \u2022 emerald sofa seat",
+      "Lobby \u2022 emerald sofa back",
+      "Lobby \u2022 emerald sofa arm",
+      "Lobby \u2022 emerald sofa arm.001",
+      "Lobby \u2022 sofa brass leg",
+      "Lobby \u2022 sofa brass leg.001",
+      "Lobby \u2022 emerald sofa seat.001",
+      "Lobby \u2022 emerald sofa back.001",
+      "Lobby \u2022 emerald sofa arm.002",
+      "Lobby \u2022 emerald sofa arm.003",
+      "Lobby \u2022 sofa brass leg.002",
+      "Lobby \u2022 sofa brass leg.003"
+    ],
+    "lobby_sha256": "327de58a3302a5188eb14d9260387eb0ba2987ebf213d5b2b40b139dc8d33b9f"
+  }
+}
